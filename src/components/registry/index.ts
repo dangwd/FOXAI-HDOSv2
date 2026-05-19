@@ -10,11 +10,14 @@ import { ChartPie } from "@/components/widgets/ChartPie";
 import { ProgressList } from "@/components/widgets/ProgressList";
 import { BulletList } from "@/components/widgets/BulletList";
 import { StatsSummary } from "@/components/widgets/StatsSummary";
+import { FlowPipeline } from "@/components/widgets/FlowPipeline";
+import { AlertList } from "@/components/widgets/AlertList";
 
 export const REGISTRY: Record<string, ComponentType<any>> = {
   KpiCard,
   DataTable,
   AlertBanner,
+  AlertList,
   ChartBar,
   ChartLine,
   ChartArea,
@@ -22,6 +25,7 @@ export const REGISTRY: Record<string, ComponentType<any>> = {
   ProgressList,
   BulletList,
   StatsSummary,
+  FlowPipeline,
 };
 
 export const MANIFEST = {

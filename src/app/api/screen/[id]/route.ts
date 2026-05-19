@@ -9,310 +9,130 @@ import { NextResponse } from "next/server";
 const SCREENS: Record<string, ScreenConfig> = {
   dashboard: {
     title: "Executive Dashboard",
-    badge: "BETA",
-    subtitle: "Cập nhật lần cuối: 19/05/2026 08:30 — Dữ liệu thời gian thực",
+    badge: "HDOS v1.0",
+    live: true,
+    subtitle: "Tổng quan điều hành toàn viện · Cập nhật realtime",
+    actions: [
+      { label: "↺ Làm mới", variant: "default" },
+      { label: "Báo cáo giao ban", variant: "default" },
+      { label: "Hỏi AI", variant: "primary", color: "#1677ff" },
+    ],
     rows: [
-      // Hàng 1: 6 KPI cards
+      // Row 1: 5 KPI cards
       {
         components: [
           {
             type: "KpiCard",
             props: {
-              title: "Tổng BN hôm nay",
-              value: 43,
+              title: "LƯỢT KHÁM HÔM NAY",
+              value: 150,
               accent: "#1677ff",
-              hint: "+5 so với hôm qua",
+              hint: "+42% hôm qua",
               hintColor: "#52c41a",
             },
           },
           {
             type: "KpiCard",
             props: {
-              title: "Tổng giờ điều trị",
-              value: "230.3 hr",
+              title: "DOANH THU",
+              value: "4.23 tỷ",
               accent: "#52c41a",
-              hint: "Trung bình 5.4 hr/BN",
-              hintColor: "#8b949e",
+              hint: "+8% so kế hoạch",
+              hintColor: "#52c41a",
             },
           },
           {
             type: "KpiCard",
             props: {
-              title: "BN xuất viện",
-              value: 79,
+              title: "BN NỘI TRÚ",
+              value: 312,
               accent: "#722ed1",
-              hint: "↑ 12%",
+              hint: "+14 so sáng nay",
               hintColor: "#52c41a",
             },
           },
           {
             type: "KpiCard",
             props: {
-              title: "Công suất giường",
-              value: "31.8%",
-              accent: "#faad14",
-              hint: "38/120 giường",
-              hintColor: "#8b949e",
-            },
-          },
-          {
-            type: "KpiCard",
-            props: {
-              title: "Doanh thu (nghìn đ)",
-              value: "60,075",
-              accent: "#13c2c2",
-              hint: "↑ 8.2% vs tháng trước",
+              title: "BOR TOÀN VIỆN",
+              value: "78.4%",
+              accent: "#fa8c16",
+              hint: "+2.1%",
               hintColor: "#52c41a",
             },
           },
           {
             type: "KpiCard",
             props: {
-              title: "Sự cố chưa xử lý",
-              value: 0,
+              title: "CẢNH BÁO ACTIVE",
+              value: 8,
               accent: "#ff4d4f",
-              hint: "Không có cảnh báo",
-              hintColor: "#52c41a",
+              hint: "2.13 cần xử lý ngay",
+              hintColor: "#ff4d4f",
             },
           },
         ],
       },
-      // Hàng 2: Theo dõi từng khoa (left 16) + Chiến lược (right 8)
+      // Row 2: ProgressList (span 16) + AlertList (span 8)
       {
         components: [
           {
             type: "ProgressList",
             span: 16,
             props: {
-              title: "Công việc đang theo dõi từng khoa",
-              headerAction: "Xem tất cả",
-              maxValue: 100,
+              title: "Công suất giường theo khoa",
+              realtimeBadge: true,
+              showFraction: true,
               items: [
-                {
-                  label: "Khoa Nội tim mạch",
-                  value: 30,
-                  secondaryValue: 45,
-                  color: "#52c41a",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Ngoại tiêu hóa",
-                  value: 21,
-                  secondaryValue: 50,
-                  color: "#52c41a",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Sản",
-                  value: 38,
-                  secondaryValue: 60,
-                  color: "#52c41a",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Nhi",
-                  value: 44,
-                  secondaryValue: 55,
-                  color: "#52c41a",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Chấn thương chỉnh hình",
-                  value: 62,
-                  secondaryValue: 70,
-                  color: "#52c41a",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Ung bướu",
-                  value: 28,
-                  secondaryValue: 40,
-                  color: "#52c41a",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Thần kinh",
-                  value: 35,
-                  secondaryValue: 48,
-                  color: "#52c41a",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa ICU",
-                  value: 72,
-                  secondaryValue: 80,
-                  color: "#ff4d4f",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Cấp cứu",
-                  value: 55,
-                  secondaryValue: 65,
-                  color: "#faad14",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Da liễu",
-                  value: 18,
-                  secondaryValue: 30,
-                  color: "#52c41a",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Tai mũi họng",
-                  value: 24,
-                  secondaryValue: 35,
-                  color: "#52c41a",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Mắt",
-                  value: 19,
-                  secondaryValue: 28,
-                  color: "#52c41a",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Phục hồi chức năng",
-                  value: 41,
-                  secondaryValue: 52,
-                  color: "#52c41a",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Hô hấp",
-                  value: 57,
-                  secondaryValue: 68,
-                  color: "#faad14",
-                  secondaryColor: "#faad14",
-                },
-                {
-                  label: "Khoa Nội tổng hợp",
-                  value: 33,
-                  secondaryValue: 45,
-                  color: "#52c41a",
-                  secondaryColor: "#faad14",
-                },
+                { label: "ICU",                      value: 47, secondaryValue: 50, color: "#ff4d4f" },
+                { label: "Khoa Nội tim mạch",        value: 45, secondaryValue: 50, color: "#faad14" },
+                { label: "Khoa Nội tổng quát (ICU)", value: 45, secondaryValue: 50, color: "#ff4d4f" },
+                { label: "Ung bướu",                 value: 39, secondaryValue: 45, color: "#faad14" },
+                { label: "Khoa Tim mạch can thiệp",  value: 37, secondaryValue: 48, color: "#faad14" },
+                { label: "Khoa Nội tổng quát",       value: 36, secondaryValue: 50, color: "#52c41a" },
+                { label: "Khoa Ngoại tổng quát",     value: 33, secondaryValue: 52, color: "#52c41a" },
+                { label: "Khoa Nhi",                 value: 27, secondaryValue: 50, color: "#52c41a" },
+                { label: "Khoa Thần kinh",            value: 31, secondaryValue: 50, color: "#52c41a" },
+                { label: "Khoa Sản khoa",            value: 25, secondaryValue: 47, color: "#52c41a" },
+                { label: "Khoa Nội tiết",            value: 22, secondaryValue: 45, color: "#52c41a" },
+              ],
+              footerActions: [
+                { label: "18 khoa · Xem chi tiết →", variant: "link" },
               ],
             },
           },
           {
-            type: "BulletList",
+            type: "AlertList",
             span: 8,
             props: {
-              title: "Chiến lược dòng tiền hay",
+              title: "Cảnh báo đang kích hoạt",
+              totalCount: 8,
               items: [
-                {
-                  text: "Critical thay van tim đơn thuần - Thực tế 1",
-                  status: "active",
-                },
-                {
-                  text: "Critical thay van tim đơn thuần - Thực tế 2",
-                  status: "active",
-                },
-                {
-                  text: "Critical thay van tim đơn thuần - Thực tế 3",
-                  status: "active",
-                },
-                {
-                  text: "Critical thay van tim đơn thuần - Thực tế 4",
-                  status: "pending",
-                },
-                {
-                  text: "Critical thay van tim đơn thuần - Thực tế 5",
-                  status: "pending",
-                },
-                {
-                  text: "Critical thay van tim đơn thuần - Thực tế 6",
-                  status: "critical",
-                },
+                { code: "1.3", text: "PTx > 22% — BN: Phạm Thị D",          patient: "Khoa Huyết học", time: "16 phút trước", severity: "warning" },
+                { code: "1.3", text: "NH3 > 185 μmol/L — BN: Hoàng Văn E",   patient: "Khoa Gan mật",   time: "24 phút trước", severity: "warning" },
+                { code: "1.1", text: "Glucose > 22 mmol/L — BN: Vũ Thị F",   patient: "Khoa Nội tiết",  time: "36 phút trước", severity: "warning" },
+                { code: "1.1", text: "Hb > 5.8 g/dL — BN: Đặng Văn G",       patient: "Khoa Ung bướu",  time: "42 phút trước", severity: "warning" },
+                { code: "1.1", text: "Ca++ > 2.1 mmol/L — BN: Ngô Thị H",    patient: "Khoa Thận",      time: "08 phút trước", severity: "warning" },
               ],
             },
           },
         ],
       },
-      // Hàng 3: Stats summary
+      // Row 3: FlowPipeline (span 16) + ProgressList doanh thu (span 8)
       {
         components: [
           {
-            type: "StatsSummary",
-            span: 24,
+            type: "FlowPipeline",
+            span: 16,
             props: {
-              items: [
-                { label: "Tổng BN đang theo dõi", value: 43, color: "#1677ff" },
-                { label: "Tổng BN đã xuất", value: 42, color: "#52c41a" },
-                { label: "BN chưa có CP", value: 0, color: "#8b949e" },
-                { label: "Tổng ngày điều trị", value: 70, color: "#722ed1" },
-                { label: "Sự cố hôm nay", value: 0, color: "#8b949e" },
-              ],
-            },
-          },
-        ],
-      },
-      // Hàng 4: 3 panel dưới
-      {
-        components: [
-          {
-            type: "BulletList",
-            span: 8,
-            props: {
-              title: "Ân hạn sắp — 175",
-              items: [
-                {
-                  text: "Đỗ Thị Bích Hương — 14",
-                  status: "critical",
-                  badge: "Critical",
-                },
-                {
-                  text: "Nguyễn Văn Minh — Ổn định BH",
-                  status: "pending",
-                  badge: "Warning",
-                },
-                {
-                  text: "Trần Quốc Toản — BH",
-                  status: "pending",
-                  badge: "Warning",
-                },
-                { text: "Bùi Thị Thu Hà", status: "active", badge: "OK" },
-                { text: "Phạm Minh Khoa", status: "active", badge: "OK" },
-              ],
-              footerActions: [
-                { label: "Xem tất cả bệnh nhân", variant: "link" },
-                { label: "Đưa ra đề xuất", color: "#1677ff" },
-              ],
-            },
-          },
-          {
-            type: "BulletList",
-            span: 8,
-            props: {
-              title: "Clinical Pathway",
-              items: [
-                {
-                  text: "Acute Ischemic Stroke",
-                  status: "active",
-                  badge: "Đang chạy",
-                },
-                {
-                  text: "Route to Revascularization",
-                  status: "active",
-                  badge: "Đang chạy",
-                },
-                { text: "Hip Fracture", status: "pending", badge: "Chờ xử lý" },
-                {
-                  text: "Community Acquired Pneumonia",
-                  status: "done",
-                  badge: "Hoàn thành",
-                },
-                {
-                  text: "Heart Failure Management",
-                  status: "active",
-                  badge: "Đang chạy",
-                },
-              ],
-              footerActions: [
-                { label: "Xem tất cả pathway", variant: "link" },
-                { label: "Thêm pathway", color: "#722ed1" },
+              title: "Dòng bệnh nhân hôm nay",
+              realtimeBadge: true,
+              footer: "T/BT: 38 phút · Tracking từ đăng ký đến hoàn thành",
+              stages: [
+                { label: "Tổng lịch",    value: 148, color: "#1677ff" },
+                { label: "Chờ khám",     value: 46,  color: "#faad14" },
+                { label: "Đang nội trú", value: 79,  color: "#722ed1" },
+                { label: "Hoàn thành",   value: 0,   color: "#52c41a" },
               ],
             },
           },
@@ -320,26 +140,13 @@ const SCREENS: Record<string, ScreenConfig> = {
             type: "ProgressList",
             span: 8,
             props: {
-              title: "Population Health",
+              title: "Phân loại doanh thu",
               maxValue: 100,
               items: [
-                { label: "Anh ơi sắp tiểu đường", value: 82, color: "#ff4d4f" },
-                {
-                  label: "Anh ơi sắp tăng huyết áp",
-                  value: 67,
-                  color: "#faad14",
-                },
-                { label: "Anh ơi sắp thừa cân", value: 45, color: "#52c41a" },
-                { label: "Quản lý bệnh mãn tính", value: 78, color: "#1677ff" },
-                {
-                  label: "Theo dõi sau xuất viện",
-                  value: 55,
-                  color: "#722ed1",
-                },
-              ],
-              footerActions: [
-                { label: "Xem tất cả bệnh nhân", variant: "link" },
-                { label: "Đưa ra đề xuất", color: "#52c41a" },
+                { label: "BHYT",     value: 68, color: "#1677ff" },
+                { label: "Viện phí", value: 27, color: "#fa8c16" },
+                { label: "Dịch vụ", value: 12, color: "#52c41a" },
+                { label: "BH Khác",  value: 3,  color: "#8b949e" },
               ],
             },
           },
@@ -349,36 +156,130 @@ const SCREENS: Record<string, ScreenConfig> = {
   },
 
   "patient-exam": {
-    title: "Khám bệnh nhân",
+    title: "M01 - Điều hành Khám chữa bệnh",
+    badge: "BETA",
+    subtitle: "Đồng bộ realtime · Triage · Điều phối phòng khám",
+    actions: [
+      { label: "+ Điều phối phòng khám", variant: "primary", color: "#52c41a" },
+      { label: "Trao điều cứu", variant: "default" },
+    ],
     rows: [
+      // Hàng 1: KPI
       {
         components: [
           {
             type: "KpiCard",
-            props: { title: "Chờ khám", value: 14, accent: "#faad14" },
-            span: 6,
-          },
-          {
-            type: "KpiCard",
-            props: { title: "Đang khám", value: 3, accent: "#1677ff" },
-            span: 6,
+            props: {
+              title: "Tổng lượt khám",
+              value: 3,
+              accent: "#1677ff",
+              hint: "+4 so với hôm qua",
+              hintColor: "#52c41a",
+            },
           },
           {
             type: "KpiCard",
             props: {
-              title: "Hoàn thành hôm nay",
-              value: 52,
-              accent: "#52c41a",
+              title: "Chờ khám TA",
+              value: 0,
+              accent: "#ff4d4f",
+              hint: "0 / Chưa Triage",
+              hintColor: "#8b949e",
             },
-            span: 6,
           },
           {
             type: "KpiCard",
-            props: { title: "Tổng ca tháng", value: 1240, accent: "#722ed1" },
-            span: 6,
+            props: {
+              title: "Chờ MÁC",
+              value: 0,
+              accent: "#faad14",
+              hint: "0 Nothing",
+              hintColor: "#8b949e",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Triage P1 / P2 / P3",
+              value: "0 / 0 / 0",
+              accent: "#722ed1",
+              hint: "0 Chờ theo dõi",
+              hintColor: "#8b949e",
+            },
           },
         ],
       },
+      // Hàng 2: Top phòng khám + Dự báo AI
+      {
+        components: [
+          {
+            type: "ProgressList",
+            span: 14,
+            props: {
+              title: "Tốp theo phòng khám",
+              maxValue: 60,
+              items: [
+                { label: "Nội Th-01", value: 22, secondaryValue: 45, color: "#52c41a", secondaryColor: "#faad14" },
+                { label: "Nội Th-02", value: 19, secondaryValue: 40, color: "#52c41a", secondaryColor: "#faad14" },
+                { label: "Nội Th-03", value: 44, secondaryValue: 55, color: "#ff4d4f", secondaryColor: "#faad14" },
+                { label: "Ngoại-01",  value: 31, secondaryValue: 48, color: "#faad14", secondaryColor: "#faad14" },
+                { label: "Nội-02",    value: 25, secondaryValue: 42, color: "#52c41a", secondaryColor: "#faad14" },
+                { label: "Răng-01",   value: 12, secondaryValue: 30, color: "#52c41a", secondaryColor: "#faad14" },
+                { label: "Mắt-01",    value: 18, secondaryValue: 35, color: "#52c41a", secondaryColor: "#faad14" },
+                { label: "Phụ khoa-01", value: 29, secondaryValue: 45, color: "#faad14", secondaryColor: "#faad14" },
+                { label: "Tim mạch-01", value: 35, secondaryValue: 50, color: "#faad14", secondaryColor: "#faad14" },
+              ],
+            },
+          },
+          {
+            type: "ChartArea",
+            span: 10,
+            props: {
+              title: "Dự báo AI — 4 giờ tới",
+              height: 300,
+              legend: true,
+              series: [
+                { key: "aiDuBao", color: "#1677ff", name: "AI dự báo" },
+                { key: "thucTe",  color: "#52c41a", name: "Thực tế" },
+                { key: "caoDiem", color: "#ff4d4f", name: "Cao điểm 10h" },
+              ],
+              data: [
+                { label: "08h", aiDuBao: 47, thucTe: 43, caoDiem: 60 },
+                { label: "09h", aiDuBao: 53, thucTe: 55, caoDiem: 70 },
+                { label: "10h", aiDuBao: 69, thucTe: 65, caoDiem: 80 },
+                { label: "11h", aiDuBao: 43, thucTe: 48, caoDiem: 70 },
+                { label: "12h", aiDuBao: 137, caoDiem: 100 },
+                { label: "13h", aiDuBao: 138, caoDiem: 100 },
+                { label: "14h", aiDuBao: 132, caoDiem: 100 },
+                { label: "15h", aiDuBao: 97,  caoDiem: 100 },
+              ],
+            },
+          },
+        ],
+      },
+      // Hàng 3: Dòng chảy bệnh nhân
+      {
+        components: [
+          {
+            type: "FlowPipeline",
+            span: 24,
+            props: {
+              title: "Dòng chảy bệnh nhân hôm nay",
+              footer: "Cập nhật mỗi 5 phút · Đã Th 6 phút · Trung bình kỳ đến tặc thành tuần",
+              stages: [
+                { label: "Đăng ký",    value: 3, color: "#1677ff" },
+                { label: "Chờ khám",   value: 0, color: "#faad14" },
+                { label: "Đang khám",  value: 0, color: "#1677ff" },
+                { label: "Chờ CLS",    value: 0, color: "#722ed1" },
+                { label: "Nhận kết",   value: 0, color: "#13c2c2" },
+                { label: "Kê đơn/KV", value: 0, color: "#52c41a" },
+                { label: "Hoàn thành", value: 0, color: "#52c41a" },
+              ],
+            },
+          },
+        ],
+      },
+      // Hàng 4: Danh sách ca đang xử lý
       {
         components: [
           {
@@ -386,39 +287,38 @@ const SCREENS: Record<string, ScreenConfig> = {
             span: 24,
             props: {
               columns: [
-                { key: "id", title: "Mã BN" },
-                { key: "name", title: "Họ tên" },
-                { key: "reason", title: "Lý do khám" },
+                { key: "ma", title: "Mã" },
+                { key: "benhNhan", title: "Bệnh nhân" },
                 {
-                  key: "status",
+                  key: "triage",
+                  title: "Triage",
+                  render: "tag",
+                  tagColors: { P1: "red", P2: "orange", P3: "blue" },
+                },
+                { key: "cho", title: "Chờ" },
+                { key: "bs", title: "BS" },
+                {
+                  key: "trangThai",
                   title: "Trạng thái",
                   render: "tag",
                   tagColors: {
-                    "Chờ khám": "orange",
-                    "Đang khám": "blue",
-                    "Hoàn thành": "green",
+                    "Chưa phân công": "orange",
+                    "Đang xử lý": "green",
                   },
+                },
+                {
+                  key: "hanhDong",
+                  title: "Hành động",
+                  render: "button",
+                  buttonColor: "#1677ff",
                 },
               ],
               data: [
-                {
-                  id: "BN-001",
-                  name: "Nguyễn Văn A",
-                  reason: "Sốt cao",
-                  status: "Chờ khám",
-                },
-                {
-                  id: "BN-002",
-                  name: "Trần Thị B",
-                  reason: "Đau ngực",
-                  status: "Đang khám",
-                },
-                {
-                  id: "BN-003",
-                  name: "Lê Minh C",
-                  reason: "Kiểm tra định kỳ",
-                  status: "Hoàn thành",
-                },
+                { ma: "CU-B01", benhNhan: "Nguyễn Văn An", triage: "P1", cho: "7 phút",  bs: "—",          trangThai: "Chưa phân công", hanhDong: "Update" },
+                { ma: "CU-B02", benhNhan: "Trần Thị B",    triage: "P1", cho: "3 phút",  bs: "Bs. Bình",   trangThai: "Đang xử lý",     hanhDong: "Update" },
+                { ma: "CU-B03", benhNhan: "Lê Văn C",      triage: "P2", cho: "16 phút", bs: "Bs. Đức",    trangThai: "Đang xử lý",     hanhDong: "Update" },
+                { ma: "CU-B04", benhNhan: "Phạm Thị D",    triage: "P2", cho: "11 phút", bs: "—",          trangThai: "Chưa phân công", hanhDong: "Update" },
+                { ma: "CU-B05", benhNhan: "Hoàng Văn E",   triage: "P3", cho: "5 phút",  bs: "BS. Giang",  trangThai: "Đang xử lý",     hanhDong: "Update" },
               ],
             },
           },

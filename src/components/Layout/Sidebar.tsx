@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Spin } from 'antd';
 import { useMenuStore } from '@/store/menuStore';
 import { useThemeStore } from '@/store/themeStore';
+import useAuthStore from '@/core/auth/authStore';
 import MenuBadgeChip from './MenuBadgeChip';
 import MenuIcon from './MenuIcon';
 
@@ -14,6 +15,10 @@ export default function Sidebar() {
   const searchParams = useSearchParams();
   const activeId = searchParams.get('module') ?? 'dashboard';
   const isDark = theme === 'dark';
+  const user = useAuthStore((s) => s.user);
+  const avatarLetter = user?.name?.charAt(0).toUpperCase()
+    ?? user?.email?.charAt(0).toUpperCase()
+    ?? 'U';
 
   return (
     <aside className="w-64 h-screen bg-white dark:bg-[#0d1117] border-r border-gray-200 dark:border-[#30363d] flex flex-col flex-shrink-0">
@@ -23,7 +28,7 @@ export default function Sidebar() {
           H
         </div>
         <span className="font-bold text-gray-800 dark:text-[#e6edf3] text-base">HDOS</span>
-        <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-[#21262d] dark:text-[#8b949e] px-1.5 py-0.5 rounded">v1.0</span>
+        <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-[#21262d] dark:text-[#8b949e] px-1.5 py-0.5 rounded">v2.0</span>
         <button
           onClick={toggle}
           title={isDark ? 'Chuyển sang Light' : 'Chuyển sang Dark'}
@@ -92,6 +97,19 @@ export default function Sidebar() {
           </div>
         )}
       </nav>
+
+      {/* User at bottom */}
+      <div className="px-3 py-3 border-t border-gray-200 dark:border-[#30363d]">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            {avatarLetter}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-gray-800 dark:text-[#e6edf3] truncate m-0">{user?.name ?? 'Người dùng'}</p>
+            <p className="text-[10px] text-gray-400 dark:text-[#8b949e] m-0">Admin</p>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }

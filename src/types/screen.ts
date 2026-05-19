@@ -15,10 +15,21 @@ export interface RowConfig {
   components: ComponentConfig[];
 }
 
+export interface ScreenAction {
+  label: string;
+  /** "primary" = filled, "default" = outlined, "dashed" = dashed border */
+  variant?: "primary" | "default" | "dashed";
+  color?: string;
+}
+
 export interface ScreenConfig {
   title?: string;
   subtitle?: string;
   badge?: string;
   badgeColor?: string;
+  /** Hiển thị chấm xanh "Live" bên cạnh badge */
+  live?: boolean;
+  /** Các button hiển thị góc trên bên phải header */
+  actions?: ScreenAction[];
   rows: RowConfig[];
 }
