@@ -34,6 +34,20 @@ jobs:
           cp /opt/foxai/.env.production .env.production
           echo "env file ready"
 
+      - name: Ensure TLS certs exist
+        run: |
+          if [ ! -f /opt/foxai/certs/key.pem ] || [ ! -f /opt/foxai/certs/cert.pem ]; then
+            echo "Certs not found — generating self-signed cert..."
+            mkdir -p /opt/foxai/certs
+            bash certs/generate.sh
+            cp certs/key.pem  /opt/foxai/certs/key.pem
+            cp certs/cert.pem /opt/foxai/certs/cert.pem
+            chmod 644 /opt/foxai/certs/key.pem /opt/foxai/certs/cert.pem
+            echo "Certs generated at /opt/foxai/certs/"
+          else
+            echo "Certs already exist at /opt/foxai/certs/ — skipping generation"
+          fi
+
       - name: Build & start container
         run: |
           docker stop foxai-hdos 2>/dev/null || true
@@ -45,7 +59,7 @@ jobs:
         run: |
           echo "Waiting for app to be healthy..."
           for i in $(seq 1 12); do
-            if wget -qO- http://127.0.0.1:4000/ > /dev/null 2>&1; then
+            if wget -qO- --no-check-certificate https://127.0.0.1:4000/ > /dev/null 2>&1; then
               echo "Health check passed (attempt $i/12)"
               exit 0
             fi
