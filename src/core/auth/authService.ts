@@ -9,7 +9,11 @@ export const authService = {
   },
 
   async logout(): Promise<void> {
-    useAuthStore.getState().clearAuth();
+    // Expire cookie trước để middleware cho phép /login sau khi Keycloak redirect về.
+    // Không gọi clearAuth() vì nó set isAuthenticated=false → AppProviders effect
+    // redirect /login ngay lập tức, race với kc.logout() và bỏ qua việc invalidate
+    // session trên Keycloak server → check-sso lần sau vẫn tự login lại.
+    useAuthStore.getState().expireAuth();
     useNotificationStore.getState().clearAll();
 
     const kc = getKeycloak();
@@ -20,6 +24,7 @@ export const authService = {
         window.location.href = '/login';
       });
     } else {
+      useAuthStore.getState().clearAuth();
       window.location.href = '/login';
     }
   },

@@ -11,6 +11,7 @@ interface AuthState {
 
   setAuthFromKeycloak: (kc: Keycloak) => void;
   clearAuth: () => void;
+  expireAuth: () => void;
   hasPermission: (permission: string) => boolean;
 }
 
@@ -64,6 +65,14 @@ const useAuthStore = create<AuthState>((set, get) => ({
       permissions: new Set<string>(),
       isAuthenticated: false,
     });
+  },
+
+  // Chỉ expire cookie + localStorage, KHÔNG update Zustand state.
+  // Dùng khi logout chủ động để tránh trigger AppProviders redirect
+  // trước khi kc.logout() kịp invalidate session trên Keycloak.
+  expireAuth() {
+    expireCookie();
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* SSR */ }
   },
 
   hasPermission(permission: string): boolean {

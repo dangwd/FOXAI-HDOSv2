@@ -22,6 +22,12 @@ export interface ScreenAction {
   color?: string;
 }
 
+export interface ScreenTab {
+  id: string;
+  label: string;
+  rows: RowConfig[];
+}
+
 export interface ScreenConfig {
   title?: string;
   subtitle?: string;
@@ -31,5 +37,7 @@ export interface ScreenConfig {
   live?: boolean;
   /** Các button hiển thị góc trên bên phải header */
   actions?: ScreenAction[];
-  rows: RowConfig[];
+  /** Nếu có tabs, renderer dùng Tabs thay vì rows trực tiếp */
+  tabs?: ScreenTab[];
+  rows?: RowConfig[];
 }

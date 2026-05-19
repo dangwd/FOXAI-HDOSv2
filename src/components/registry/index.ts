@@ -12,6 +12,9 @@ import { BulletList } from "@/components/widgets/BulletList";
 import { StatsSummary } from "@/components/widgets/StatsSummary";
 import { FlowPipeline } from "@/components/widgets/FlowPipeline";
 import { AlertList } from "@/components/widgets/AlertList";
+import { WardBedGrid } from "@/components/widgets/WardBedGrid";
+import { OrRoomGrid } from "@/components/widgets/OrRoomGrid";
+import { VoiceEMR } from "@/components/widgets/VoiceEMR";
 
 export const REGISTRY: Record<string, ComponentType<any>> = {
   KpiCard,
@@ -26,6 +29,9 @@ export const REGISTRY: Record<string, ComponentType<any>> = {
   BulletList,
   StatsSummary,
   FlowPipeline,
+  WardBedGrid,
+  OrRoomGrid,
+  VoiceEMR,
 };
 
 export const MANIFEST = {

@@ -1,12 +1,58 @@
 "use client";
 
 import { REGISTRY } from "@/components/registry";
-import type { ScreenConfig } from "@/types/screen";
-import { Button, Col, Row } from "antd";
+import type { RowConfig, ScreenConfig } from "@/types/screen";
+import { Button, Col, Row, Tabs } from "antd";
 
 interface Props {
   config: ScreenConfig;
   loading?: boolean;
+}
+
+function RowsRenderer({ rows, loading }: { rows: RowConfig[]; loading: boolean }) {
+  return (
+    <div className="space-y-4">
+      {rows.map((row, rowIdx) => {
+        const gutter = row.gutter ?? 16;
+
+        const fixedSpan = row.components.reduce((acc, c) => acc + (c.span ?? 0), 0);
+        const autoCount = row.components.filter((c) => !c.span).length;
+        const remaining = 24 - fixedSpan;
+        const baseSpan = autoCount > 0 ? Math.floor(remaining / autoCount) : 0;
+        const extraCount = autoCount > 0 ? remaining % autoCount : 0;
+        let autoIdx = 0;
+
+        const resolvedSpans = row.components.map((c) => {
+          if (c.span) return c.span;
+          const span = baseSpan + (autoIdx < extraCount ? 1 : 0);
+          autoIdx++;
+          return span;
+        });
+
+        return (
+          <Row key={rowIdx} gutter={[gutter, gutter]}>
+            {row.components.map((comp, compIdx) => {
+              const Component = REGISTRY[comp.type];
+              if (!Component) {
+                return (
+                  <Col key={compIdx} span={resolvedSpans[compIdx]}>
+                    <div className="p-3 rounded border border-dashed border-red-300 text-red-400 text-xs">
+                      Widget chưa đăng ký: <code>{comp.type}</code>
+                    </div>
+                  </Col>
+                );
+              }
+              return (
+                <Col key={compIdx} span={resolvedSpans[compIdx]}>
+                  <Component {...(comp.props ?? {})} signalR={comp.signalR} loading={loading} />
+                </Col>
+              );
+            })}
+          </Row>
+        );
+      })}
+    </div>
+  );
 }
 
 export function ScreenRenderer({ config, loading = false }: Props) {
@@ -39,9 +85,7 @@ export function ScreenRenderer({ config, loading = false }: Props) {
               )}
             </div>
             {config.subtitle && (
-              <p className="text-xs text-gray-400 dark:text-[#8b949e] m-0">
-                {config.subtitle}
-              </p>
+              <p className="text-xs text-gray-400 dark:text-[#8b949e] m-0">{config.subtitle}</p>
             )}
           </div>
 
@@ -50,21 +94,12 @@ export function ScreenRenderer({ config, loading = false }: Props) {
               {config.actions.map((action, i) => (
                 <Button
                   key={i}
-                  type={
-                    action.variant === "primary"
-                      ? "primary"
-                      : action.variant === "dashed"
-                        ? "dashed"
-                        : "default"
-                  }
+                  type={action.variant === "primary" ? "primary" : action.variant === "dashed" ? "dashed" : "default"}
                   style={
                     action.color && action.variant !== "primary"
                       ? { borderColor: action.color, color: action.color }
                       : action.color && action.variant === "primary"
-                        ? {
-                            background: action.color,
-                            borderColor: action.color,
-                          }
+                        ? { background: action.color, borderColor: action.color }
                         : undefined
                   }
                 >
@@ -75,51 +110,18 @@ export function ScreenRenderer({ config, loading = false }: Props) {
           )}
         </div>
       )}
-      {config.rows.map((row, rowIdx) => {
-        const gutter = row.gutter ?? 16;
 
-        // Tính span cho từng component sao cho tổng luôn = 24
-        const fixedSpan = row.components.reduce(
-          (acc, c) => acc + (c.span ?? 0),
-          0,
-        );
-        const autoCount = row.components.filter((c) => !c.span).length;
-        const remaining = 24 - fixedSpan;
-        const baseSpan = autoCount > 0 ? Math.floor(remaining / autoCount) : 0;
-        const extraCount = autoCount > 0 ? remaining % autoCount : 0;
-        let autoIdx = 0;
-
-        const resolvedSpans = row.components.map((c) => {
-          if (c.span) return c.span;
-          const span = baseSpan + (autoIdx < extraCount ? 1 : 0);
-          autoIdx++;
-          return span;
-        });
-
-        return (
-          <Row key={rowIdx} gutter={[gutter, gutter]}>
-            {row.components.map((comp, compIdx) => {
-              const Component = REGISTRY[comp.type];
-
-              if (!Component) {
-                return (
-                  <Col key={compIdx} span={resolvedSpans[compIdx]}>
-                    <div className="p-3 rounded border border-dashed border-red-300 text-red-400 text-xs">
-                      Widget chưa đăng ký: <code>{comp.type}</code>
-                    </div>
-                  </Col>
-                );
-              }
-
-              return (
-                <Col key={compIdx} span={resolvedSpans[compIdx]}>
-                  <Component {...(comp.props ?? {})} signalR={comp.signalR} loading={loading} />
-                </Col>
-              );
-            })}
-          </Row>
-        );
-      })}
+      {config.tabs ? (
+        <Tabs
+          items={config.tabs.map((tab) => ({
+            key: tab.id,
+            label: tab.label,
+            children: <RowsRenderer rows={tab.rows} loading={loading} />,
+          }))}
+        />
+      ) : (
+        <RowsRenderer rows={config.rows ?? []} loading={loading} />
+      )}
     </div>
   );
 }
