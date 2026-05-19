@@ -1,0 +1,72 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+# CD không bao giờ bị hủy giữa chừng — tránh deployment dở dang
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: [self-hosted, Linux, X64]
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Checkout đúng commit đã pass CI — tránh race condition
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Copy env file
+        run: |
+          if [ ! -f /opt/foxai/.env.production ]; then
+            echo "::error::File /opt/foxai/.env.production không tồn tại trên server."
+            echo "::error::Chạy scripts/setup-server.sh rồi điền nội dung file env."
+            exit 1
+          fi
+          cp /opt/foxai/.env.production .env.production
+          echo "env file ready"
+
+      - name: Build & start container
+        run: |
+          docker stop foxai-hdos 2>/dev/null || true
+          docker rm   foxai-hdos 2>/dev/null || true
+          docker compose -f docker-compose.prod.yml build --no-cache
+          docker compose -f docker-compose.prod.yml up -d
+
+      - name: Health check
+        run: |
+          echo "Waiting for app to be healthy..."
+          for i in $(seq 1 12); do
+            if wget -qO- http://localhost:4000/ > /dev/null 2>&1; then
+              echo "Health check passed (attempt $i/12)"
+              exit 0
+            fi
+            echo "Attempt $i/12 — retrying in 5s..."
+            sleep 5
+          done
+          echo "::error::App không healthy sau 60s"
+          docker compose -f docker-compose.prod.yml logs --tail=100
+          exit 1
+
+      - name: Prune old images
+        if: success()
+        run: docker image prune -f
+
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "========================================"
+          echo "Result:  ${{ job.status }}"
+          echo "Commit:  ${{ github.event.workflow_run.head_sha }}"
+          echo "Message: ${{ github.event.workflow_run.head_commit.message }}"
+          echo "Time:    $(date '+%Y-%m-%d %H:%M:%S %Z')"
+          echo "URL:     http://192.168.100.60:4000"
+          echo "========================================"

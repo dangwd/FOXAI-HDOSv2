@@ -9,6 +9,8 @@ import type { ScreenConfig } from '@/types/screen';
 const SCREENS: Record<string, ScreenConfig> = {
   dashboard: {
     title: 'Executive Dashboard',
+    badge: 'BETA',
+    subtitle: 'Cập nhật lần cuối: 19/05/2026 08:30 — Dữ liệu thời gian thực',
     rows: [
       // Hàng 1: 6 KPI cards
       {
@@ -29,6 +31,7 @@ const SCREENS: Record<string, ScreenConfig> = {
             span: 16,
             props: {
               title: 'Công việc đang theo dõi từng khoa',
+              headerAction: 'Xem tất cả',
               maxValue: 100,
               items: [
                 { label: 'Khoa Nội tim mạch', value: 30, secondaryValue: 45, color: '#52c41a', secondaryColor: '#faad14' },
@@ -98,7 +101,10 @@ const SCREENS: Record<string, ScreenConfig> = {
                 { text: 'Trần Quốc Toản — BH', status: 'pending', badge: 'Warning' },
                 { text: 'Bùi Thị Thu Hà', status: 'active', badge: 'OK' },
                 { text: 'Phạm Minh Khoa', status: 'active', badge: 'OK' },
-                { text: 'Tất cả loans', status: 'done', badge: 'Xem' },
+              ],
+              footerActions: [
+                { label: 'Xem tất cả bệnh nhân', variant: 'link' },
+                { label: 'Đưa ra đề xuất', color: '#1677ff' },
               ],
             },
           },
@@ -114,6 +120,10 @@ const SCREENS: Record<string, ScreenConfig> = {
                 { text: 'Community Acquired Pneumonia', status: 'done', badge: 'Hoàn thành' },
                 { text: 'Heart Failure Management', status: 'active', badge: 'Đang chạy' },
               ],
+              footerActions: [
+                { label: 'Xem tất cả pathway', variant: 'link' },
+                { label: 'Thêm pathway', color: '#722ed1' },
+              ],
             },
           },
           {
@@ -128,6 +138,10 @@ const SCREENS: Record<string, ScreenConfig> = {
                 { label: 'Anh ơi sắp thừa cân', value: 45, color: '#52c41a' },
                 { label: 'Quản lý bệnh mãn tính', value: 78, color: '#1677ff' },
                 { label: 'Theo dõi sau xuất viện', value: 55, color: '#722ed1' },
+              ],
+              footerActions: [
+                { label: 'Xem tất cả bệnh nhân', variant: 'link' },
+                { label: 'Đưa ra đề xuất', color: '#52c41a' },
               ],
             },
           },

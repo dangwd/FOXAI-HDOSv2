@@ -8,9 +8,17 @@ interface BulletItem {
   badge?: string | number;
 }
 
+interface FooterAction {
+  label: string;
+  variant?: "link" | "default";
+  color?: string;
+}
+
 interface BulletListProps {
   title?: string;
+  headerAction?: string;
   items: BulletItem[];
+  footerActions?: FooterAction[];
 }
 
 const STATUS_COLOR: Record<BulletStatus, string> = {
@@ -20,15 +28,22 @@ const STATUS_COLOR: Record<BulletStatus, string> = {
   critical: "#ff4d4f",
 };
 
-export function BulletList({ title, items }: BulletListProps) {
+export function BulletList({ title, headerAction, items, footerActions }: BulletListProps) {
   return (
-    <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full">
+    <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full flex flex-col">
       {title && (
-        <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-3">
-          {title}
-        </p>
+        <div className="flex items-center justify-between px-4 pt-4 pb-3">
+          <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider m-0">
+            {title}
+          </p>
+          {headerAction && (
+            <button className="text-[10px] text-blue-500 hover:text-blue-400 transition-colors cursor-pointer">
+              {headerAction}
+            </button>
+          )}
+        </div>
       )}
-      <ul className="space-y-2 m-0 p-0 list-none overflow-y-auto" style={{ maxHeight: 480 }}>
+      <ul className="flex-1 space-y-2 m-0 px-4 pb-3 list-none overflow-y-auto" style={{ maxHeight: 360 }}>
         {items.map((item, i) => {
           const dotColor = STATUS_COLOR[item.status ?? "pending"];
           return (
@@ -48,6 +63,28 @@ export function BulletList({ title, items }: BulletListProps) {
           );
         })}
       </ul>
+      {footerActions && footerActions.length > 0 && (
+        <div className="flex items-center gap-2 px-4 py-2.5 border-t border-gray-100 dark:border-[#30363d]">
+          {footerActions.map((action, i) => {
+            if (action.variant === 'link') {
+              return (
+                <button key={i} className="text-xs text-blue-500 hover:text-blue-400 transition-colors cursor-pointer">
+                  {action.label}
+                </button>
+              );
+            }
+            return (
+              <button
+                key={i}
+                className="ml-auto text-xs px-3 py-1 rounded-md border border-gray-200 dark:border-[#30363d] text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors cursor-pointer"
+                style={action.color ? { color: action.color, borderColor: action.color + '55' } : undefined}
+              >
+                {action.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

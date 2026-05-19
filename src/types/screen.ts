@@ -13,5 +13,8 @@ export interface RowConfig {
 
 export interface ScreenConfig {
   title?: string;
+  subtitle?: string;
+  badge?: string;
+  badgeColor?: string;
   rows: RowConfig[];
 }

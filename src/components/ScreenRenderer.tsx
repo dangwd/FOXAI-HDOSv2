@@ -12,7 +12,28 @@ export function ScreenRenderer({ config }: Props) {
   return (
     <div className="p-6 space-y-4">
       {config.title && (
-        <h1 className="text-xl font-semibold text-gray-800 m-0">{config.title}</h1>
+        <div>
+          <div className="flex items-center gap-2 mb-0.5">
+            <h1 className="text-xl font-semibold text-gray-800 dark:text-[#e6edf3] m-0 leading-tight">
+              {config.title}
+            </h1>
+            {config.badge && (
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase leading-none"
+                style={{
+                  background: (config.badgeColor ?? '#52c41a') + '22',
+                  color: config.badgeColor ?? '#52c41a',
+                  border: `1px solid ${(config.badgeColor ?? '#52c41a')}55`,
+                }}
+              >
+                {config.badge}
+              </span>
+            )}
+          </div>
+          {config.subtitle && (
+            <p className="text-xs text-gray-400 dark:text-[#8b949e] m-0">{config.subtitle}</p>
+          )}
+        </div>
       )}
       {config.rows.map((row, rowIdx) => {
         const gutter = row.gutter ?? 16;

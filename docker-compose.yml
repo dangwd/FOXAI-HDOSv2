@@ -1,0 +1,45 @@
+name: hdos
+
+services:
+  # ---------- Development (hot reload) ----------
+  app-dev:
+    profiles: [dev]
+    build:
+      context: .
+      target: dev
+    container_name: foxai-hdos-dev
+    volumes:
+      - .:/app
+      - /app/node_modules   # giữ node_modules trong container, tránh conflict với host
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      NODE_ENV: development
+
+  # ---------- Production (standalone build) ----------
+  app-prod:
+    profiles: [prod]
+    build:
+      context: .
+      target: runner
+    image: foxai-hdos:latest
+    container_name: foxai-hdos
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
