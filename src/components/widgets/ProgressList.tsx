@@ -25,9 +25,12 @@ interface ProgressListProps {
   /** Chế độ capacity: bar = value/secondaryValue, hiển thị "value/secondaryValue  pct%" */
   showFraction?: boolean;
   footerActions?: FooterAction[];
+  loading?: boolean;
 }
 
-export function ProgressList({ title, headerAction, realtimeBadge, items, maxValue = 100, showFraction, footerActions }: ProgressListProps) {
+const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
+
+export function ProgressList({ title, headerAction, realtimeBadge, items, maxValue = 100, showFraction, footerActions, loading = false }: ProgressListProps) {
   return (
     <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full flex flex-col">
       {title && (
@@ -48,7 +51,17 @@ export function ProgressList({ title, headerAction, realtimeBadge, items, maxVal
         </div>
       )}
       <div className="flex-1 space-y-2 overflow-y-auto px-4 pb-3" style={{ maxHeight: 480 }}>
-        {items.map((item, i) => {
+        {loading
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className={`${SK} h-2.5 w-36 shrink-0`} />
+                <div className="flex-1 h-2 rounded-sm bg-gray-100 dark:bg-[#30363d] overflow-hidden">
+                  <div className={`${SK} h-full`} style={{ width: `${30 + i * 12}%` }} />
+                </div>
+                <div className={`${SK} h-2 w-16 shrink-0`} />
+              </div>
+            ))
+          : items.map((item, i) => {
           let barPct: number;
           let displayRight: string;
 

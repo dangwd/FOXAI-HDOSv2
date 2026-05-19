@@ -12,6 +12,8 @@ import {
 } from "recharts";
 import type { BaseChartProps } from "@/types/chart";
 
+const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
+
 export function ChartBar({
   data,
   dataKey = "value",
@@ -21,7 +23,17 @@ export function ChartBar({
   color = "#1677ff",
   legend = false,
   unit,
+  loading = false,
 }: BaseChartProps) {
+  if (loading) {
+    return (
+      <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22]">
+        {title && <div className={`${SK} h-3 w-32 mb-3`} />}
+        <div className={`${SK} w-full`} style={{ height }} />
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-lg p-4 border border-gray-200 bg-white">
       {title && (

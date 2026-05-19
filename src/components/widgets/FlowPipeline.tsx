@@ -16,9 +16,12 @@ interface FlowPipelineProps {
   className?: string;
   /** Hiển thị chip xanh "Realtime" ở góc trên phải header */
   realtimeBadge?: boolean;
+  loading?: boolean;
 }
 
-export function FlowPipeline({ title, footer, stages, className, realtimeBadge }: FlowPipelineProps) {
+const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
+
+export function FlowPipeline({ title, footer, stages, className, realtimeBadge, loading = false }: FlowPipelineProps) {
   return (
     <div
       className={cn(
@@ -41,7 +44,17 @@ export function FlowPipeline({ title, footer, stages, className, realtimeBadge }
       )}
 
       <div className="flex items-center gap-0 overflow-x-auto pb-1">
-        {stages.map((stage, i) => (
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center shrink-0">
+                <div className="flex flex-col items-center px-3 min-w-[72px] gap-1.5">
+                  <div className={`${SK} h-7 w-10`} />
+                  <div className={`${SK} h-2 w-14`} />
+                </div>
+                {i < 3 && <div className={`${SK} h-3 w-3 mx-1`} style={{ borderRadius: 2 }} />}
+              </div>
+            ))
+          : stages.map((stage, i) => (
           <div key={i} className="flex items-center shrink-0">
             {/* Stage box */}
             <div className="flex flex-col items-center px-3 min-w-[72px]">

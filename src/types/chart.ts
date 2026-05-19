@@ -19,4 +19,5 @@ export interface BaseChartProps {
   legend?: boolean;
   /** Định dạng trục Y / tooltip */
   unit?: string;
+  loading?: boolean;
 }

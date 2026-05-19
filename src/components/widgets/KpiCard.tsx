@@ -1,7 +1,6 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { Skeleton } from "antd";
 import { cn } from "@/shared/utils/cn";
 
 interface KpiCardProps {
@@ -46,19 +45,21 @@ export function KpiCard({
         {title}
       </p>
       {loading ? (
-        <Skeleton.Input active size="small" />
+        <>
+          <div className="animate-pulse bg-gray-200 dark:bg-[#30363d] rounded h-8 w-24 mt-1" />
+          <div className="animate-pulse bg-gray-200 dark:bg-[#30363d] rounded h-2.5 w-16 mt-2" />
+        </>
       ) : (
-        <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-[#e6edf3] m-0 leading-tight">
-          {value}
-        </p>
-      )}
-      {!loading && hint != null && (
-        <p
-          className="text-xs m-0 mt-1"
-          style={hintColor ? { color: hintColor } : undefined}
-        >
-          {hint}
-        </p>
+        <>
+          <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-[#e6edf3] m-0 leading-tight">
+            {value}
+          </p>
+          {hint != null && (
+            <p className="text-xs m-0 mt-1" style={hintColor ? { color: hintColor } : undefined}>
+              {hint}
+            </p>
+          )}
+        </>
       )}
     </div>
   );

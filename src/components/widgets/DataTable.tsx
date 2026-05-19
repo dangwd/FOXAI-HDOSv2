@@ -17,9 +17,10 @@ interface DataTableProps {
   columns: ColConfig[];
   data: Record<string, unknown>[];
   pageSize?: number;
+  loading?: boolean;
 }
 
-export function DataTable({ columns, data, pageSize = 10 }: DataTableProps) {
+export function DataTable({ columns, data, pageSize = 10, loading = false }: DataTableProps) {
   const antColumns: ColumnType<Record<string, unknown>>[] = columns.map((col) => ({
     title: col.title,
     dataIndex: col.key,
@@ -41,5 +42,5 @@ export function DataTable({ columns, data, pageSize = 10 }: DataTableProps) {
 
   const rows = data.map((row, i) => ({ ...row, key: i }));
 
-  return <Table columns={antColumns} dataSource={rows} pagination={{ pageSize }} />;
+  return <Table columns={antColumns} dataSource={rows} pagination={{ pageSize }} loading={loading} />;
 }

@@ -19,6 +19,8 @@ interface ChartPieProps extends Omit<BaseChartProps, "series"> {
   colors?: string[];
 }
 
+const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
+
 export function ChartPie({
   data,
   dataKey = "value",
@@ -28,8 +30,21 @@ export function ChartPie({
   unit,
   variant = "donut",
   colors = DEFAULT_COLORS,
+  loading = false,
 }: ChartPieProps) {
   const innerRadius = variant === "donut" ? "55%" : 0;
+
+  if (loading) {
+    const circleSize = Math.round(height * 0.6);
+    return (
+      <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22]">
+        {title && <div className={`${SK} h-3 w-32 mb-3`} />}
+        <div className="flex justify-center items-center" style={{ height }}>
+          <div className={`${SK} rounded-full`} style={{ width: circleSize, height: circleSize }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-lg p-4 border border-gray-200 bg-white">

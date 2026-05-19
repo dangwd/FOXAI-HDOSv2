@@ -14,6 +14,8 @@ import type { BaseChartProps } from "@/types/chart";
 
 const DEFAULT_COLORS = ["#1677ff", "#52c41a", "#faad14", "#ff4d4f", "#722ed1"];
 
+const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
+
 export function ChartArea({
   data,
   dataKey = "value",
@@ -23,7 +25,17 @@ export function ChartArea({
   color = "#1677ff",
   legend = false,
   unit,
+  loading = false,
 }: BaseChartProps) {
+  if (loading) {
+    return (
+      <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22]">
+        {title && <div className={`${SK} h-3 w-32 mb-3`} />}
+        <div className={`${SK} w-full`} style={{ height }} />
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-lg p-4 border border-gray-200 bg-white">
       {title && (

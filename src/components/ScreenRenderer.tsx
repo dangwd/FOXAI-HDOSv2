@@ -6,9 +6,10 @@ import { Button, Col, Row } from "antd";
 
 interface Props {
   config: ScreenConfig;
+  loading?: boolean;
 }
 
-export function ScreenRenderer({ config }: Props) {
+export function ScreenRenderer({ config, loading = false }: Props) {
   return (
     <div className="p-6 space-y-4">
       {config.title && (
@@ -112,7 +113,7 @@ export function ScreenRenderer({ config }: Props) {
 
               return (
                 <Col key={compIdx} span={resolvedSpans[compIdx]}>
-                  <Component {...(comp.props ?? {})} signalR={comp.signalR} />
+                  <Component {...(comp.props ?? {})} signalR={comp.signalR} loading={loading} />
                 </Col>
               );
             })}
