@@ -1,16 +1,25 @@
 'use strict';
 
-const https = require('https');
-const http  = require('http');
-const fs    = require('fs');
-const net   = require('net');
-const path  = require('path');
+const https  = require('https');
+const http   = require('http');
+const fs     = require('fs');
+const net    = require('net');
+const tls    = require('tls');
+const path   = require('path');
 const { spawn } = require('child_process');
 
-const HTTPS_PORT   = parseInt(process.env.PORT, 10) || 4000;
+const HTTPS_PORT    = parseInt(process.env.PORT, 10) || 4000;
 const INTERNAL_PORT = 4001;
-const HOSTNAME     = process.env.HOSTNAME || '0.0.0.0';
-const CERTS_DIR    = process.env.CERTS_DIR || '/app/certs';
+const HOSTNAME      = process.env.HOSTNAME || '0.0.0.0';
+const CERTS_DIR     = process.env.CERTS_DIR || '/app/certs';
+
+// Parse backend host/port so WebSocket can be proxied server-side
+// (avoids browser having to trust the backend's self-signed cert)
+const _backendUrl   = process.env.NEXT_PUBLIC_API_URL ?? 'https://192.168.100.60:8443';
+const _bm           = _backendUrl.match(/^(https?):\/\/([^/:]+)(?::(\d+))?/);
+const BACKEND_HOST  = _bm?.[2] ?? '192.168.100.60';
+const BACKEND_PORT  = parseInt(_bm?.[3] ?? '8443', 10);
+const BACKEND_TLS   = (_bm?.[1] ?? 'https') === 'https';
 
 function waitForPort(port, timeoutMs = 30000) {
   return new Promise((resolve, reject) => {
@@ -27,7 +36,6 @@ function waitForPort(port, timeoutMs = 30000) {
   });
 }
 
-// Start the standalone Next.js server on the internal HTTP port
 const nextProc = spawn('node', [path.join(__dirname, 'server.js')], {
   env: { ...process.env, PORT: String(INTERNAL_PORT), HOSTNAME: '127.0.0.1' },
   stdio: 'inherit',
@@ -67,17 +75,64 @@ function proxyRequest(req, res) {
   req.pipe(proxy, { end: true });
 }
 
+/**
+ * Transparent WebSocket tunnel: client socket ↔ target socket.
+ * For backend targets: opens a TLS connection (rejectUnauthorized: false for self-signed).
+ * For internal Next.js: plain TCP to localhost:4001.
+ */
+function proxyWs(req, clientSocket, head, targetHost, targetPort, targetTls) {
+  const targetSocket = targetTls
+    ? tls.connect({ host: targetHost, port: targetPort, rejectUnauthorized: false })
+    : net.connect(targetPort, targetHost);
+
+  targetSocket.on('connect', () => {
+    // Forward the HTTP Upgrade handshake to the target
+    const headers = Object.entries({ ...req.headers, host: `${targetHost}:${targetPort}` })
+      .map(([k, v]) => `${k}: ${v}`)
+      .join('\r\n');
+    targetSocket.write(`GET ${req.url} HTTP/1.1\r\n${headers}\r\n\r\n`);
+    if (head?.length) targetSocket.write(head);
+
+    targetSocket.pipe(clientSocket);
+    clientSocket.pipe(targetSocket);
+  });
+
+  const destroy = (label) => (err) => {
+    if (err) console.error(`[https-wrapper] WS ${label}:`, err.message);
+    clientSocket.destroy();
+    targetSocket.destroy();
+  };
+  targetSocket.on('error', destroy('backend error'));
+  clientSocket.on('error', destroy('client error'));
+  targetSocket.on('end', () => clientSocket.destroy());
+  clientSocket.on('end', () => targetSocket.destroy());
+}
+
 waitForPort(INTERNAL_PORT)
   .then(() => {
     const ssl = {
       key:  fs.readFileSync(path.join(CERTS_DIR, 'key.pem')),
       cert: fs.readFileSync(path.join(CERTS_DIR, 'cert.pem')),
     };
-    https
-      .createServer(ssl, proxyRequest)
-      .listen(HTTPS_PORT, HOSTNAME, () =>
-        console.log(`[https-wrapper] Ready → https://${HOSTNAME}:${HTTPS_PORT}`)
-      );
+
+    const server = https.createServer(ssl, proxyRequest);
+
+    // Route WebSocket upgrades:
+    // /notifications/** → backend (server-side TLS, browser never touches backend cert)
+    // everything else    → internal Next.js
+    server.on('upgrade', (req, socket, head) => {
+      const url = req.url ?? '/';
+      if (url.startsWith('/notifications/')) {
+        console.log(`[https-wrapper] WS upgrade → backend: ${url}`);
+        proxyWs(req, socket, head, BACKEND_HOST, BACKEND_PORT, BACKEND_TLS);
+      } else {
+        proxyWs(req, socket, head, '127.0.0.1', INTERNAL_PORT, false);
+      }
+    });
+
+    server.listen(HTTPS_PORT, HOSTNAME, () =>
+      console.log(`[https-wrapper] Ready → https://${HOSTNAME}:${HTTPS_PORT}`)
+    );
   })
   .catch((err) => {
     console.error('[https-wrapper] Startup failed:', err.message);

@@ -7,9 +7,10 @@ import useAuthStore from "@/core/auth/authStore";
 import { useNotificationStore } from "@/store/notificationStore";
 import type { SignalREnvelope, NotificationPayload } from "./types";
 
-const HUB_URL =
-  process.env.NEXT_PUBLIC_SIGNALR_URL ??
-  "/notifications/hubs/notifications";
+// Always use relative path so the browser connects through our own HTTPS proxy
+// (port 4000, already trusted). The server-https.js upgrade handler tunnels
+// /notifications/** WebSocket traffic to the backend over server-side TLS.
+const HUB_URL = "/notifications/hubs/notifications";
 
 /**
  * Kết nối SignalR hub thông báo.
