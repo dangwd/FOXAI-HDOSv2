@@ -16,7 +16,9 @@ export const authService = {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
     if (kc?.authenticated) {
-      await kc.logout({ redirectUri: `${origin}/login` });
+      kc.logout({ redirectUri: `${origin}/login` }).catch(() => {
+        window.location.href = '/login';
+      });
     } else {
       window.location.href = '/login';
     }
