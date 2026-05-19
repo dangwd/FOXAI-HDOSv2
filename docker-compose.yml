@@ -12,7 +12,7 @@ services:
       - .:/app
       - /app/node_modules   # giữ node_modules trong container, tránh conflict với host
     ports:
-      - "3000:3000"
+      - "5173:5173"
     env_file:
       - .env.local
     environment:
@@ -34,11 +34,16 @@ services:
       NODE_ENV: production
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:4000/"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
     deploy:
       resources:
         limits:

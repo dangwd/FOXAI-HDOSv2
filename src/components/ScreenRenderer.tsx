@@ -37,7 +37,21 @@ export function ScreenRenderer({ config }: Props) {
       )}
       {config.rows.map((row, rowIdx) => {
         const gutter = row.gutter ?? 16;
-        const defaultSpan = Math.floor(24 / row.components.length);
+
+        // Tính span cho từng component sao cho tổng luôn = 24
+        const fixedSpan = row.components.reduce((acc, c) => acc + (c.span ?? 0), 0);
+        const autoCount = row.components.filter((c) => !c.span).length;
+        const remaining = 24 - fixedSpan;
+        const baseSpan = autoCount > 0 ? Math.floor(remaining / autoCount) : 0;
+        const extraCount = autoCount > 0 ? remaining % autoCount : 0;
+        let autoIdx = 0;
+
+        const resolvedSpans = row.components.map((c) => {
+          if (c.span) return c.span;
+          const span = baseSpan + (autoIdx < extraCount ? 1 : 0);
+          autoIdx++;
+          return span;
+        });
 
         return (
           <Row key={rowIdx} gutter={[gutter, gutter]}>
@@ -46,7 +60,7 @@ export function ScreenRenderer({ config }: Props) {
 
               if (!Component) {
                 return (
-                  <Col key={compIdx} span={comp.span ?? defaultSpan}>
+                  <Col key={compIdx} span={resolvedSpans[compIdx]}>
                     <div className="p-3 rounded border border-dashed border-red-300 text-red-400 text-xs">
                       Widget chưa đăng ký: <code>{comp.type}</code>
                     </div>
@@ -55,8 +69,8 @@ export function ScreenRenderer({ config }: Props) {
               }
 
               return (
-                <Col key={compIdx} span={comp.span ?? defaultSpan}>
-                  <Component {...(comp.props ?? {})} />
+                <Col key={compIdx} span={resolvedSpans[compIdx]}>
+                  <Component {...(comp.props ?? {})} signalR={comp.signalR} />
                 </Col>
               );
             })}

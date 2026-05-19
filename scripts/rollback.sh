@@ -46,7 +46,7 @@ docker compose -f "$COMPOSE_FILE" up -d
 # Health check
 echo "[4/4] Health check..."
 for i in $(seq 1 12); do
-  if wget -qO- http://localhost:4000/ > /dev/null 2>&1; then
+  if wget -qO- http://127.0.0.1:4000/ > /dev/null 2>&1; then
     echo "Health check passed (attempt $i/12)"
     break
   fi

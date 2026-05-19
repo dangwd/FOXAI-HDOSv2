@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 ENV NODE_ENV=development
-EXPOSE 3000
+EXPOSE 5173
 CMD ["npm", "run", "dev"]
 
 # Stage 3: Build production bundle
