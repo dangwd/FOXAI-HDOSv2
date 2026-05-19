@@ -76,6 +76,44 @@ function proxyRequest(req, res) {
 }
 
 /**
+ * Proxy SSE trực tiếp tới backend — bypass Next.js để tránh buffering.
+ * SSE là long-lived GET, không có request body.
+ */
+function proxySSE(req, res) {
+  const opts = {
+    hostname: BACKEND_HOST,
+    port: BACKEND_PORT,
+    path: req.url,
+    method: 'GET',
+    headers: {
+      ...req.headers,
+      host: `${BACKEND_HOST}:${BACKEND_PORT}`,
+      'x-forwarded-proto': 'https',
+      'x-forwarded-for': req.socket.remoteAddress || '',
+    },
+    rejectUnauthorized: false,
+  };
+
+  console.log(`[https-wrapper] SSE → backend: ${req.url}`);
+
+  const transport = BACKEND_TLS ? https : http;
+  const proxy = transport.request(opts, (upstream) => {
+    res.writeHead(upstream.statusCode, upstream.headers);
+    upstream.pipe(res);
+  });
+
+  proxy.on('error', (err) => {
+    console.error('[https-wrapper] SSE proxy error:', err.message);
+    if (!res.headersSent) { res.writeHead(502); res.end('Bad Gateway'); }
+  });
+
+  // Khi client ngắt kết nối, đóng upstream ngay lập tức
+  req.socket.on('close', () => proxy.destroy());
+
+  proxy.end();
+}
+
+/**
  * Transparent WebSocket tunnel: client socket ↔ target socket.
  * For backend targets: opens a TLS connection (rejectUnauthorized: false for self-signed).
  * For internal Next.js: plain TCP to localhost:4001.
@@ -115,19 +153,19 @@ waitForPort(INTERNAL_PORT)
       cert: fs.readFileSync(path.join(CERTS_DIR, 'cert.pem')),
     };
 
-    const server = https.createServer(ssl, proxyRequest);
-
-    // Route WebSocket upgrades:
-    // /notifications/** → backend (server-side TLS, browser never touches backend cert)
-    // everything else    → internal Next.js
-    server.on('upgrade', (req, socket, head) => {
+    const server = https.createServer(ssl, (req, res) => {
       const url = req.url ?? '/';
-      if (url.startsWith('/notifications/')) {
-        console.log(`[https-wrapper] WS upgrade → backend: ${url}`);
-        proxyWs(req, socket, head, BACKEND_HOST, BACKEND_PORT, BACKEND_TLS);
+      // /notifications/sse → proxy trực tiếp tới backend (bypass Next.js, tránh buffering)
+      if (url === '/notifications/sse' || url.startsWith('/notifications/sse?')) {
+        proxySSE(req, res);
       } else {
-        proxyWs(req, socket, head, '127.0.0.1', INTERNAL_PORT, false);
+        proxyRequest(req, res);
       }
+    });
+
+    // WebSocket upgrades → internal Next.js (hot reload, v.v.)
+    server.on('upgrade', (req, socket, head) => {
+      proxyWs(req, socket, head, '127.0.0.1', INTERNAL_PORT, false);
     });
 
     server.listen(HTTPS_PORT, HOSTNAME, () =>

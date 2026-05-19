@@ -5,7 +5,7 @@ import { useNotificationStore } from '@/store/notificationStore';
 export const authService = {
   login(redirectUri?: string): void {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    getKeycloak()?.login({ redirectUri: redirectUri ?? `${origin}/login` });
+    getKeycloak()?.login({ redirectUri: redirectUri ?? `${origin}/hdos` });
   },
 
   async logout(): Promise<void> {

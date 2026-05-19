@@ -5,7 +5,7 @@ export interface SignalRConfig {
 
 export type SignalRStatus = "connecting" | "connected" | "reconnecting" | "disconnected";
 
-/** Envelope chuẩn server push qua SignalR */
+/** Envelope chuẩn server push (SignalR hoặc SSE) */
 export interface SignalREnvelope<T> {
   type: string;
   payload: T;

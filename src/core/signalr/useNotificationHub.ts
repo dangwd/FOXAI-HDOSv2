@@ -2,52 +2,40 @@
 
 import { useEffect, useRef } from "react";
 import { notification } from "antd";
-import * as signalR from "@microsoft/signalr";
 import useAuthStore from "@/core/auth/authStore";
 import { useNotificationStore } from "@/store/notificationStore";
 import type { SignalREnvelope, NotificationPayload } from "./types";
 
-// Dev: dùng NEXT_PUBLIC_SIGNALR_URL trỏ thẳng tới backend (wss://192.168.100.60:8443/...)
-// Production: relative path → server-https.js proxy WebSocket tới backend qua TLS
-const HUB_URL =
-  process.env.NEXT_PUBLIC_SIGNALR_URL ?? "/notifications/hubs/notifications";
+// Dev: NEXT_PUBLIC_SSE_URL trỏ thẳng tới backend (https://192.168.100.60:8443/notifications/sse)
+// Production: relative path → server-https.js proxy SSE tới backend qua TLS
+const SSE_URL =
+  process.env.NEXT_PUBLIC_SSE_URL ?? "/notifications/sse";
 
 /**
- * Kết nối SignalR hub thông báo.
+ * Kết nối SSE notification stream.
  * Trả về contextHolder cần render trong component cha để toast hoạt động.
  */
 export function useNotificationHub() {
   const [api, contextHolder] = notification.useNotification();
   const token = useAuthStore((s) => s.accessToken);
   const push = useNotificationStore((s) => s.push);
-  const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
     if (!token) {
-      console.log("[NotificationHub] no token — waiting for auth");
+      console.log("[NotificationSSE] no token — waiting for auth");
       return;
     }
 
-    console.log("[NotificationHub] connecting →", HUB_URL);
+    const url = `${SSE_URL}?access_token=${encodeURIComponent(token)}`;
+    console.log("[NotificationSSE] connecting →", SSE_URL);
 
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl(HUB_URL, {
-        accessTokenFactory: () => token,
-        skipNegotiation: true,
-        transport: signalR.HttpTransportType.WebSockets,
-      })
-      .withAutomaticReconnect()
-      .configureLogging(signalR.LogLevel.Information)
-      .build();
+    const es = new EventSource(url);
+    esRef.current = es;
 
-    connectionRef.current = connection;
-
-    connection.onreconnecting(() => console.log("[NotificationHub] reconnecting…"));
-    connection.onreconnected(() => console.log("[NotificationHub] reconnected ✓"));
-    connection.onclose((err) => console.log("[NotificationHub] closed", err ?? ""));
-
-    connection.on("notification", (envelope: SignalREnvelope<NotificationPayload>) => {
-      console.log("[NotificationHub] event →", envelope.type, envelope.payload);
+    es.addEventListener("notification", (e: MessageEvent) => {
+      const envelope = JSON.parse(e.data) as SignalREnvelope<NotificationPayload>;
+      console.log("[NotificationSSE] event →", envelope.type, envelope.payload);
       push(envelope.payload);
       api.info({
         message: envelope.payload.subject,
@@ -57,14 +45,11 @@ export function useNotificationHub() {
       });
     });
 
-    connection
-      .start()
-      .then(() => console.log("[NotificationHub] connected ✓ id:", connection.connectionId))
-      .catch((err) => console.error("[NotificationHub] connect failed:", err));
+    es.onerror = (err) => console.error("[NotificationSSE] error", err);
 
     return () => {
-      connection.stop();
-      connectionRef.current = null;
+      es.close();
+      esRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);

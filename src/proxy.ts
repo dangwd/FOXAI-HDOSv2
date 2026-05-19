@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const PUBLIC_PATHS = new Set(['/login', '/unauthorized']);
+const PUBLIC_PATHS = new Set(['/login', '/unauthorized', '/silent-check-sso.html']);
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {

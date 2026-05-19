@@ -17,6 +17,9 @@ function LoginContent() {
     }
   }, [isAuthenticated, router, searchParams]);
 
+  // Đã authenticated → không render nội dung login, tránh flash trước khi effect redirect
+  if (isAuthenticated) return null;
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-[#010409] gap-8">
       {/* Logo */}
