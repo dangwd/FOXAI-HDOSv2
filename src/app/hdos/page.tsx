@@ -6,17 +6,12 @@ import { Spin } from "antd";
 import { ScreenRenderer } from "@/components/ScreenRenderer";
 import type { ScreenConfig } from "@/types/screen";
 
-function HdosContent() {
-  const searchParams = useSearchParams();
-  const moduleId = searchParams.get("module") ?? "dashboard";
-
+function HdosContent({ moduleId }: { moduleId: string }) {
   const [screen, setScreen] = useState<ScreenConfig | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    setNotFound(false);
     fetch(`/api/screen/${moduleId}`)
       .then((res) => {
         if (!res.ok) { setNotFound(true); return null; }
@@ -45,10 +40,17 @@ function HdosContent() {
   return <ScreenRenderer config={screen} />;
 }
 
+function HdosPageContent() {
+  const searchParams = useSearchParams();
+  const moduleId = searchParams.get("module") ?? "dashboard";
+
+  return <HdosContent key={moduleId} moduleId={moduleId} />;
+}
+
 export default function HdosPage() {
   return (
     <Suspense fallback={<div className="flex items-center justify-center h-full"><Spin size="large" /></div>}>
-      <HdosContent />
+      <HdosPageContent />
     </Suspense>
   );
 }

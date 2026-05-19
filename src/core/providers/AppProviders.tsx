@@ -35,7 +35,6 @@ export function AppProviders({ children }: Props) {
           .catch(() => useAuthStore.getState().clearAuth());
       };
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Redirect to /login when session expires (isAuthenticated flips true → false)

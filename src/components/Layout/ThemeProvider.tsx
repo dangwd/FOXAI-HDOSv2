@@ -5,7 +5,7 @@ import { ConfigProvider, theme as antTheme } from 'antd';
 import { useThemeStore } from '@/store/themeStore';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const { theme, toggle: _toggle } = useThemeStore();
+  const { theme } = useThemeStore();
 
   // Khởi tạo theme từ localStorage khi mount
   useEffect(() => {
