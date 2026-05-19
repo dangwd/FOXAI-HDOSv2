@@ -9,17 +9,19 @@ services:
       target: runner
     ports:
       - "4000:4000"
+    volumes:
+      - ./certs:/app/certs:ro
     env_file:
       - .env.production
     environment:
       NODE_ENV: production
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4001/"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
     logging:
       driver: json-file
       options:

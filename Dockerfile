@@ -31,12 +31,14 @@ RUN addgroup --system --gid 1001 nodejs \
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static    ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public          ./public
+COPY --chown=nextjs:nodejs server-https.js                     ./
 
 USER nextjs
 
 ENV NODE_ENV=production
 ENV PORT=4000
 ENV HOSTNAME=0.0.0.0
+ENV CERTS_DIR=/app/certs
 
 EXPOSE 4000
-CMD ["node", "server.js"]
+CMD ["node", "server-https.js"]
