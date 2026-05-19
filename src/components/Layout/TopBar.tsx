@@ -1,11 +1,18 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
 import { useMenuStore } from '@/store/menuStore';
+import useAuthStore from '@/core/auth/authStore';
+import { authService } from '@/core/auth/authService';
 
 export default function TopBar() {
   const searchParams = useSearchParams();
   const activeId = searchParams.get('module') ?? 'dashboard';
   const groups = useMenuStore((s) => s.groups);
+  const user = useAuthStore((s) => s.user);
+
+  const avatarLetter = user?.name?.charAt(0).toUpperCase()
+    ?? user?.email?.charAt(0).toUpperCase()
+    ?? 'U';
 
   let currentLabel = 'Dashboard';
   for (const group of groups) {
@@ -55,9 +62,29 @@ export default function TopBar() {
         {/* Divider */}
         <div className="w-px h-5 bg-gray-200 dark:bg-[#30363d] mx-0.5" />
 
-        {/* User avatar */}
-        <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold cursor-pointer select-none">
-          A
+        {/* User avatar + logout */}
+        <div className="relative group">
+          <button
+            className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold cursor-pointer select-none"
+            title={user?.email ?? 'Tài khoản'}
+          >
+            {avatarLetter}
+          </button>
+          {/* Dropdown */}
+          <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-[#161b22] border border-gray-200 dark:border-[#30363d] rounded-lg shadow-lg py-1 z-50 hidden group-focus-within:block group-hover:block">
+            {user && (
+              <div className="px-3 py-2 border-b border-gray-100 dark:border-[#30363d]">
+                <p className="text-xs font-medium text-gray-800 dark:text-[#e6edf3] truncate m-0">{user.name ?? user.email}</p>
+                <p className="text-[10px] text-gray-400 dark:text-[#8b949e] truncate m-0">{user.email}</p>
+              </div>
+            )}
+            <button
+              onClick={() => authService.logout()}
+              className="w-full text-left px-3 py-2 text-xs text-red-500 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors cursor-pointer"
+            >
+              Đăng xuất
+            </button>
+          </div>
         </div>
       </div>
     </header>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { ThemeProvider } from '@/components/Layout/ThemeProvider';
+import { AppProviders } from '@/core/providers/AppProviders';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -13,7 +14,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="vi" className="h-full">
       <body className="h-full">
         <AntdRegistry>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            <AppProviders>
+              {children}
+            </AppProviders>
+          </ThemeProvider>
         </AntdRegistry>
       </body>
     </html>

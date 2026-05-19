@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { MenuGroup } from '@/types/menu';
+import useAuthStore from '@/core/auth/authStore';
 
 interface MenuStore {
   groups: MenuGroup[];
@@ -14,9 +15,9 @@ export const useMenuStore = create<MenuStore>((set) => ({
   fetchMenu: async () => {
     set({ loading: true });
     try {
-      const jwt = typeof window !== 'undefined' ? localStorage.getItem('jwt') : null;
+      const accessToken = useAuthStore.getState().accessToken;
       const res = await fetch('/api/menu', {
-        headers: jwt ? { Authorization: `Bearer ${jwt}` } : {},
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       });
       const data = await res.json();
       set({ groups: data.groups });
