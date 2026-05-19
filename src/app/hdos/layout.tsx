@@ -3,6 +3,7 @@ import { useEffect, Suspense } from 'react';
 import { useMenuStore } from '@/store/menuStore';
 import Sidebar from '@/components/Layout/Sidebar';
 import TopBar from '@/components/Layout/TopBar';
+import { NotificationHubProvider } from '@/core/signalr/NotificationHubProvider';
 
 export default function HdosLayout({ children }: { children: React.ReactNode }) {
   const fetchMenu = useMenuStore((s) => s.fetchMenu);
@@ -13,6 +14,7 @@ export default function HdosLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex h-screen overflow-hidden">
+      <NotificationHubProvider />
       <Suspense>
         <Sidebar />
       </Suspense>

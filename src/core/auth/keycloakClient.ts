@@ -24,6 +24,8 @@ export function initKeycloak(): Promise<boolean> {
 
   initPromise = kc
     .init({
+      onLoad: 'check-sso',
+      silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
       checkLoginIframe: false,
       ...(pkceMethod ? { pkceMethod } : {}),
     })
