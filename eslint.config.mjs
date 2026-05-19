@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // CommonJS deployment script — not part of the TypeScript source
+    "server-https.js",
   ]),
 ]);
 

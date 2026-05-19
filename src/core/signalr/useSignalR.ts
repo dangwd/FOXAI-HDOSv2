@@ -14,18 +14,21 @@ export function useSignalR<T>(config?: SignalRConfig): UseSignalRResult<T> {
   const [status, setStatus] = useState<SignalRStatus>(config ? "connecting" : "disconnected");
   const connectionRef = useRef<signalR.HubConnection | null>(null);
 
+  const hubUrl = config?.hubUrl;
+  const methodName = config?.methodName;
+
   useEffect(() => {
-    if (!config) return;
+    if (!hubUrl || !methodName) return;
 
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl(config.hubUrl)
+      .withUrl(hubUrl)
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Warning)
       .build();
 
     connectionRef.current = connection;
 
-    connection.on(config.methodName, (payload: T) => setData(payload));
+    connection.on(methodName, (payload: T) => setData(payload));
     connection.onreconnecting(() => setStatus("reconnecting"));
     connection.onreconnected(() => setStatus("connected"));
     connection.onclose(() => setStatus("disconnected"));
@@ -38,7 +41,7 @@ export function useSignalR<T>(config?: SignalRConfig): UseSignalRResult<T> {
     return () => {
       connection.stop();
     };
-  }, [config?.hubUrl, config?.methodName]);
+  }, [hubUrl, methodName]);
 
   return { data, status };
 }
