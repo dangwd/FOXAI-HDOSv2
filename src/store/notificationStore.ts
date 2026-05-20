@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { NotificationPayload } from '@/core/signalr/types';
+import type { NotificationPayload } from '@/core/sse/types';
 
 export interface NotificationItem extends NotificationPayload {
   read: boolean;

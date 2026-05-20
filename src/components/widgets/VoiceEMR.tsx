@@ -1,6 +1,6 @@
 "use client";
 
-import type { SignalRConfig } from "@/core/signalr/types";
+import type { SSEConfig } from "@/core/sse/types";
 
 interface Props {
   title?: string;
@@ -10,7 +10,7 @@ interface Props {
   features?: string[];
   description?: string[];
   loading?: boolean;
-  signalR?: SignalRConfig;
+  sse?: SSEConfig;
 }
 
 export function VoiceEMR({ title, badge, badgeColor = "#1677ff", accuracy, features, description, loading }: Props) {

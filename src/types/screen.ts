@@ -1,4 +1,4 @@
-import type { SignalRConfig } from "@/core/signalr/types";
+import type { SSEConfig } from "@/core/sse/types";
 
 /** Một component trong màn hình — backend kiểm soát toàn bộ */
 export interface ComponentConfig {
@@ -6,8 +6,8 @@ export interface ComponentConfig {
   props?: Record<string, unknown>;
   /** antd Col span (1-24). Mặc định chia đều theo số component trong row */
   span?: number;
-  /** Nếu có, component tự kết nối SignalR độc lập và nhận live data */
-  signalR?: SignalRConfig;
+  /** Nếu có, component tự kết nối SSE độc lập và nhận live data */
+  sse?: SSEConfig;
 }
 
 export interface RowConfig {

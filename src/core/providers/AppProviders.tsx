@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { Spin } from 'antd';
-import { getKeycloak, initKeycloak } from '@/core/auth/keycloakClient';
 import useAuthStore from '@/core/auth/authStore';
 
 interface Props {
@@ -13,28 +12,9 @@ export function AppProviders({ children }: Props) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const prevIsAuthenticated = useRef<boolean | null>(null);
 
-  // Init Keycloak on mount + set onTokenExpired handler
   useEffect(() => {
-    const kc = getKeycloak();
-
-    initKeycloak().then((authenticated) => {
-      if (authenticated && kc) {
-        useAuthStore.getState().setAuthFromKeycloak(kc);
-      }
-      setIsRehydrated(true);
-    });
-
-    if (kc) {
-      kc.onTokenExpired = () => {
-        kc.updateToken(60)
-          .then((refreshed) => {
-            if (refreshed && kc.token) {
-              useAuthStore.getState().setAuthFromKeycloak(kc);
-            }
-          })
-          .catch(() => useAuthStore.getState().clearAuth());
-      };
-    }
+    useAuthStore.getState().rehydrate();
+    setIsRehydrated(true);
   }, []);
 
   // Redirect to /login when session expires (isAuthenticated flips true → false)

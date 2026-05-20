@@ -3,7 +3,7 @@ import { useEffect, Suspense } from 'react';
 import { useMenuStore } from '@/store/menuStore';
 import Sidebar from '@/components/Layout/Sidebar';
 import TopBar from '@/components/Layout/TopBar';
-import { NotificationHubProvider } from '@/core/signalr/NotificationHubProvider';
+import { NotificationHubProvider } from '@/core/sse/NotificationHubProvider';
 
 export default function HdosLayout({ children }: { children: React.ReactNode }) {
   const fetchMenu = useMenuStore((s) => s.fetchMenu);

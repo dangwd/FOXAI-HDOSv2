@@ -44,7 +44,7 @@ function RowsRenderer({ rows, loading }: { rows: RowConfig[]; loading: boolean }
               }
               return (
                 <Col key={compIdx} span={resolvedSpans[compIdx]}>
-                  <Component {...(comp.props ?? {})} signalR={comp.signalR} loading={loading} />
+                  <Component {...(comp.props ?? {})} sse={comp.sse} loading={loading} />
                 </Col>
               );
             })}

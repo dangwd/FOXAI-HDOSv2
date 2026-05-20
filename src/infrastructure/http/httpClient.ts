@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { getKeycloak } from '@/core/auth/keycloakClient';
 import useAuthStore from '@/core/auth/authStore';
 
 const httpClient = axios.create({
@@ -17,32 +16,12 @@ httpClient.interceptors.request.use((config) => {
 
 httpClient.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config as typeof error.config & { _retry?: boolean };
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      const kc = getKeycloak();
-
-      if (kc?.authenticated) {
-        try {
-          const refreshed = await kc.updateToken(30);
-          if (refreshed && kc.token) {
-            useAuthStore.getState().setAuthFromKeycloak(kc);
-            originalRequest.headers.Authorization = `Bearer ${kc.token}`;
-            return httpClient(originalRequest);
-          }
-        } catch {
-          useAuthStore.getState().clearAuth();
-          kc.login({ redirectUri: window.location.href });
-          return Promise.reject(error);
-        }
-      }
-
+  (error) => {
+    // Only redirect on 401 if we had an active session (token expired server-side)
+    if (error.response?.status === 401 && useAuthStore.getState().accessToken) {
       useAuthStore.getState().clearAuth();
       window.location.href = '/login';
     }
-
     return Promise.reject(error);
   }
 );

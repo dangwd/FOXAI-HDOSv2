@@ -1,6 +1,6 @@
 "use client";
 
-import type { SignalRConfig } from "@/core/signalr/types";
+import type { SSEConfig } from "@/core/sse/types";
 
 export type OrRoomStatus = "active" | "preparing" | "cleaning" | "available" | "emergency";
 
@@ -15,7 +15,7 @@ interface Props {
   title?: string;
   rooms: OrRoomData[];
   loading?: boolean;
-  signalR?: SignalRConfig;
+  sse?: SSEConfig;
 }
 
 const STATUS: Record<OrRoomStatus, { label: string; color: string }> = {

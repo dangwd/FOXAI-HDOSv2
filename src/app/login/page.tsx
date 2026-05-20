@@ -1,14 +1,15 @@
 'use client';
 import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button, Spin } from 'antd';
+import { Alert, Button, Form, Input, Spin } from 'antd';
 import useAuthStore from '@/core/auth/authStore';
-import { authService } from '@/core/auth/authService';
+import { useLogin } from '@/core/auth/useLogin';
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { login, loading, error } = useLogin();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -17,7 +18,6 @@ function LoginContent() {
     }
   }, [isAuthenticated, router, searchParams]);
 
-  // Đã authenticated → không render nội dung login, tránh flash trước khi effect redirect
   if (isAuthenticated) return null;
 
   return (
@@ -34,7 +34,7 @@ function LoginContent() {
       </div>
 
       {/* Card */}
-      <div className="w-full max-w-sm bg-white dark:bg-[#161b22] border border-gray-200 dark:border-[#30363d] rounded-xl p-8 shadow-sm flex flex-col items-center gap-6">
+      <div className="w-full max-w-sm bg-white dark:bg-[#161b22] border border-gray-200 dark:border-[#30363d] rounded-xl p-8 shadow-sm flex flex-col gap-6">
         <div className="text-center">
           <p className="text-base font-semibold text-gray-800 dark:text-[#e6edf3] m-0">Đăng nhập</p>
           <p className="text-sm text-gray-400 dark:text-[#8b949e] mt-1 m-0">
@@ -42,18 +42,42 @@ function LoginContent() {
           </p>
         </div>
 
-        <Button
-          type="primary"
-          size="large"
-          className="w-full"
-          onClick={() => authService.login()}
-        >
-          Đăng nhập với Keycloak
-        </Button>
+        {error && <Alert type="error" message={error} showIcon />}
 
-        <p className="text-xs text-gray-400 dark:text-[#8b949e] text-center m-0">
-          Bạn sẽ được chuyển đến trang đăng nhập bảo mật của tổ chức
-        </p>
+        <Form
+          layout="vertical"
+          onFinish={({ email, password }: { email: string; password: string }) =>
+            login(email, password)
+          }
+          requiredMark={false}
+          autoComplete="on"
+        >
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[{ required: true, message: 'Vui lòng nhập email' }]}
+          >
+            <Input type="email" placeholder="admin@example.com" autoComplete="email" />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="Mật khẩu"
+            rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
+          >
+            <Input.Password placeholder="••••••••" autoComplete="current-password" />
+          </Form.Item>
+          <Form.Item className="mb-0">
+            <Button
+              type="primary"
+              htmlType="submit"
+              size="large"
+              className="w-full"
+              loading={loading}
+            >
+              Đăng nhập
+            </Button>
+          </Form.Item>
+        </Form>
       </div>
     </div>
   );
@@ -61,11 +85,13 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <Spin size="large" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <Spin size="large" />
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
   );
