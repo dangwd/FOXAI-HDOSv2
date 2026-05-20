@@ -169,6 +169,7 @@ const SCREENS: Record<string, ScreenConfig> = {
             props: {
               title: "Cảnh báo đang kích hoạt",
               realtimeBadge: true,
+              maxHeight: 400,
               totalCount: 8,
               items: [
                 {

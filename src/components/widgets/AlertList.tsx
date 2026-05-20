@@ -18,6 +18,8 @@ interface AlertListProps {
   items: AlertItem[];
   loading?: boolean;
   realtimeBadge?: boolean;
+  /** Giới hạn chiều cao phần danh sách (px). Mặc định 480 */
+  maxHeight?: number;
   sse?: SSEConfig;
 }
 
@@ -31,7 +33,7 @@ function severityBadgeClass(severity?: AlertItem["severity"]): string {
 
 const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
 
-export function AlertList({ title = "Cảnh báo", totalCount, items, loading = false, realtimeBadge, sse }: AlertListProps) {
+export function AlertList({ title = "Cảnh báo", totalCount, items, loading = false, realtimeBadge, maxHeight = 480, sse }: AlertListProps) {
   const { data: live } = useSSE<{ items: AlertItem[]; totalCount: number }>(sse);
   const displayItems      = live?.items      ?? items;
   const displayTotalCount = live?.totalCount ?? totalCount;
@@ -56,7 +58,7 @@ export function AlertList({ title = "Cảnh báo", totalCount, items, loading = 
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-[#30363d]">
+      <div className="overflow-y-auto divide-y divide-gray-100 dark:divide-[#30363d]" style={{ maxHeight }}>
         {loading
           ? Array.from({ length: 5 }).map((_, idx) => (
               <div key={idx} className="flex items-start gap-3 px-4 py-3">

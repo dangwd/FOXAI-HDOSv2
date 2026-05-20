@@ -25,7 +25,7 @@ export function useNotificationHub() {
       const envelope = JSON.parse(e.data) as SSEEnvelope<NotificationPayload>;
       push(envelope.payload);
       api.info({
-        message: envelope.payload.subject,
+        title: envelope.payload.subject,
         description: envelope.payload.body,
         placement: "topRight",
         duration: 6,
