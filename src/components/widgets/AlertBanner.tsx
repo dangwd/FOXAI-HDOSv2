@@ -10,5 +10,5 @@ interface AlertBannerProps {
 }
 
 export function AlertBanner({ message, description, type = "info", showIcon = true }: AlertBannerProps) {
-  return <Alert message={message} description={description} type={type} showIcon={showIcon} />;
+  return <Alert title={message} description={description} type={type} showIcon={showIcon} />;
 }
