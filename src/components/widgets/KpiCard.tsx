@@ -2,6 +2,14 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/shared/utils/cn";
+import { useSSE } from "@/core/sse/useSSE";
+import type { SSEConfig } from "@/core/sse/types";
+
+interface KpiLiveData {
+  value: string | number;
+  hint?: string;
+  hintColor?: string;
+}
 
 interface KpiCardProps {
   title: string;
@@ -12,6 +20,8 @@ interface KpiCardProps {
   className?: string;
   /** Accent color: draws a 3px left border and a matching dot next to the title */
   accent?: string;
+  /** SSE config — khi có, giá trị live sẽ đè lên props tĩnh */
+  sse?: SSEConfig;
 }
 
 export function KpiCard({
@@ -22,7 +32,13 @@ export function KpiCard({
   loading = false,
   className,
   accent,
+  sse,
 }: KpiCardProps): ReactNode {
+  const { data: live } = useSSE<KpiLiveData>(sse);
+
+  const displayValue     = live?.value     ?? value;
+  const displayHint      = live?.hint      ?? hint;
+  const displayHintColor = live?.hintColor ?? hintColor;
   const borderStyle: CSSProperties = accent
     ? { borderLeftWidth: 3, borderLeftColor: accent }
     : {};
@@ -52,11 +68,11 @@ export function KpiCard({
       ) : (
         <>
           <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-[#e6edf3] m-0 leading-tight">
-            {value}
+            {displayValue}
           </p>
-          {hint != null && (
-            <p className="text-xs m-0 mt-1" style={hintColor ? { color: hintColor } : undefined}>
-              {hint}
+          {displayHint != null && (
+            <p className="text-xs m-0 mt-1" style={displayHintColor ? { color: displayHintColor } : undefined}>
+              {displayHint}
             </p>
           )}
         </>

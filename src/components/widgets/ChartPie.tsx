@@ -9,14 +9,15 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { BaseChartProps } from "@/types/chart";
+import { useSSE } from "@/core/sse/useSSE";
+import type { SSEConfig } from "@/core/sse/types";
 
 const DEFAULT_COLORS = ["#1677ff", "#52c41a", "#faad14", "#ff4d4f", "#722ed1", "#13c2c2"];
 
 interface ChartPieProps extends Omit<BaseChartProps, "series"> {
-  /** "donut" vẽ innerRadius, "pie" vẽ đầy */
   variant?: "pie" | "donut";
-  /** Màu từng slice theo thứ tự */
   colors?: string[];
+  sse?: SSEConfig;
 }
 
 const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
@@ -31,7 +32,10 @@ export function ChartPie({
   variant = "donut",
   colors = DEFAULT_COLORS,
   loading = false,
+  sse,
 }: ChartPieProps) {
+  const { data: live } = useSSE<{ data: typeof data }>(sse);
+  const displayData = live?.data ?? data;
   const innerRadius = variant === "donut" ? "55%" : 0;
 
   if (loading) {
@@ -56,7 +60,7 @@ export function ChartPie({
       <ResponsiveContainer width="100%" height={height}>
         <PieChart>
           <Pie
-            data={data}
+            data={displayData}
             dataKey={dataKey}
             nameKey="label"
             cx="50%"
@@ -65,7 +69,7 @@ export function ChartPie({
             outerRadius="75%"
             paddingAngle={variant === "donut" ? 3 : 0}
           >
-            {data.map((_, i) => (
+            {displayData.map((_, i) => (
               <Cell key={i} fill={colors[i % colors.length]} />
             ))}
           </Pie>

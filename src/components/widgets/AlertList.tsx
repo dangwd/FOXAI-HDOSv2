@@ -1,5 +1,8 @@
 "use client";
 
+import { useSSE } from "@/core/sse/useSSE";
+import type { SSEConfig } from "@/core/sse/types";
+
 interface AlertItem {
   code: string;
   text: string;
@@ -14,6 +17,8 @@ interface AlertListProps {
   totalCount?: number;
   items: AlertItem[];
   loading?: boolean;
+  realtimeBadge?: boolean;
+  sse?: SSEConfig;
 }
 
 function severityBadgeClass(severity?: AlertItem["severity"]): string {
@@ -26,18 +31,29 @@ function severityBadgeClass(severity?: AlertItem["severity"]): string {
 
 const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
 
-export function AlertList({ title = "Cảnh báo", totalCount, items, loading = false }: AlertListProps) {
+export function AlertList({ title = "Cảnh báo", totalCount, items, loading = false, realtimeBadge, sse }: AlertListProps) {
+  const { data: live } = useSSE<{ items: AlertItem[]; totalCount: number }>(sse);
+  const displayItems      = live?.items      ?? items;
+  const displayTotalCount = live?.totalCount ?? totalCount;
   return (
     <div className="h-full flex flex-col rounded-xl border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-[#30363d] flex-shrink-0">
         <span className="text-sm font-semibold text-gray-800 dark:text-[#e6edf3]">{title}</span>
-        {loading ? (
-          <div className={`${SK} h-4 w-16 rounded-full`} />
-        ) : totalCount !== undefined ? (
-          <span className="text-xs font-medium bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 px-2 py-0.5 rounded-full">
-            {totalCount} cảnh báo
-          </span>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {realtimeBadge && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              Live
+            </span>
+          )}
+          {loading ? (
+            <div className={`${SK} h-4 w-16 rounded-full`} />
+          ) : displayTotalCount !== undefined ? (
+            <span className="text-xs font-medium bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 px-2 py-0.5 rounded-full">
+              {displayTotalCount} cảnh báo
+            </span>
+          ) : null}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-[#30363d]">
@@ -52,7 +68,7 @@ export function AlertList({ title = "Cảnh báo", totalCount, items, loading = 
                 <div className={`${SK} h-2 w-10 shrink-0 mt-0.5`} />
               </div>
             ))
-          : items.map((item, idx) => (
+          : displayItems.map((item, idx) => (
               <div key={idx} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#161b22] transition-colors">
                 <span className={`mt-0.5 flex-shrink-0 inline-flex items-center justify-center rounded-md px-1.5 py-0.5 text-[10px] font-bold leading-none min-w-[2rem] ${severityBadgeClass(item.severity)}`}>
                   {item.code}

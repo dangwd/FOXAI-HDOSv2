@@ -10,6 +10,7 @@ const SCREENS: Record<string, ScreenConfig> = {
   dashboard: {
     title: "Executive Dashboard",
     badge: "HDOS v1.0",
+    live: true,
     subtitle: "Tổng quan điều hành toàn viện · Cập nhật realtime",
     actions: [
       { label: "↺ Làm mới", variant: "default" },
@@ -17,11 +18,12 @@ const SCREENS: Record<string, ScreenConfig> = {
       { label: "Hỏi AI", variant: "primary", color: "#1677ff" },
     ],
     rows: [
-      // Row 1: 5 KPI cards
+      // Row 1: 5 KPI cards — live via SSE
       {
         components: [
           {
             type: "KpiCard",
+            sse: { url: "/api/sse/dashboard", event: "kpi-visits" },
             props: {
               title: "LƯỢT KHÁM HÔM NAY",
               value: 151,
@@ -32,6 +34,7 @@ const SCREENS: Record<string, ScreenConfig> = {
           },
           {
             type: "KpiCard",
+            sse: { url: "/api/sse/dashboard", event: "kpi-revenue" },
             props: {
               title: "DOANH THU",
               value: "4.23 tỷ",
@@ -42,6 +45,7 @@ const SCREENS: Record<string, ScreenConfig> = {
           },
           {
             type: "KpiCard",
+            sse: { url: "/api/sse/dashboard", event: "kpi-inpatient" },
             props: {
               title: "BN NỘI TRÚ",
               value: 312,
@@ -52,6 +56,7 @@ const SCREENS: Record<string, ScreenConfig> = {
           },
           {
             type: "KpiCard",
+            sse: { url: "/api/sse/dashboard", event: "kpi-bor" },
             props: {
               title: "BOB TOÀN VIỆN",
               value: "78.4%",
@@ -62,11 +67,12 @@ const SCREENS: Record<string, ScreenConfig> = {
           },
           {
             type: "KpiCard",
+            sse: { url: "/api/sse/dashboard", event: "kpi-alerts" },
             props: {
               title: "CẢNH BÁO ACTIVE",
               value: 8,
               accent: "#ff4d4f",
-              hint: "2.13 cần xử lý ngay",
+              hint: "8 cần xử lý ngay",
               hintColor: "#ff4d4f",
             },
           },
@@ -78,6 +84,7 @@ const SCREENS: Record<string, ScreenConfig> = {
           {
             type: "ProgressList",
             span: 16,
+            sse: { url: "/api/sse/dashboard", event: "chart-beds" },
             props: {
               title: "Công suất giường theo khoa",
               headerAction: "Xem chi tiết →",
@@ -158,8 +165,10 @@ const SCREENS: Record<string, ScreenConfig> = {
           {
             type: "AlertList",
             span: 8,
+            sse: { url: "/api/sse/dashboard", event: "chart-alerts" },
             props: {
               title: "Cảnh báo đang kích hoạt",
+              realtimeBadge: true,
               totalCount: 8,
               items: [
                 {
@@ -213,6 +222,7 @@ const SCREENS: Record<string, ScreenConfig> = {
           {
             type: "FlowPipeline",
             span: 16,
+            sse: { url: "/api/sse/dashboard", event: "chart-flow" },
             props: {
               title: "Dòng bệnh nhân hôm nay",
               footer: "T/BT: 38 phút · Tracking từ đăng ký đến hoàn thành",
@@ -227,6 +237,7 @@ const SCREENS: Record<string, ScreenConfig> = {
           {
             type: "ChartPie",
             span: 8,
+            sse: { url: "/api/sse/dashboard", event: "chart-revenue-pie" },
             props: {
               title: "Phân loại doanh thu",
               height: 220,

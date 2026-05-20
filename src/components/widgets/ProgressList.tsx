@@ -1,5 +1,8 @@
 "use client";
 
+import { useSSE } from "@/core/sse/useSSE";
+import type { SSEConfig } from "@/core/sse/types";
+
 interface ProgressItem {
   label: string;
   value: number;
@@ -26,11 +29,14 @@ interface ProgressListProps {
   showFraction?: boolean;
   footerActions?: FooterAction[];
   loading?: boolean;
+  sse?: SSEConfig;
 }
 
 const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
 
-export function ProgressList({ title, headerAction, realtimeBadge, items, maxValue = 100, showFraction, footerActions, loading = false }: ProgressListProps) {
+export function ProgressList({ title, headerAction, realtimeBadge, items, maxValue = 100, showFraction, footerActions, loading = false, sse }: ProgressListProps) {
+  const { data: live } = useSSE<{ items: ProgressItem[] }>(sse);
+  const displayItems = live?.items ?? items;
   return (
     <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full flex flex-col">
       {title && (
@@ -61,7 +67,7 @@ export function ProgressList({ title, headerAction, realtimeBadge, items, maxVal
                 <div className={`${SK} h-2 w-16 shrink-0`} />
               </div>
             ))
-          : items.map((item, i) => {
+          : displayItems.map((item, i) => {
           let barPct: number;
           let displayRight: string;
 

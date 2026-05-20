@@ -1,6 +1,8 @@
 "use client";
 
 import { cn } from "@/shared/utils/cn";
+import { useSSE } from "@/core/sse/useSSE";
+import type { SSEConfig } from "@/core/sse/types";
 
 interface FlowStage {
   label: string;
@@ -17,11 +19,14 @@ interface FlowPipelineProps {
   /** Hiển thị chip xanh "Realtime" ở góc trên phải header */
   realtimeBadge?: boolean;
   loading?: boolean;
+  sse?: SSEConfig;
 }
 
 const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
 
-export function FlowPipeline({ title, footer, stages, className, realtimeBadge, loading = false }: FlowPipelineProps) {
+export function FlowPipeline({ title, footer, stages, className, realtimeBadge, loading = false, sse }: FlowPipelineProps) {
+  const { data: live } = useSSE<{ stages: FlowStage[] }>(sse);
+  const displayStages = live?.stages ?? stages;
   return (
     <div
       className={cn(
@@ -54,7 +59,7 @@ export function FlowPipeline({ title, footer, stages, className, realtimeBadge, 
                 {i < 3 && <div className={`${SK} h-3 w-3 mx-1`} style={{ borderRadius: 2 }} />}
               </div>
             ))
-          : stages.map((stage, i) => (
+          : displayStages.map((stage, i) => (
           <div key={i} className="flex items-center shrink-0">
             {/* Stage box */}
             <div className="flex flex-col items-center px-3 min-w-[72px]">
@@ -70,7 +75,7 @@ export function FlowPipeline({ title, footer, stages, className, realtimeBadge, 
             </div>
 
             {/* Arrow connector */}
-            {i < stages.length - 1 && (
+            {i < displayStages.length - 1 && (
               <svg
                 className="text-gray-300 dark:text-[#30363d] shrink-0"
                 width="16"
