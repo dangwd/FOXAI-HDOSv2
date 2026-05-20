@@ -31,5 +31,5 @@ export function initKeycloak(): Promise<boolean> {
     })
     .catch(() => false);
 
-  return initPromise;
+  return initPromise!;
 }
