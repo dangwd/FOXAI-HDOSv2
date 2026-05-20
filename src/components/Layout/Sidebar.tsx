@@ -1,5 +1,4 @@
 "use client";
-import useAuthStore from "@/core/auth/authStore";
 import { useMenuStore } from "@/store/menuStore";
 import { useThemeStore } from "@/store/themeStore";
 import { Spin } from "antd";
@@ -15,12 +14,6 @@ export default function Sidebar() {
   const searchParams = useSearchParams();
   const activeId = searchParams.get("module") ?? "dashboard";
   const isDark = theme === "dark";
-  const user = useAuthStore((s) => s.user);
-  const avatarLetter =
-    user?.name?.charAt(0).toUpperCase() ??
-    user?.email?.charAt(0).toUpperCase() ??
-    "U";
-
   return (
     <aside className="w-64 h-screen bg-white dark:bg-[#0d1117] border-r border-gray-200 dark:border-[#30363d] flex flex-col flex-shrink-0">
       {/* Logo + theme toggle */}
