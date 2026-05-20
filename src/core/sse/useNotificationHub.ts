@@ -32,7 +32,12 @@ export function useNotificationHub() {
       });
     });
 
-    es.onerror = (err) => console.error("[NotificationSSE] error", err);
+    es.onerror = () => {
+      if (es.readyState === EventSource.CLOSED) {
+        console.warn("[NotificationSSE] connection closed — will not retry");
+      }
+      // readyState === CONNECTING means browser is auto-retrying; no log needed
+    };
 
     return () => {
       es.close();
