@@ -8,14 +8,12 @@ interface Props {
 }
 
 export function AppProviders({ children }: Props) {
-  const [isRehydrated, setIsRehydrated] = useState(false);
+  const [isRehydrated] = useState(() => {
+    useAuthStore.getState().rehydrate();
+    return true;
+  });
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const prevIsAuthenticated = useRef<boolean | null>(null);
-
-  useEffect(() => {
-    useAuthStore.getState().rehydrate();
-    setIsRehydrated(true);
-  }, []);
 
   // Redirect to /login when session expires (isAuthenticated flips true → false)
   useEffect(() => {

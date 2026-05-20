@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import useAuthStore from "@/core/auth/authStore";
 import type { SSEConfig, SSEStatus } from "./types";
 
@@ -11,7 +11,10 @@ interface UseSSEResult<T> {
 
 export function useSSE<T>(config?: SSEConfig): UseSSEResult<T> {
   const [data, setData] = useState<T | null>(null);
-  const [status, setStatus] = useState<SSEStatus>(config ? "connecting" : "disconnected");
+  const [status, dispatchStatus] = useReducer(
+    (_: SSEStatus, next: SSEStatus) => next,
+    config ? "connecting" : "disconnected"
+  );
   const token = useAuthStore((s) => s.accessToken);
   const esRef = useRef<EventSource | null>(null);
 
@@ -22,12 +25,12 @@ export function useSSE<T>(config?: SSEConfig): UseSSEResult<T> {
     if (!url || !event || !token) return;
 
     const fullUrl = `${url}?access_token=${encodeURIComponent(token)}`;
-    setStatus("connecting");
+    dispatchStatus("connecting");
 
     const es = new EventSource(fullUrl);
     esRef.current = es;
 
-    es.onopen = () => setStatus("connected");
+    es.onopen = () => dispatchStatus("connected");
 
     es.addEventListener(event, (e: MessageEvent) => {
       try {
@@ -37,10 +40,10 @@ export function useSSE<T>(config?: SSEConfig): UseSSEResult<T> {
 
     es.onerror = () => {
       if (es.readyState === EventSource.CLOSED) {
-        setStatus("disconnected");
+        dispatchStatus("disconnected");
       } else {
         // readyState === CONNECTING → browser is auto-retrying
-        setStatus("reconnecting");
+        dispatchStatus("reconnecting");
       }
     };
 
