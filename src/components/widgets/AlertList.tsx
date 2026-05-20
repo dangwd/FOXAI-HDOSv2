@@ -38,7 +38,7 @@ export function AlertList({ title = "Cảnh báo", totalCount, items, loading = 
   const displayItems      = live?.items      ?? items;
   const displayTotalCount = live?.totalCount ?? totalCount;
   return (
-    <div className="h-full flex flex-col rounded-xl border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] overflow-hidden">
+    <div className="flex flex-col rounded-xl border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] overflow-hidden" style={{ height: maxHeight }}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-[#30363d] flex-shrink-0">
         <span className="text-sm font-semibold text-gray-800 dark:text-[#e6edf3]">{title}</span>
         <div className="flex items-center gap-2">
@@ -58,7 +58,7 @@ export function AlertList({ title = "Cảnh báo", totalCount, items, loading = 
         </div>
       </div>
 
-      <div className="overflow-y-auto divide-y divide-gray-100 dark:divide-[#30363d]" style={{ maxHeight }}>
+      <div className="overflow-y-auto flex-1 min-h-0 divide-y divide-gray-100 dark:divide-[#30363d]">
         {loading
           ? Array.from({ length: 5 }).map((_, idx) => (
               <div key={idx} className="flex items-start gap-3 px-4 py-3">
