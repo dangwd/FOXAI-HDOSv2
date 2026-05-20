@@ -1,7 +1,14 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { Spin } from 'antd';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import useAuthStore from '@/core/auth/authStore';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, staleTime: 30_000 },
+  },
+});
 
 interface Props {
   children: React.ReactNode;
@@ -32,5 +39,9 @@ export function AppProviders({ children }: Props) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
 }

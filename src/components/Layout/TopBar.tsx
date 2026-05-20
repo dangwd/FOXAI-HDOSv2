@@ -1,11 +1,15 @@
 'use client';
+import { useRef, useState } from 'react';
 import useAuthStore from '@/core/auth/authStore';
 import { authService } from '@/core/auth/authService';
 import { useNotificationStore } from '@/store/notificationStore';
+import { NotificationPanel } from './NotificationPanel';
 
 export default function TopBar() {
   const user = useAuthStore((s) => s.user);
-  const { unreadCount, markAllRead } = useNotificationStore();
+  const { unreadCount } = useNotificationStore();
+  const [panelOpen, setPanelOpen] = useState(false);
+  const bellRef = useRef<HTMLDivElement>(null);
 
   const avatarLetter = user?.name?.charAt(0).toUpperCase()
     ?? user?.email?.charAt(0).toUpperCase()
@@ -33,21 +37,24 @@ export default function TopBar() {
       {/* Right section */}
       <div className="flex items-center gap-2 ml-auto">
         {/* Bell with unread badge */}
-        <button
-          onClick={markAllRead}
-          className="relative w-9 h-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors cursor-pointer"
-          title="Thông báo"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-          {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 bg-orange-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center leading-none px-0.5">
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
-          )}
-        </button>
+        <div ref={bellRef} className="relative">
+          <button
+            onClick={() => setPanelOpen((o) => !o)}
+            className="relative w-9 h-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors cursor-pointer"
+            title="Thông báo"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 bg-orange-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center leading-none px-0.5">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
+          {panelOpen && <NotificationPanel onClose={() => setPanelOpen(false)} />}
+        </div>
 
         {/* Divider */}
         <div className="w-px h-6 bg-gray-200 dark:bg-[#30363d]" />
