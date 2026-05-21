@@ -8,7 +8,8 @@ export async function GET() {
         id: "overview",
         label: "TỔNG QUAN",
         items: [
-          { id: "dashboard", label: "Executive Dashboard", icon: "dashboard" },
+          { id: "dashboard",          label: "Executive Dashboard",   icon: "dashboard" },
+          { id: "bao-cao-truc-quan",  label: "Báo cáo trực quan",     icon: "report",    badge: { type: "new" } },
         ],
       },
       {

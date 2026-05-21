@@ -15,6 +15,7 @@ import { AlertList } from "@/components/widgets/AlertList";
 import { WardBedGrid } from "@/components/widgets/WardBedGrid";
 import { OrRoomGrid } from "@/components/widgets/OrRoomGrid";
 import { VoiceEMR } from "@/components/widgets/VoiceEMR";
+import { BaoCaoKhoaWidget } from "@/components/widgets/BaoCaoKhoaWidget";
 
 export const REGISTRY: Record<string, ComponentType<any>> = {
   KpiCard,
@@ -32,6 +33,7 @@ export const REGISTRY: Record<string, ComponentType<any>> = {
   WardBedGrid,
   OrRoomGrid,
   VoiceEMR,
+  BaoCaoKhoaWidget,
 };
 
 export const MANIFEST = {

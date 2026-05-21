@@ -1067,6 +1067,28 @@ const SCREENS: Record<string, ScreenConfig> = {
     ],
   },
 
+  "bao-cao-truc-quan": {
+    title: "BÁO CÁO DOANH THU VÀ LƯỢT KHÁM THEO KHOA",
+    subtitle: "Hệ thống quản lý dữ liệu lâm sàng chính xác",
+    live: true,
+    actions: [
+      { label: "↺ Làm mới", variant: "primary", color: "#1677ff" },
+    ],
+    rows: [
+      {
+        components: [
+          {
+            type: "BaoCaoKhoaWidget",
+            span: 24,
+            props: {
+              apiPath: "/m01/bao-cao/khoa",
+            },
+          },
+        ],
+      },
+    ],
+  },
+
   supply: {
     title: "Chuỗi cung ứng",
     rows: [
