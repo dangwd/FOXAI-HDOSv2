@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Col, Row } from "antd";
 import httpClient from "@/infrastructure/http/httpClient";
 import useAuthStore from "@/core/auth/authStore";
@@ -66,12 +66,10 @@ export function BaoCaoKhoaWidget({
   const [loading,  setLoading]  = useState(true);
   const token = useAuthStore((s) => s.accessToken);
 
-  // ── Bước 1: gọi REST API lần đầu ─────────────────────────────────────────
-  useEffect(() => {
+  // ── Fetch API — dùng lại được cho cả lần đầu lẫn khi SSE trigger ─────────
+  const fetchData = useCallback(() => {
     httpClient
-      .get<{ success: boolean; data: { summary: Summary; chiTiet: ChiTietRow[] } }>(
-        apiPath,
-      )
+      .get<{ success: boolean; data: { summary: Summary; chiTiet: ChiTietRow[] } }>(apiPath)
       .then((res) => {
         setSummary(res.data.data.summary);
         setChiTiet(res.data.data.chiTiet);
@@ -80,8 +78,10 @@ export function BaoCaoKhoaWidget({
       .finally(() => setLoading(false));
   }, [apiPath]);
 
-  // ── Bước 2: lắng nghe SSE — event "notification", filter type ────────────
-  // SSE chỉ cập nhật summary (backend không push lại chiTiet qua SSE)
+  // ── Bước 1: gọi API lần đầu khi mount ────────────────────────────────────
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // ── Bước 2: SSE — update KPI từ payload, sau đó re-fetch chiTiet ─────────
   useEffect(() => {
     if (!token) return;
     const url = `${SSE_URL}?access_token=${encodeURIComponent(token)}`;
@@ -93,24 +93,28 @@ export function BaoCaoKhoaWidget({
         const env = raw as SSEEnvelope<BaoCaoSummaryPayload>;
         if (env.type !== "bao_cao_khoa_summary") return;
 
+        // Cập nhật KPI ngay từ SSE payload
         setSummary((prev) => {
           if (!prev) return prev;
           const newLuotKham = env.payload.tongLuotKham;
           const newDoanhThu = env.payload.tongDoanhThu;
           return {
             ...prev,
-            tongLuotKham:                   newLuotKham,
-            tongDoanhThu:                   newDoanhThu,
-            doanhThuTrungBinhTheoTuan:      env.payload.doanhThuTrungBinhTheoTuan,
-            doanhThuTrungBinhTheoBenhNhan:  newLuotKham > 0
+            tongLuotKham:                  newLuotKham,
+            tongDoanhThu:                  newDoanhThu,
+            doanhThuTrungBinhTheoTuan:     env.payload.doanhThuTrungBinhTheoTuan,
+            doanhThuTrungBinhTheoBenhNhan: newLuotKham > 0
               ? Math.round(newDoanhThu / newLuotKham)
               : prev.doanhThuTrungBinhTheoBenhNhan,
           };
         });
+
+        // Re-fetch API để cập nhật bảng chiTiet
+        fetchData();
       },
       () => {},
     );
-  }, [token]);
+  }, [token, fetchData]);
 
   // ── Build table rows ──────────────────────────────────────────────────────
   const validRows = chiTiet.filter(
