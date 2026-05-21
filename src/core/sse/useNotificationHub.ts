@@ -23,6 +23,7 @@ export function useNotificationHub() {
 
     es.addEventListener("notification", (e: MessageEvent) => {
       const envelope = JSON.parse(e.data) as SSEEnvelope<NotificationPayload>;
+      if (envelope.type !== "notification") return;
       push(envelope.payload);
       api.info({
         title: envelope.payload.subject,
