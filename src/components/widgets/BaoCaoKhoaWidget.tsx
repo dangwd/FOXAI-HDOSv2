@@ -68,7 +68,6 @@ export function BaoCaoKhoaWidget({
 
   // ── Bước 1: gọi REST API lần đầu ─────────────────────────────────────────
   useEffect(() => {
-    setLoading(true);
     httpClient
       .get<{ success: boolean; data: { summary: Summary; chiTiet: ChiTietRow[] } }>(
         apiPath,
