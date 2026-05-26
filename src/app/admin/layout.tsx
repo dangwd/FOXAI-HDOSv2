@@ -1,0 +1,214 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useThemeStore } from "@/store/themeStore";
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+function IconSettings() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+    </svg>
+  );
+}
+
+function IconList() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+      <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+    </svg>
+  );
+}
+
+function IconTerminal() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
+    </svg>
+  );
+}
+
+function IconPencil() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  );
+}
+
+function IconWifi() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12.55a11 11 0 0 1 14.08 0" /><path d="M1.42 9a16 16 0 0 1 21.16 0" />
+      <path d="M8.53 16.11a6 6 0 0 1 6.95 0" /><circle cx="12" cy="20" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconMenu() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  );
+}
+
+function IconBack() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  );
+}
+
+function IconSun() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4" />
+      <line x1="12" y1="2" x2="12" y2="6" /><line x1="12" y1="18" x2="12" y2="22" />
+      <line x1="4.93" y1="4.93" x2="7.76" y2="7.76" /><line x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
+      <line x1="2" y1="12" x2="6" y2="12" /><line x1="18" y1="12" x2="22" y2="12" />
+      <line x1="4.93" y1="19.07" x2="7.76" y2="16.24" /><line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+    </svg>
+  );
+}
+
+function IconMoon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
+// ─── Menu definition ──────────────────────────────────────────────────────────
+
+const MENU_ITEMS = [
+  { href: "/admin/provider",   label: "Quản trị Provider",  Icon: IconSettings },
+  { href: "/admin/operations", label: "Quản lý Operations", Icon: IconList     },
+  { href: "/admin/console",    label: "Test Console",       Icon: IconTerminal },
+  { href: "/admin",            label: "Thiết kế Báo cáo",   Icon: IconPencil   },
+  { href: "/admin/sync",       label: "Theo dõi đồng bộ",   Icon: IconWifi     },
+  { href: "/admin/menu",       label: "Quản lý Menu BC",    Icon: IconMenu     },
+];
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+
+function AdminSidebar() {
+  const pathname = usePathname();
+  const { theme, toggle } = useThemeStore();
+  const isDark = theme === "dark";
+
+  return (
+    <aside className="w-60 h-screen bg-white dark:bg-[#0d1117] border-r border-gray-200 dark:border-[#30363d] flex flex-col shrink-0">
+      {/* Logo */}
+      <div className="flex items-center gap-2.5 px-4 py-4 border-b border-gray-100 dark:border-[#30363d]">
+        <div className="w-7 h-7 rounded bg-violet-600 flex items-center justify-center text-white">
+          <IconSettings />
+        </div>
+        <span className="font-bold text-gray-800 dark:text-[#e6edf3] text-sm">HDOS Admin</span>
+        <div className="ml-auto flex items-center gap-1">
+          <button
+            onClick={toggle}
+            title={isDark ? "Chuyển sang Light" : "Chuyển sang Dark"}
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors"
+          >
+            {isDark ? <IconSun /> : <IconMoon />}
+          </button>
+          <Link
+            href="/hdos"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors"
+            title="Quay lại HDOS"
+          >
+            <IconBack />
+          </Link>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto px-2 py-3">
+        <p className="text-[10px] font-semibold text-gray-400 dark:text-[#8b949e] uppercase tracking-wider px-2 mb-2">
+          QUẢN TRỊ
+        </p>
+        <ul className="space-y-0.5">
+          {MENU_ITEMS.map((item) => {
+            const isActive = item.href === "/admin"
+              ? pathname === "/admin"
+              : pathname === item.href;
+            const { Icon } = item;
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
+                    ${isActive
+                      ? "bg-blue-600 text-white font-medium"
+                      : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3]"
+                    }`}
+                >
+                  <span className={isActive ? "text-white" : "text-gray-400 dark:text-[#8b949e]"}>
+                    <Icon />
+                  </span>
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </aside>
+  );
+}
+
+// ─── Topbar ───────────────────────────────────────────────────────────────────
+
+function AdminTopBar() {
+  return (
+    <header className="h-14 shrink-0 bg-white dark:bg-[#0d1117] border-b border-gray-200 dark:border-[#30363d] flex items-center px-5 gap-4">
+      <div className="flex-1 max-w-lg">
+        <div className="relative">
+          <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400 dark:text-[#8b949e]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Tìm module, widget, config..."
+            className="w-full pl-9 pr-4 py-2 text-sm rounded-lg bg-gray-100 dark:bg-[#21262d] border border-transparent focus:border-violet-500 focus:bg-white dark:focus:bg-[#161b22] outline-none text-gray-700 dark:text-[#e6edf3] placeholder-gray-400 dark:placeholder-[#8b949e] transition-colors"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 ml-auto">
+        <button className="px-3 py-1.5 text-xs rounded-lg bg-gray-100 dark:bg-[#21262d] text-gray-600 dark:text-[#8b949e] hover:bg-gray-200 dark:hover:bg-[#30363d] transition-colors">
+          Xem trước
+        </button>
+        <button className="px-3 py-1.5 text-xs rounded-lg bg-violet-600 hover:bg-violet-700 text-white transition-colors font-medium">
+          Lưu thay đổi
+        </button>
+        <div className="w-px h-6 bg-gray-200 dark:bg-[#30363d] mx-1" />
+        <div className="w-7 h-7 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-bold">A</div>
+      </div>
+    </header>
+  );
+}
+
+// ─── Layout ───────────────────────────────────────────────────────────────────
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-[#010409]">
+      <AdminSidebar />
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <AdminTopBar />
+        <main className="flex-1 overflow-y-auto">{children}</main>
+      </div>
+    </div>
+  );
+}
