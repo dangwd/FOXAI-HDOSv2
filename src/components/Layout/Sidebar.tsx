@@ -2,7 +2,7 @@
 import { useMenuStore } from "@/store/menuStore";
 import { useThemeStore } from "@/store/themeStore";
 import { Spin } from "antd";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import MenuBadgeChip from "./MenuBadgeChip";
 import MenuIcon from "./MenuIcon";
 
@@ -12,6 +12,7 @@ export default function Sidebar() {
   const { theme, toggle } = useThemeStore();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const activeId = searchParams.get("module") ?? "dashboard";
   const isDark = theme === "dark";
   return (
@@ -87,11 +88,13 @@ export default function Sidebar() {
                 </p>
                 <ul className="space-y-0.5">
                   {group.items.map((item) => {
-                    const isActive = activeId === item.id;
+                    const isActive = item.href
+                      ? pathname === item.href
+                      : activeId === item.id;
                     return (
                       <li key={item.id}>
                         <button
-                          onClick={() => router.push(`/hdos?module=${item.id}`)}
+                          onClick={() => router.push(item.href ?? `/hdos?module=${item.id}`)}
                           className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer
                             ${
                               isActive

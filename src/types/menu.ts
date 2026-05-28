@@ -10,6 +10,7 @@ export interface MenuItem {
   label: string;
   icon: string;
   badge?: MenuBadge;
+  href?: string;
 }
 
 export interface MenuGroup {
