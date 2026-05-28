@@ -3,7 +3,7 @@
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import ReactGridLayout from "react-grid-layout/legacy";
 import { Tooltip } from "antd";
 
@@ -24,14 +24,15 @@ import { IconCheck }              from "./_components/shared";
 export default function DashboardDesignerPage() {
   const { modules, catalog, providers, operations, loading, loadError, reload } = useAdminData();
 
-  const [selectedSlug, setSelectedSlug] = useState<string>("");
-  const [search,       setSearch]       = useState<string>("");
-  const [rightTab,     setRightTab]     = useState<"palette" | "json">("palette");
+  const [_selectedSlug, setSelectedSlug] = useState<string>("");
+  const [search,        setSearch]       = useState<string>("");
+  const [rightTab,      setRightTab]     = useState<"palette" | "json">("palette");
 
-  // Set first module when data loads
-  useEffect(() => {
-    if (modules.length > 0 && !selectedSlug) setSelectedSlug(modules[0].slug);
-  }, [modules, selectedSlug]);
+  // Derive active slug — auto-select first module once data is loaded, no useEffect needed.
+  const selectedSlug = useMemo(
+    () => _selectedSlug || modules[0]?.slug || "",
+    [_selectedSlug, modules],
+  );
 
   const designer = useDesignerState(selectedSlug);
 
@@ -241,6 +242,7 @@ export default function DashboardDesignerPage() {
       <aside className="w-72 shrink-0 border-l border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] flex flex-col h-full">
         {designer.selectedWidget ? (
           <WidgetPropertiesPanel
+            key={designer.selectedWidget.widgetKey}
             widget={designer.selectedWidget}
             catalog={catalog}
             providers={providers}

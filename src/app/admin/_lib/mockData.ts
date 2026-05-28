@@ -1,3 +1,4 @@
+import { adminApi } from "@/infrastructure/http/adminApi";
 import type {
   AdminModule,
   WidgetSchemaEntry,
@@ -5,6 +6,8 @@ import type {
   OperationEntry,
   ModuleLayout,
 } from "@/infrastructure/http/adminApi";
+
+type AdminApiType = typeof adminApi;
 
 const delay = (ms = 400) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -150,7 +153,7 @@ const MOCK_LAYOUTS: Record<string, ModuleLayout> = {
 
 // ─── Mock API (same shape as adminApi) ───────────────────────────────────────
 
-export const mockAdminApi = {
+export const mockAdminApi: AdminApiType = {
   listModules: async (): Promise<AdminModule[]> => {
     await delay(300);
     return MOCK_MODULES;
@@ -180,21 +183,23 @@ export const mockAdminApi = {
     };
   },
 
-  createTab: async (_slug: string, body: { slug: string; label: string; sortOrder: number }): Promise<{ id: string; slug: string }> => {
+  createTab: async (slug, body) => {
     await delay(200);
+    void slug;
     return { id: `tab_${Date.now().toString(36)}`, slug: body.slug };
   },
 
-  updateTab: async (_slug: string, _tabId: string, _body: { label?: string; sortOrder?: number }): Promise<void> => {
+  updateTab: async () => {
     await delay(100);
   },
 
-  deleteTab: async (_slug: string, _tabId: string): Promise<void> => {
+  deleteTab: async () => {
     await delay(100);
   },
 
-  saveWidgets: async (_slug: string, _tabId: string, widgets: unknown[]): Promise<{ saved: number }> => {
+  saveWidgets: async (slug, tabId, widgets) => {
     await delay(500);
-    return { saved: (widgets as unknown[]).length };
+    void slug; void tabId;
+    return { saved: widgets.length };
   },
 };

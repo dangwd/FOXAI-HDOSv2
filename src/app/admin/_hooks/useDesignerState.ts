@@ -11,18 +11,18 @@ import type { DesignerWidget } from "../_lib/types";
 // Swap `mockAdminApi` → `adminApi` from "@/infrastructure/http/adminApi" when real API is ready.
 const api = mockAdminApi;
 
-export interface TabMeta extends Pick<ModuleTabApi, "id" | "label"> {}
+export type TabMeta = Pick<ModuleTabApi, "id" | "label">;
 
 export interface DesignerStateReturn {
   // Data
-  tabs:          TabMeta[];
-  activeTabId:   string;
-  widgetsByTab:  Map<string, DesignerWidget[]>;
-  widgets:       DesignerWidget[];
-  selectedKey:   string | null;
+  tabs:           TabMeta[];
+  activeTabId:    string;
+  widgetsByTab:   Map<string, DesignerWidget[]>;
+  widgets:        DesignerWidget[];
+  selectedKey:    string | null;
   selectedWidget: DesignerWidget | null;
-  gridLayout:    Layout;
-  droppingEntry: WidgetSchemaEntry | null;
+  gridLayout:     Layout;
+  droppingEntry:  WidgetSchemaEntry | null;
 
   // Save state
   isDirty:     boolean;
@@ -77,8 +77,9 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
   const [isAddingTab,  setIsAddingTab]  = useState(false);
   const [newTabLabel,  setNewTabLabel]  = useState("");
 
-  // ── Layout loading ──────────────────────────────────────────────────────────
-  const [layoutLoading, setLayoutLoading] = useState(false);
+  // ── Layout loading — derived from slug mismatch to avoid sync setState ──────
+  const [loadedSlug, setLoadedSlug] = useState<string | null>(null);
+  const layoutLoading = Boolean(selectedSlug) && loadedSlug !== selectedSlug;
 
   // ── Save state ──────────────────────────────────────────────────────────────
   const [isDirty,     setIsDirty]     = useState(false);
@@ -87,7 +88,7 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
   const [saveError,   setSaveError]   = useState<string | null>(null);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
-  const widgets       = widgetsByTab.get(activeTabId) ?? [];
+  const widgets        = widgetsByTab.get(activeTabId) ?? [];
   const selectedWidget = selectedKey ? (widgets.find((w) => w.widgetKey === selectedKey) ?? null) : null;
 
   const gridLayout: Layout = widgets.map((w) => ({
@@ -96,33 +97,41 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
     minW: 2, minH: 1,
   }));
 
-  // ── Load layout when slug changes ────────────────────────────────────────────
-  const loadLayout = useCallback(async (slug: string) => {
-    setLayoutLoading(true);
-    setSelectedKey(null);
-    try {
-      const layout = await api.getModuleLayout(slug);
-      const tabList = layout.tabs.map((t) => ({ id: t.id, label: t.label }));
-      setTabs(tabList);
-      const newMap = new Map<string, DesignerWidget[]>();
-      layout.tabs.forEach((t) => newMap.set(t.id, t.widgets.map(fromApiWidget)));
-      setWidgetsByTab(newMap);
-      const defaultTab = layout.tabs.find((t) => t.isDefault) ?? layout.tabs[0];
-      setActiveTabId(defaultTab?.id ?? "");
-    } catch {
-      const blankId = `tab_${Date.now().toString(36)}`;
-      setTabs([{ id: blankId, label: "Tab chính" }]);
-      setWidgetsByTab(new Map([[blankId, []]]));
-      setActiveTabId(blankId);
-    } finally {
-      setLayoutLoading(false);
-      setIsDirty(false);
-    }
-  }, []);
-
+  // ── Load layout when slug changes ─────────────────────────────────────────
+  // All setState calls happen after the first await — none synchronous in effect body.
   useEffect(() => {
-    if (selectedSlug) loadLayout(selectedSlug);
-  }, [selectedSlug, loadLayout]);
+    if (!selectedSlug) return;
+    let cancelled = false;
+
+    async function run() {
+      try {
+        const layout = await api.getModuleLayout(selectedSlug);
+        if (cancelled) return;
+        const tabList = layout.tabs.map((t) => ({ id: t.id, label: t.label }));
+        const newMap = new Map<string, DesignerWidget[]>();
+        layout.tabs.forEach((t) => newMap.set(t.id, t.widgets.map(fromApiWidget)));
+        const defaultTab = layout.tabs.find((t) => t.isDefault) ?? layout.tabs[0];
+        setSelectedKey(null);
+        setTabs(tabList);
+        setWidgetsByTab(newMap);
+        setActiveTabId(defaultTab?.id ?? "");
+        setLoadedSlug(selectedSlug);
+        setIsDirty(false);
+      } catch {
+        if (cancelled) return;
+        const blankId = `tab_${Date.now().toString(36)}`;
+        setSelectedKey(null);
+        setTabs([{ id: blankId, label: "Tab chính" }]);
+        setWidgetsByTab(new Map([[blankId, []]]));
+        setActiveTabId(blankId);
+        setLoadedSlug(selectedSlug);
+        setIsDirty(false);
+      }
+    }
+
+    run();
+    return () => { cancelled = true; };
+  }, [selectedSlug]);
 
   // ── beforeunload guard ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -243,12 +252,13 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
   }
 
   // ── Save ─────────────────────────────────────────────────────────────────────
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     if (!isDirty || isSaving || !selectedSlug || !activeTabId) return;
     setIsSaving(true);
     setSaveError(null);
     try {
-      const payload = widgets.map((w) => ({
+      const currentWidgets = widgetsByTab.get(activeTabId) ?? [];
+      const payload = currentWidgets.map((w) => ({
         widgetKey:        w.widgetKey,
         title:            w.title            || undefined,
         subtitle:         w.subtitle         || undefined,
@@ -274,7 +284,7 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
     } finally {
       setIsSaving(false);
     }
-  }
+  }, [isDirty, isSaving, selectedSlug, activeTabId, widgetsByTab]);
 
   return {
     tabs, activeTabId, widgetsByTab, widgets, selectedKey, selectedWidget,
