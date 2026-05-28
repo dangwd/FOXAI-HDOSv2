@@ -62,6 +62,7 @@ export interface ModuleTabApi {
 export interface ModuleLayout {
   slug: string;
   label: string;
+  description?: string;
   tabs: ModuleTabApi[];
 }
 

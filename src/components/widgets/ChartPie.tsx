@@ -41,7 +41,7 @@ export function ChartPie({
   if (loading) {
     const circleSize = Math.round(height * 0.6);
     return (
-      <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22]">
+      <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full">
         {title && <div className={`${SK} h-3 w-32 mb-3`} />}
         <div className="flex justify-center items-center" style={{ height }}>
           <div className={`${SK} rounded-full`} style={{ width: circleSize, height: circleSize }} />
@@ -51,35 +51,37 @@ export function ChartPie({
   }
 
   return (
-    <div className="rounded-lg p-4 border border-gray-200 bg-white">
+    <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full flex flex-col">
       {title && (
-        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-3">
+        <p className="text-[11px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-3 shrink-0">
           {title}
         </p>
       )}
-      <ResponsiveContainer width="100%" height={height}>
-        <PieChart>
-          <Pie
-            data={displayData}
-            dataKey={dataKey}
-            nameKey="label"
-            cx="50%"
-            cy="50%"
-            innerRadius={innerRadius}
-            outerRadius="75%"
-            paddingAngle={variant === "donut" ? 3 : 0}
-          >
-            {displayData.map((_, i) => (
-              <Cell key={i} fill={colors[i % colors.length]} />
-            ))}
-          </Pie>
-          <Tooltip
-            formatter={(v) => [`${v ?? ""}${unit ?? ""}`, ""]}
-            contentStyle={{ fontSize: 12 }}
-          />
-          {legend && <Legend wrapperStyle={{ fontSize: 12 }} />}
-        </PieChart>
-      </ResponsiveContainer>
+      <div className="flex-1 min-h-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={displayData}
+              dataKey={dataKey}
+              nameKey="label"
+              cx="50%"
+              cy="50%"
+              innerRadius={innerRadius}
+              outerRadius="65%"
+              paddingAngle={variant === "donut" ? 3 : 0}
+            >
+              {displayData.map((_, i) => (
+                <Cell key={i} fill={colors[i % colors.length]} />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(v) => [`${v ?? ""}${unit ?? ""}`, ""]}
+              contentStyle={{ fontSize: 12 }}
+            />
+            {legend && <Legend wrapperStyle={{ fontSize: 12 }} />}
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
