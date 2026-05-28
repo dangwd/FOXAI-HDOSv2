@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Select, Tag } from "antd";
 import type { WidgetSchemaEntry, ProviderInfo, OperationEntry } from "@/infrastructure/http/adminApi";
 import { CATEGORY_ORDER, CATEGORY_LABELS, CATEGORY_COLOR } from "../_lib/constants";
@@ -25,15 +25,11 @@ export function WidgetPropertiesPanel({
   const [form, setForm] = useState<DesignerWidget>(widget);
   const [bindingsInput, setBindingsInput] = useState(widget.filterBindings.join(", "));
 
+  // Note: this component is rendered with key={widget.widgetKey} by the parent,
+  // so it remounts fresh whenever the selected widget changes — no useEffect needed.
   function set<K extends keyof DesignerWidget>(key: K, val: DesignerWidget[K]) {
     setForm((prev) => ({ ...prev, [key]: val }));
   }
-
-  useEffect(() => {
-    setForm(widget);
-    setBindingsInput(widget.filterBindings.join(", "));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [widget.widgetKey]);
 
   const filteredOps = form.providerId
     ? operations.filter((op) => op.providerId === form.providerId)
