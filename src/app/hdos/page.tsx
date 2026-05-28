@@ -2,8 +2,10 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ScreenRenderer } from "@/components/ScreenRenderer";
+import { ScreenRenderer }  from "@/components/ScreenRenderer";
+import { ModuleRenderer }  from "@/components/ModuleRenderer";
 import type { ScreenConfig } from "@/types/screen";
+import type { ModuleLayout } from "@/infrastructure/http/adminApi";
 
 const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
 
@@ -24,38 +26,64 @@ function PageSkeleton() {
   );
 }
 
+type PageState =
+  | { kind: "loading" }
+  | { kind: "module"; layout: ModuleLayout }
+  | { kind: "screen"; config: ScreenConfig }
+  | { kind: "error"; message: string };
+
 function HdosContent({ moduleId }: { moduleId: string }) {
-  const [screen, setScreen] = useState<ScreenConfig | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const [state, setState] = useState<PageState>({ kind: "loading" });
 
   useEffect(() => {
-    fetch(`/api/screen/${moduleId}`)
-      .then((res) => {
-        if (!res.ok) { setNotFound(true); return null; }
-        return res.json();
-      })
-      .then((data) => { if (data) setScreen(data); })
-      .finally(() => setLoading(false));
+    let cancelled = false;
+
+    async function load() {
+      // 1. Try module layout (admin-configured, react-grid-layout based)
+      const modRes = await fetch(`/api/v1/modules/${moduleId}/layout`);
+      if (!cancelled && modRes.ok) {
+        const layout = (await modRes.json()) as ModuleLayout;
+        if (!cancelled) setState({ kind: "module", layout });
+        return;
+      }
+
+      // 2. Fall back to legacy ScreenConfig
+      const scRes = await fetch(`/api/screen/${moduleId}`);
+      if (cancelled) return;
+      if (scRes.ok) {
+        const config = (await scRes.json()) as ScreenConfig;
+        if (!cancelled) setState({ kind: "screen", config });
+        return;
+      }
+
+      if (!cancelled) setState({ kind: "error", message: `Màn hình chưa được cấu hình: ${moduleId}` });
+    }
+
+    load().catch(() => {
+      if (!cancelled) setState({ kind: "error", message: "Không thể tải dữ liệu màn hình." });
+    });
+
+    return () => { cancelled = true; };
   }, [moduleId]);
 
-  if (loading) return <PageSkeleton />;
+  if (state.kind === "loading") return <PageSkeleton />;
 
-  if (notFound || !screen) {
+  if (state.kind === "error") {
     return (
-      <div className="p-8 text-gray-400 text-sm">
-        Màn hình chưa được cấu hình: <code className="text-red-400">{moduleId}</code>
+      <div className="p-8 text-gray-400 dark:text-[#484f58] text-sm">
+        <code className="text-red-400">{state.message}</code>
       </div>
     );
   }
 
-  return <ScreenRenderer config={screen} />;
+  if (state.kind === "module") return <ModuleRenderer layout={state.layout} />;
+
+  return <ScreenRenderer config={state.config} />;
 }
 
 function HdosPageContent() {
   const searchParams = useSearchParams();
   const moduleId = searchParams.get("module") ?? "dashboard";
-
   return <HdosContent key={moduleId} moduleId={moduleId} />;
 }
 
