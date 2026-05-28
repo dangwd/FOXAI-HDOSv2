@@ -1,8 +1,11 @@
+import axios from 'axios';
 import httpClient from './httpClient';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type WidgetCategory = 'visualization' | 'healthcare' | 'filter' | 'layout' | 'ai';
+
+export type ModuleGroup = 'dieu-hanh' | 'lam-sang' | 'quan-tri';
 
 export interface AdminModule {
   id: string;
@@ -11,6 +14,11 @@ export interface AdminModule {
   icon: string;
   description: string;
   sortOrder: number;
+  group?: ModuleGroup;
+  roles?: string[];
+  isActive?: boolean;
+  isVisible?: boolean;
+  refreshInterval?: number;
 }
 
 export interface WidgetSchemaEntry {
@@ -100,7 +108,7 @@ export const adminApi = {
     httpClient.get<OperationEntry[]>('/api/v1/admin/operations').then((r) => r.data),
 
   getModuleLayout: (slug: string): Promise<ModuleLayout> =>
-    httpClient.get<ModuleLayout>(`/api/v1/modules/${slug}/layout`).then((r) => r.data),
+    axios.get<ModuleLayout>(`/api/v1/modules/${slug}/layout`).then((r) => r.data),
 
   createTab: (
     slug: string,

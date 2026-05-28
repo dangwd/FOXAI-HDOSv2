@@ -1,4 +1,5 @@
-import { Tag } from "antd";
+import { Input, Tag } from "antd";
+import { Search } from "lucide-react";
 import type { WidgetSchemaEntry } from "@/infrastructure/http/adminApi";
 import { CATEGORY_ORDER, CATEGORY_LABELS, CATEGORY_COLOR } from "../_lib/constants";
 
@@ -77,15 +78,13 @@ export function WidgetCatalogPanel({
   return (
     <>
       <div className="p-2 border-b border-gray-200 dark:border-[#30363d] shrink-0">
-        <input
-          type="text"
+        <Input
+          size="small"
+          prefix={<Search size={13} className="text-gray-400" />}
           placeholder="Tìm widget..."
           value={search}
           onChange={(e) => onSearch(e.target.value)}
-          className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-[#30363d]
-            bg-gray-50 dark:bg-[#21262d] text-gray-700 dark:text-[#e6edf3]
-            placeholder-gray-400 dark:placeholder-[#484f58]
-            outline-none focus:border-violet-400 dark:focus:border-violet-600 transition-colors"
+          allowClear
         />
       </div>
       <div className="flex-1 overflow-y-auto p-2 space-y-3">

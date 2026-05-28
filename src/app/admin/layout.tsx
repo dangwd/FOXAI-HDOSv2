@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ConfigProvider } from "antd";
 import { useThemeStore } from "@/store/themeStore";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -58,6 +59,19 @@ function IconMenu() {
   );
 }
 
+function IconBoxes() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z" />
+      <path d="m7 16.5-4.74-2.85" /><path d="m7 16.5 5-3" /><path d="M7 16.5v5.17" />
+      <path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z" />
+      <path d="m17 16.5-5-3" /><path d="m17 16.5 4.74-2.85" /><path d="M17 16.5v5.17" />
+      <path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z" />
+      <path d="M12 8 7.26 5.15" /><path d="m12 8 4.74-2.85" /><path d="M12 13.5V8" />
+    </svg>
+  );
+}
+
 function IconBack() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -89,12 +103,13 @@ function IconMoon() {
 // ─── Menu definition ──────────────────────────────────────────────────────────
 
 const MENU_ITEMS = [
+  { href: "/admin/modules",    label: "Quản lý Module",     Icon: IconBoxes    },
+  { href: "/admin",            label: "Thiết kế Báo cáo",   Icon: IconPencil   },
+  { href: "/admin/menu",       label: "Quản lý Menu BC",    Icon: IconMenu     },
   { href: "/admin/provider",   label: "Quản trị Provider",  Icon: IconSettings },
   { href: "/admin/operations", label: "Quản lý Operations", Icon: IconList     },
   { href: "/admin/console",    label: "Test Console",       Icon: IconTerminal },
-  { href: "/admin",            label: "Thiết kế Báo cáo",   Icon: IconPencil   },
   { href: "/admin/sync",       label: "Theo dõi đồng bộ",   Icon: IconWifi     },
-  { href: "/admin/menu",       label: "Quản lý Menu BC",    Icon: IconMenu     },
 ];
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
@@ -202,13 +217,108 @@ function AdminTopBar() {
 // ─── Layout ───────────────────────────────────────────────────────────────────
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { theme } = useThemeStore();
+  const dk = theme === "dark";
+
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-[#010409]">
-      <AdminSidebar />
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <AdminTopBar />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+    <ConfigProvider
+      theme={{
+        token: {
+          // ── Primary → violet-600 (matches bg-violet-600 across admin) ──────
+          colorPrimary:          "#7c3aed",
+          colorPrimaryHover:     "#6d28d9",
+          colorPrimaryActive:    "#5b21b6",
+
+          // ── Background tokens ─────────────────────────────────────────────
+          colorBgContainer:      dk ? "#161b22" : "#ffffff",  // inputs, table body, cards
+          colorBgElevated:       dk ? "#161b22" : "#ffffff",  // modals, drawers, dropdowns
+          colorBgSpotlight:      dk ? "#21262d" : "#f3f4f6",
+          colorFillAlter:        dk ? "#0d1117" : "#f9fafb",  // table header stripe
+          colorFillSecondary:    dk ? "#21262d" : "#f5f5f5",
+          colorFillTertiary:     dk ? "#161b22" : "#f9fafb",
+
+          // ── Border tokens ─────────────────────────────────────────────────
+          colorBorder:           dk ? "#30363d" : "#e5e7eb",  // inputs, cards
+          colorBorderSecondary:  dk ? "#21262d" : "#f0f0f0",  // subtle dividers
+          colorSplit:            dk ? "#21262d" : "#f0f0f0",
+
+          // ── Text tokens ───────────────────────────────────────────────────
+          colorText:             dk ? "#e6edf3" : "#111827",
+          colorTextSecondary:    dk ? "#8b949e" : "#6b7280",
+          colorTextTertiary:     dk ? "#484f58" : "#9ca3af",
+          colorTextQuaternary:   dk ? "#30363d" : "#d1d5db",
+
+          // ── Shape & type ──────────────────────────────────────────────────
+          borderRadius:    8,
+          borderRadiusLG:  10,
+          borderRadiusSM:  6,
+          borderRadiusXS:  4,
+          fontSize:        13,
+          fontSizeSM:      11,
+          fontSizeLG:      14,
+        },
+        components: {
+          Table: {
+            headerBg:      dk ? "#0d1117" : "#f9fafb",
+            headerColor:   dk ? "#8b949e" : "#6b7280",
+            rowHoverBg:    dk ? "#1c2128" : "rgba(0,0,0,0.02)",
+            borderColor:   dk ? "#21262d" : "#f0f0f0",
+            cellPaddingBlock:   8,
+            cellPaddingInline: 12,
+          },
+          Drawer: {
+            colorBgElevated: dk ? "#161b22" : "#ffffff",
+            colorSplit:      dk ? "#21262d" : "#f0f0f0",
+          },
+          Modal: {
+            contentBg: dk ? "#161b22" : "#ffffff",
+            headerBg:  dk ? "#161b22" : "#ffffff",
+            colorSplit: dk ? "#21262d" : "#f0f0f0",
+          },
+          Tabs: {
+            itemActiveColor:   "#7c3aed",
+            itemSelectedColor: "#7c3aed",
+            inkBarColor:       "#7c3aed",
+            itemColor:         dk ? "#8b949e" : "#6b7280",
+            itemHoverColor:    dk ? "#e6edf3" : "#111827",
+            colorBorderSecondary: dk ? "#21262d" : "#f0f0f0",
+          },
+          Input: {
+            colorBgContainer: dk ? "#0d1117" : "#ffffff",
+            activeBorderColor: "#7c3aed",
+            hoverBorderColor:  "#a78bfa",
+          },
+          Select: {
+            colorBgContainer:    dk ? "#0d1117" : "#ffffff",
+            optionSelectedBg:    dk ? "#2d2542" : "#f3f0ff",
+            optionActiveBg:      dk ? "#21262d" : "#f5f5f5",
+          },
+          InputNumber: {
+            colorBgContainer: dk ? "#0d1117" : "#ffffff",
+            activeBorderColor: "#7c3aed",
+            hoverBorderColor:  "#a78bfa",
+          },
+          Button: {
+            colorPrimaryBg: "#7c3aed",
+          },
+          Alert: {
+            colorInfoBg:    dk ? "rgba(22,119,255,.1)"  : "rgba(22,119,255,.08)",
+            colorWarningBg: dk ? "rgba(250,140,22,.1)"  : "rgba(250,140,22,.08)",
+            colorErrorBg:   dk ? "rgba(255,77,79,.1)"   : "rgba(255,77,79,.08)",
+          },
+          Tag: {
+            borderRadiusSM: 6,
+          },
+        },
+      }}
+    >
+      <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-[#010409]">
+        <AdminSidebar />
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+          <AdminTopBar />
+          <main className="flex-1 overflow-y-auto">{children}</main>
+        </div>
       </div>
-    </div>
+    </ConfigProvider>
   );
 }

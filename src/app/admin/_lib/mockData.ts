@@ -14,13 +14,49 @@ const delay = (ms = 400) => new Promise<void>((r) => setTimeout(r, ms));
 // ─── Modules ─────────────────────────────────────────────────────────────────
 
 export const MOCK_MODULES: AdminModule[] = [
-  { id: "1", slug: "patient-flow",    label: "Luồng bệnh nhân",    icon: "🏥", description: "Theo dõi luồng di chuyển bệnh nhân",  sortOrder: 0 },
-  { id: "2", slug: "bed-management",  label: "Quản lý giường",      icon: "🛏️", description: "Tình trạng giường bệnh viện",          sortOrder: 1 },
-  { id: "3", slug: "vitals-monitor",  label: "Giám sát sinh hiệu",  icon: "❤️", description: "Dữ liệu sinh hiệu bệnh nhân",          sortOrder: 2 },
-  { id: "4", slug: "lab-results",     label: "Xét nghiệm",          icon: "🔬", description: "Kết quả từ phòng lab",                 sortOrder: 3 },
-  { id: "5", slug: "pharmacy",        label: "Dược",                 icon: "💊", description: "Quản lý thuốc và đơn thuốc",           sortOrder: 4 },
-  { id: "6", slug: "emergency",       label: "Cấp cứu",              icon: "🚨", description: "Dashboard phòng cấp cứu",              sortOrder: 5 },
-  { id: "7", slug: "analytics",       label: "Phân tích",            icon: "📊", description: "Báo cáo và phân tích tổng hợp",        sortOrder: 6 },
+  // ĐIỀU HÀNH
+  {
+    id: "1", slug: "dashboard",          label: "Dashboard Điều hành",     icon: "DB",
+    description: "KPI tổng quan toàn bệnh viện: doanh thu, giường, nhân sự, cảnh báo.",
+    sortOrder: 0, group: "dieu-hanh", roles: ["admin"], isActive: true, isVisible: true,
+  },
+  {
+    id: "2", slug: "operations-center",  label: "Trung tâm điều phối",     icon: "TT",
+    description: "Theo dõi hoạt động real-time: ambulance, OR, ER, ICU.",
+    sortOrder: 1, group: "dieu-hanh", roles: ["admin"], isActive: true, isVisible: true,
+  },
+  {
+    id: "3", slug: "digital-twin",       label: "Digital Twin Bệnh viện",  icon: "DT",
+    description: "Mô phỏng số bệnh viện, mô hình 3D tầng, luồng bệnh nhân, dự báo.",
+    sortOrder: 2, group: "dieu-hanh", roles: ["admin", "doctor"], isActive: true, isVisible: true,
+  },
+  // LÂM SÀNG
+  {
+    id: "4", slug: "emergency",          label: "Cấp cứu",                 icon: "CC",
+    description: "Theo dõi ER: bệnh nhân chờ, phân loại, xe cấp cứu đến, cảnh báo.",
+    sortOrder: 3, group: "lam-sang", roles: ["doctor", "nurse", "admin"], isActive: true, isVisible: true,
+  },
+  {
+    id: "5", slug: "inpatient",          label: "Nội trú",                 icon: "NT",
+    description: "Quản lý bệnh nhân nội trú: giường, NEWS2, pathway điều trị.",
+    sortOrder: 4, group: "lam-sang", roles: ["doctor", "nurse", "admin"], isActive: true, isVisible: true,
+  },
+  {
+    id: "6", slug: "outpatient",         label: "Ngoại trú",               icon: "NG",
+    description: "Lịch khám, danh sách chờ, kết quả xét nghiệm ngoại trú.",
+    sortOrder: 5, group: "lam-sang", roles: ["doctor", "nurse", "admin"], isActive: true, isVisible: true,
+  },
+  // thêm để designer vẫn có data cũ
+  {
+    id: "7", slug: "patient-flow",       label: "Luồng bệnh nhân",        icon: "LB",
+    description: "Theo dõi luồng di chuyển và phân tầng nguy cơ bệnh nhân.",
+    sortOrder: 6, group: "lam-sang", roles: ["doctor", "nurse"], isActive: true, isVisible: true,
+  },
+  {
+    id: "8", slug: "bed-management",     label: "Quản lý giường",         icon: "GB",
+    description: "Tình trạng giường bệnh viện real-time theo khoa.",
+    sortOrder: 7, group: "lam-sang", roles: ["nurse", "admin"], isActive: true, isVisible: true,
+  },
 ];
 
 // ─── Widget schemas ───────────────────────────────────────────────────────────
@@ -175,6 +211,9 @@ export const mockAdminApi: AdminApiType = {
   },
 
   getModuleLayout: async (slug: string): Promise<ModuleLayout> => {
+    if (slug === "dashboard") {
+      return adminApi.getModuleLayout(slug);
+    }
     await delay(350);
     return MOCK_LAYOUTS[slug] ?? {
       slug,
