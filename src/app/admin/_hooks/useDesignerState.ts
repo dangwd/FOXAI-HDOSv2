@@ -3,13 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Layout, LayoutItem } from "react-grid-layout";
 import type { WidgetSchemaEntry, ModuleTabApi } from "@/infrastructure/http/adminApi";
-import { mockAdminApi } from "../_lib/mockData";
+import { adminApi } from "@/infrastructure/http/adminApi";
 import { fromApiWidget, makeBlankWidget, findNextY } from "../_lib/widgetUtils";
 import { DEFAULT_SIZES } from "../_lib/constants";
 import type { DesignerWidget } from "../_lib/types";
 
-// Swap `mockAdminApi` → `adminApi` from "@/infrastructure/http/adminApi" when real API is ready.
-const api = mockAdminApi;
+const api = adminApi;
 
 export type TabMeta = Pick<ModuleTabApi, "id" | "label">;
 

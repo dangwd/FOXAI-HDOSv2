@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Select, Tag } from "antd";
+import { Select, Tag, Input, Button, AutoComplete } from "antd";
+import { X } from "lucide-react";
 import type { WidgetSchemaEntry, ProviderInfo, OperationEntry } from "@/infrastructure/http/adminApi";
 import { CATEGORY_ORDER, CATEGORY_LABELS, CATEGORY_COLOR } from "../_lib/constants";
 import type { DesignerWidget } from "../_lib/types";
-import { Field, IconX } from "./shared";
+import { Field } from "./shared";
 
 export function WidgetPropertiesPanel({
   widget,
@@ -25,8 +26,6 @@ export function WidgetPropertiesPanel({
   const [form, setForm] = useState<DesignerWidget>(widget);
   const [bindingsInput, setBindingsInput] = useState(widget.filterBindings.join(", "));
 
-  // Note: this component is rendered with key={widget.widgetKey} by the parent,
-  // so it remounts fresh whenever the selected widget changes — no useEffect needed.
   function set<K extends keyof DesignerWidget>(key: K, val: DesignerWidget[K]) {
     setForm((prev) => ({ ...prev, [key]: val }));
   }
@@ -58,13 +57,12 @@ export function WidgetPropertiesPanel({
             </div>
           )}
         </div>
-        <button
+        <Button
+          type="text"
+          size="small"
+          icon={<X size={13} />}
           onClick={onClose}
-          className="w-6 h-6 flex items-center justify-center rounded text-gray-400
-            hover:text-gray-600 dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors"
-        >
-          <IconX size={12} />
-        </button>
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
@@ -81,22 +79,20 @@ export function WidgetPropertiesPanel({
         </div>
 
         <Field label="Tiêu đề">
-          <input
-            type="text"
+          <Input
+            size="small"
             value={form.title}
             onChange={(e) => set("title", e.target.value)}
             placeholder="Widget title"
-            className="hdos-prop-input"
           />
         </Field>
 
         <Field label="Phụ đề">
-          <input
-            type="text"
+          <Input
+            size="small"
             value={form.subtitle}
             onChange={(e) => set("subtitle", e.target.value)}
             placeholder="Subtitle / description"
-            className="hdos-prop-input"
           />
         </Field>
 
@@ -131,69 +127,69 @@ export function WidgetPropertiesPanel({
         </Field>
 
         <Field label="Operation">
-          <Select
+          <AutoComplete
             size="small"
-            value={form.operationPattern || undefined}
+            value={form.operationPattern}
             onChange={(v) => set("operationPattern", v ?? "")}
             allowClear
-            placeholder="Chọn operation..."
+            placeholder="Chọn hoặc nhập operation pattern..."
             style={{ width: "100%" }}
-            showSearch
             options={filteredOps.map((op) => ({ value: op.pattern, label: op.pattern }))}
+            filterOption={(input, option) =>
+              (option?.value as string ?? "").toLowerCase().includes(input.toLowerCase())
+            }
           />
         </Field>
 
         <Field label="Params Template (JSON)">
-          <textarea
+          <Input.TextArea
             value={form.paramsTemplate}
             onChange={(e) => set("paramsTemplate", e.target.value)}
             rows={4}
             spellCheck={false}
-            className="hdos-prop-textarea font-mono text-[10px]"
+            style={{ fontFamily: "monospace", fontSize: 10 }}
           />
         </Field>
 
         <Field label="Visual Config (JSON)">
-          <textarea
+          <Input.TextArea
             value={form.visualConfig}
             onChange={(e) => set("visualConfig", e.target.value)}
             rows={4}
             spellCheck={false}
-            className="hdos-prop-textarea font-mono text-[10px]"
+            style={{ fontFamily: "monospace", fontSize: 10 }}
           />
         </Field>
 
         {!isFilterWidget && (
           <Field label="Filter Bindings (cách nhau bằng dấu phẩy)">
-            <input
-              type="text"
+            <Input
+              size="small"
               value={bindingsInput}
               onChange={(e) => setBindingsInput(e.target.value)}
               placeholder="filterKey1, filterKey2"
-              className="hdos-prop-input"
             />
           </Field>
         )}
 
         {isFilterWidget && (
           <Field label="Filter Key">
-            <input
-              type="text"
+            <Input
+              size="small"
               value={form.filterKey}
               onChange={(e) => set("filterKey", e.target.value)}
               placeholder="e.g. region"
-              className="hdos-prop-input"
             />
           </Field>
         )}
 
         <Field label="Interactions (JSON)">
-          <textarea
+          <Input.TextArea
             value={form.interactions}
             onChange={(e) => set("interactions", e.target.value)}
             rows={3}
             spellCheck={false}
-            className="hdos-prop-textarea font-mono text-[10px]"
+            style={{ fontFamily: "monospace", fontSize: 10 }}
           />
         </Field>
 
@@ -205,12 +201,9 @@ export function WidgetPropertiesPanel({
       </div>
 
       <div className="p-3 border-t border-gray-200 dark:border-[#30363d] shrink-0">
-        <button
-          onClick={handleApply}
-          className="w-full py-2 text-xs font-semibold rounded-lg bg-violet-600 hover:bg-violet-700 text-white transition-colors"
-        >
+        <Button type="primary" block onClick={handleApply}>
           Áp dụng thay đổi
-        </button>
+        </Button>
       </div>
     </div>
   );

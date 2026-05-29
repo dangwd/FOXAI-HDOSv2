@@ -1,28 +1,51 @@
 "use client";
 
 import type { ApiWidget } from "@/infrastructure/http/adminApi";
-import { KpiCard }      from "./KpiCard";
-import { ChartLine }    from "./ChartLine";
-import { ChartBar }     from "./ChartBar";
-import { ChartArea }    from "./ChartArea";
-import { ChartPie }     from "./ChartPie";
-import { DataTable }    from "./DataTable";
-import { ProgressList } from "./ProgressList";
-import { AlertList }    from "./AlertList";
+import { AlertList } from "./AlertList";
+import { BulletList } from "./BulletList";
+import { ChartArea } from "./ChartArea";
+import { ChartBar } from "./ChartBar";
+import { ChartLine } from "./ChartLine";
+import { ChartPie } from "./ChartPie";
+import { DataTable } from "./DataTable";
 import { FlowPipeline } from "./FlowPipeline";
-import { WardBedGrid }  from "./WardBedGrid";
-import { OrRoomGrid }   from "./OrRoomGrid";
-import { BulletList }   from "./BulletList";
+import { KpiCard } from "./KpiCard";
+import { OrRoomGrid } from "./OrRoomGrid";
+import { ProgressList } from "./ProgressList";
 import { StatsSummary } from "./StatsSummary";
+import { WardBedGrid } from "./WardBedGrid";
 
 // ─── Static fake data pools ───────────────────────────────────────────────────
 
-const MONTHS  = ["T1","T2","T3","T4","T5","T6","T7","T8","T9","T10","T11","T12"];
-const DAYS_7  = ["T2","T3","T4","T5","T6","T7","CN"];
-const HOURS_8 = ["0:00","3:00","6:00","9:00","12:00","15:00","18:00","21:00"];
+const MONTHS = [
+  "T1",
+  "T2",
+  "T3",
+  "T4",
+  "T5",
+  "T6",
+  "T7",
+  "T8",
+  "T9",
+  "T10",
+  "T11",
+  "T12",
+];
+const DAYS_7 = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+const HOURS_8 = [
+  "0:00",
+  "3:00",
+  "6:00",
+  "9:00",
+  "12:00",
+  "15:00",
+  "18:00",
+  "21:00",
+];
 
 const TREND_DATA = DAYS_7.map((label, i) => ({
-  label, value: 145 + i * 7 + Math.round(Math.sin(i) * 8),
+  label,
+  value: 145 + i * 7 + Math.round(Math.sin(i) * 8),
 }));
 
 const MONTH_DATA = MONTHS.map((label, i) => ({
@@ -31,15 +54,16 @@ const MONTH_DATA = MONTHS.map((label, i) => ({
 }));
 
 const HOUR_DATA = HOURS_8.map((label, i) => ({
-  label, value: 35 + Math.round(Math.sin(i / 2) * 25),
+  label,
+  value: 35 + Math.round(Math.sin(i / 2) * 25),
 }));
 
 const VITALS_MULTI = HOURS_8.map((label, i) => ({
   label,
-  value:    70 + Math.round(Math.sin(i / 2) * 10),
+  value: 70 + Math.round(Math.sin(i / 2) * 10),
   nhịp_tim: 70 + Math.round(Math.sin(i / 2) * 10),
   huyết_áp: 118 + Math.round(Math.cos(i) * 6),
-  spo2:     97 + Math.round(Math.sin(i) * 1),
+  spo2: 97 + Math.round(Math.sin(i) * 1),
 }));
 
 // Revenue breakdown
@@ -71,160 +95,360 @@ const PIE_DIAG = [
 
 // Bed occupancy — matches reference screenshot style
 const CAPACITY_ITEMS = [
-  { label: "ICU",                           value: 80,  color: "#ff4d4f" },
-  { label: "Khoa Nội tim mạch",             value: 90,  color: "#ff4d4f" },
-  { label: "Khoa Nội tổng quát (ICU)",      value: 67,  color: "#faad14" },
-  { label: "Khoa Tổng hợp",                 value: 87,  color: "#ff4d4f" },
-  { label: "Khoa Tim mạch can thiệp",       value: 78,  color: "#faad14" },
-  { label: "Khoa Nội tổng quát",            value: 72,  color: "#faad14" },
-  { label: "Khoa Ngoại tổng quát",          value: 81,  color: "#ff4d4f" },
-  { label: "Khoa Nhi",                      value: 54,  color: "#52c41a" },
-  { label: "Khoa Thần kinh",                value: 62,  color: "#52c41a" },
-  { label: "Khoa Sản khoa",                 value: 53,  color: "#52c41a" },
-  { label: "Khoa Hồi lưu",                  value: 49,  color: "#52c41a" },
+  { label: "ICU", value: 80, color: "#ff4d4f" },
+  { label: "Khoa Nội tim mạch", value: 90, color: "#ff4d4f" },
+  { label: "Khoa Nội tổng quát (ICU)", value: 67, color: "#faad14" },
+  { label: "Khoa Tổng hợp", value: 87, color: "#ff4d4f" },
+  { label: "Khoa Tim mạch can thiệp", value: 78, color: "#faad14" },
+  { label: "Khoa Nội tổng quát", value: 72, color: "#faad14" },
+  { label: "Khoa Ngoại tổng quát", value: 81, color: "#ff4d4f" },
+  { label: "Khoa Nhi", value: 54, color: "#52c41a" },
+  { label: "Khoa Thần kinh", value: 62, color: "#52c41a" },
+  { label: "Khoa Sản khoa", value: 53, color: "#52c41a" },
+  { label: "Khoa Hồi lưu", value: 49, color: "#52c41a" },
 ];
 
 // Critical lab alerts — matches reference style (Troponin, electrolytes, etc.)
 const ALERT_ITEMS = [
-  { code: "T1.3",  text: "Troponin I > 12.4 ng/mL",  patient: "BN: Nguyễn Văn A", dept: "Khoa Nội tim mạch", time: "3 phút trước", severity: "critical" as const },
-  { code: "Kx",    text: "Kx > 2.2 mmol/L",           patient: "BN: Trần Thị B",   dept: "Khoa Cấp cứu",     time: "5 phút trước", severity: "warning" as const },
-  { code: "Na+",   text: "Na+ > 118 mmol/L",           patient: "BN: Lê Văn C",     dept: "Khoa Nội tổng quát", time: "8 phút trước", severity: "warning" as const },
-  { code: "PTx",   text: "PTx > 22%",                  patient: "BN: Hoàng Thị D",  dept: "Khoa Huyết học",   time: "16 phút trước", severity: "warning" as const },
-  { code: "NH3",   text: "NH3 > 185 mmol/L",           patient: "BN: Đinh Văn E",   dept: "Khoa Gan mật",     time: "34 phút trước", severity: "critical" as const },
+  {
+    code: "T1.3",
+    text: "Troponin I > 12.4 ng/mL",
+    patient: "BN: Nguyễn Văn A",
+    dept: "Khoa Nội tim mạch",
+    time: "3 phút trước",
+    severity: "critical" as const,
+  },
+  {
+    code: "Kx",
+    text: "Kx > 2.2 mmol/L",
+    patient: "BN: Trần Thị B",
+    dept: "Khoa Cấp cứu",
+    time: "5 phút trước",
+    severity: "warning" as const,
+  },
+  {
+    code: "Na+",
+    text: "Na+ > 118 mmol/L",
+    patient: "BN: Lê Văn C",
+    dept: "Khoa Nội tổng quát",
+    time: "8 phút trước",
+    severity: "warning" as const,
+  },
+  {
+    code: "PTx",
+    text: "PTx > 22%",
+    patient: "BN: Hoàng Thị D",
+    dept: "Khoa Huyết học",
+    time: "16 phút trước",
+    severity: "warning" as const,
+  },
+  {
+    code: "NH3",
+    text: "NH3 > 185 mmol/L",
+    patient: "BN: Đinh Văn E",
+    dept: "Khoa Gan mật",
+    time: "34 phút trước",
+    severity: "critical" as const,
+  },
 ];
 
 // Patient flow stages
 const FLOW_OUTPATIENT = [
-  { label: "Chờ tiếp nhận",  value: 12, color: "#1677ff" },
-  { label: "Đang khám",      value: 23, color: "#52c41a" },
+  { label: "Chờ tiếp nhận", value: 12, color: "#1677ff" },
+  { label: "Đang khám", value: 23, color: "#52c41a" },
   { label: "Chờ XN / CĐHA", value: 31, color: "#faad14", warn: true },
-  { label: "Chờ kết quả",    value: 8,  color: "#722ed1" },
-  { label: "Thanh toán",     value: 5,  color: "#13c2c2" },
-  { label: "Hoàn thành",     value: 79, color: "#389e0d" },
+  { label: "Chờ kết quả", value: 8, color: "#722ed1" },
+  { label: "Thanh toán", value: 5, color: "#13c2c2" },
+  { label: "Hoàn thành", value: 79, color: "#389e0d" },
 ];
 
 const FLOW_INPATIENT = [
-  { label: "Nhập viện",        value: 23,  color: "#1677ff" },
-  { label: "Đang điều trị",    value: 142, color: "#52c41a" },
-  { label: "Theo dõi đặc biệt",value: 38,  color: "#faad14", warn: true },
-  { label: "Chờ xuất viện",    value: 18,  color: "#722ed1" },
-  { label: "Xuất viện hôm nay",value: 12,  color: "#389e0d" },
+  { label: "Nhập viện", value: 23, color: "#1677ff" },
+  { label: "Đang điều trị", value: 142, color: "#52c41a" },
+  { label: "Theo dõi đặc biệt", value: 38, color: "#faad14", warn: true },
+  { label: "Chờ xuất viện", value: 18, color: "#722ed1" },
+  { label: "Xuất viện hôm nay", value: 12, color: "#389e0d" },
 ];
 
 const RISK_TIERS = [
-  { label: "Nguy cơ cao",       value: "47",  color: "#ff4d4f" },
-  { label: "Nguy cơ trung bình",value: "128", color: "#faad14" },
-  { label: "Ổn định",           value: "289", color: "#52c41a" },
-  { label: "Ngoại trú theo dõi",value: "64",  color: "#1677ff" },
+  { label: "Nguy cơ cao", value: "47", color: "#ff4d4f" },
+  { label: "Nguy cơ trung bình", value: "128", color: "#faad14" },
+  { label: "Ổn định", value: "289", color: "#52c41a" },
+  { label: "Ngoại trú theo dõi", value: "64", color: "#1677ff" },
 ];
 
 // Daily patient flow summary — matches reference StatsSummary block
 const DAILY_FLOW_STATS = [
   { label: "Tổng lịch", value: "148", color: "#e6edf3" },
-  { label: "Chờ khám",  value: "46",  color: "#faad14" },
+  { label: "Chờ khám", value: "46", color: "#faad14" },
   { label: "Đang nội trú", value: "79", color: "#1677ff" },
-  { label: "Hoàn thành", value: "0",  color: "#52c41a" },
+  { label: "Hoàn thành", value: "0", color: "#52c41a" },
 ];
 
 // Ward grid
 const WARDS = [
-  { code: "ICU",     total: 15, occupied: 12, checkout: 1, cleaning: 0, bor: 80 },
-  { code: "NỘI TM",  total: 30, occupied: 27, checkout: 2, cleaning: 0, bor: 90 },
-  { code: "NGOẠI",   total: 40, occupied: 32, checkout: 3, cleaning: 2, bor: 80 },
-  { code: "NHI",     total: 30, occupied: 16, checkout: 2, cleaning: 0, bor: 54 },
-  { code: "SẢN",     total: 25, occupied: 13, checkout: 1, cleaning: 1, bor: 52 },
-  { code: "HỒI SỨC", total: 10, occupied: 8,  checkout: 0, cleaning: 1, bor: 80 },
+  { code: "ICU", total: 15, occupied: 12, checkout: 1, cleaning: 0, bor: 80 },
+  {
+    code: "NỘI TM",
+    total: 30,
+    occupied: 27,
+    checkout: 2,
+    cleaning: 0,
+    bor: 90,
+  },
+  { code: "NGOẠI", total: 40, occupied: 32, checkout: 3, cleaning: 2, bor: 80 },
+  { code: "NHI", total: 30, occupied: 16, checkout: 2, cleaning: 0, bor: 54 },
+  { code: "SẢN", total: 25, occupied: 13, checkout: 1, cleaning: 1, bor: 52 },
+  {
+    code: "HỒI SỨC",
+    total: 10,
+    occupied: 8,
+    checkout: 0,
+    cleaning: 1,
+    bor: 80,
+  },
 ];
 
 // OR rooms
 const OR_ROOMS = [
-  { code: "P.Mổ 1", procedure: "Cắt ruột thừa nội soi", status: "active"    as const, hint: "120 phút" },
-  { code: "P.Mổ 2", procedure: "Thay khớp háng P",      status: "active"    as const, hint: "180 phút" },
-  { code: "P.Mổ 3",                                      status: "preparing" as const, hint: "Ca 14:30" },
-  { code: "P.Mổ 4",                                      status: "available" as const },
-  { code: "P.Mổ 5", procedure: "Nội soi cắt polyp DD",  status: "active"    as const, hint: "60 phút" },
-  { code: "P.Mổ 6",                                      status: "cleaning"  as const },
+  {
+    code: "P.Mổ 1",
+    procedure: "Cắt ruột thừa nội soi",
+    status: "active" as const,
+    hint: "120 phút",
+  },
+  {
+    code: "P.Mổ 2",
+    procedure: "Thay khớp háng P",
+    status: "active" as const,
+    hint: "180 phút",
+  },
+  { code: "P.Mổ 3", status: "preparing" as const, hint: "Ca 14:30" },
+  { code: "P.Mổ 4", status: "available" as const },
+  {
+    code: "P.Mổ 5",
+    procedure: "Nội soi cắt polyp DD",
+    status: "active" as const,
+    hint: "60 phút",
+  },
+  { code: "P.Mổ 6", status: "cleaning" as const },
 ];
 
 // Schedule / notes
 const BULLET_SCHEDULE = [
-  { text: "Hội chẩn Tim mạch – 09:00 – P.Hội chẩn A",  status: "done"     as const },
-  { text: "PT Nội soi – P.Mổ 3 – 11:30 – BS Minh Tuấn", status: "active"   as const },
-  { text: "Kiểm tra ICU chiều – 14:00",                 status: "pending"  as const },
-  { text: "Kết quả MRI – BN Nguyễn Văn A – Cần xem",   status: "pending"  as const, badge: "Mới" },
-  { text: "Xuất viện P101 – 15:00 – BS Lan Anh",        status: "pending"  as const },
+  { text: "Hội chẩn Tim mạch – 09:00 – P.Hội chẩn A", status: "done" as const },
+  {
+    text: "PT Nội soi – P.Mổ 3 – 11:30 – BS Minh Tuấn",
+    status: "active" as const,
+  },
+  { text: "Kiểm tra ICU chiều – 14:00", status: "pending" as const },
+  {
+    text: "Kết quả MRI – BN Nguyễn Văn A – Cần xem",
+    status: "pending" as const,
+    badge: "Mới",
+  },
+  { text: "Xuất viện P101 – 15:00 – BS Lan Anh", status: "pending" as const },
 ];
 
 const BULLET_DRUG_ALLERGY = [
-  { text: "Dị ứng Penicillin – BN: Nguyễn V.A – P201",   status: "critical" as const },
-  { text: "Thận trọng NSAIDs – BN: Trần T.B – P312",      status: "active"   as const },
-  { text: "Chống chỉ định MRI – BN: Lê V.C – P105",       status: "active"   as const },
-  { text: "Theo dõi electrolytes – BN: Phạm T.D – P220",  status: "pending"  as const },
+  {
+    text: "Dị ứng Penicillin – BN: Nguyễn V.A – P201",
+    status: "critical" as const,
+  },
+  {
+    text: "Thận trọng NSAIDs – BN: Trần T.B – P312",
+    status: "active" as const,
+  },
+  { text: "Chống chỉ định MRI – BN: Lê V.C – P105", status: "active" as const },
+  {
+    text: "Theo dõi electrolytes – BN: Phạm T.D – P220",
+    status: "pending" as const,
+  },
 ];
 
 // Patient list table
 const TABLE_PATIENTS = {
   columns: [
-    { key: "pid",    title: "Mã BN",      align: "left"  as const },
-    { key: "name",   title: "Họ tên",     align: "left"  as const },
-    { key: "dept",   title: "Khoa",       align: "left"  as const },
-    { key: "status", title: "Trạng thái", render: "tag"  as const, tagColors: { "Đang điều trị": "blue", "Chờ xuất viện": "green", "Nặng": "red", "Theo dõi": "orange" } },
-    { key: "day",    title: "Ngày NV",    align: "left"  as const },
+    { key: "pid", title: "Mã BN", align: "left" as const },
+    { key: "name", title: "Họ tên", align: "left" as const },
+    { key: "dept", title: "Khoa", align: "left" as const },
+    {
+      key: "status",
+      title: "Trạng thái",
+      render: "tag" as const,
+      tagColors: {
+        "Đang điều trị": "blue",
+        "Chờ xuất viện": "green",
+        Nặng: "red",
+        "Theo dõi": "orange",
+      },
+    },
+    { key: "day", title: "Ngày NV", align: "left" as const },
   ],
   data: [
-    { pid: "BN001", name: "Nguyễn Văn A",  dept: "Nội TM",  status: "Nặng",           day: "22/05" },
-    { pid: "BN002", name: "Trần Thị B",    dept: "Cấp cứu", status: "Đang điều trị",  day: "20/05" },
-    { pid: "BN003", name: "Lê Văn C",      dept: "Nội TQ",  status: "Chờ xuất viện",  day: "23/05" },
-    { pid: "BN004", name: "Phạm Thị D",    dept: "Huyết học",status: "Theo dõi",      day: "21/05" },
-    { pid: "BN005", name: "Hoàng Văn E",   dept: "Gan mật", status: "Nặng",           day: "24/05" },
-    { pid: "BN006", name: "Đinh Thị F",    dept: "Sản",     status: "Đang điều trị",  day: "25/05" },
+    {
+      pid: "BN001",
+      name: "Nguyễn Văn A",
+      dept: "Nội TM",
+      status: "Nặng",
+      day: "22/05",
+    },
+    {
+      pid: "BN002",
+      name: "Trần Thị B",
+      dept: "Cấp cứu",
+      status: "Đang điều trị",
+      day: "20/05",
+    },
+    {
+      pid: "BN003",
+      name: "Lê Văn C",
+      dept: "Nội TQ",
+      status: "Chờ xuất viện",
+      day: "23/05",
+    },
+    {
+      pid: "BN004",
+      name: "Phạm Thị D",
+      dept: "Huyết học",
+      status: "Theo dõi",
+      day: "21/05",
+    },
+    {
+      pid: "BN005",
+      name: "Hoàng Văn E",
+      dept: "Gan mật",
+      status: "Nặng",
+      day: "24/05",
+    },
+    {
+      pid: "BN006",
+      name: "Đinh Thị F",
+      dept: "Sản",
+      status: "Đang điều trị",
+      day: "25/05",
+    },
   ],
 };
 
 const TABLE_MEDS = {
   columns: [
-    { key: "name",   title: "Thuốc",       align: "left"  as const },
-    { key: "dose",   title: "Liều dùng",   align: "left"  as const },
-    { key: "time",   title: "Giờ dùng",    align: "left"  as const },
-    { key: "status", title: "Trạng thái",  render: "tag"  as const, tagColors: { "Đã dùng": "green", "Chờ dùng": "orange", "Bỏ qua": "red" } },
+    { key: "name", title: "Thuốc", align: "left" as const },
+    { key: "dose", title: "Liều dùng", align: "left" as const },
+    { key: "time", title: "Giờ dùng", align: "left" as const },
+    {
+      key: "status",
+      title: "Trạng thái",
+      render: "tag" as const,
+      tagColors: { "Đã dùng": "green", "Chờ dùng": "orange", "Bỏ qua": "red" },
+    },
   ],
   data: [
-    { name: "Amoxicillin 500mg", dose: "1 viên × 3", time: "08:00", status: "Đã dùng" },
-    { name: "Omeprazole 20mg",   dose: "1 viên × 2", time: "12:00", status: "Chờ dùng" },
-    { name: "Metformin 850mg",   dose: "1 viên × 2", time: "14:00", status: "Chờ dùng" },
-    { name: "Aspirin 81mg",      dose: "1 viên",     time: "20:00", status: "Chờ dùng" },
-    { name: "Furosemide 40mg",   dose: "1 viên",     time: "06:00", status: "Đã dùng" },
+    {
+      name: "Amoxicillin 500mg",
+      dose: "1 viên × 3",
+      time: "08:00",
+      status: "Đã dùng",
+    },
+    {
+      name: "Omeprazole 20mg",
+      dose: "1 viên × 2",
+      time: "12:00",
+      status: "Chờ dùng",
+    },
+    {
+      name: "Metformin 850mg",
+      dose: "1 viên × 2",
+      time: "14:00",
+      status: "Chờ dùng",
+    },
+    { name: "Aspirin 81mg", dose: "1 viên", time: "20:00", status: "Chờ dùng" },
+    {
+      name: "Furosemide 40mg",
+      dose: "1 viên",
+      time: "06:00",
+      status: "Đã dùng",
+    },
   ],
 };
 
 // ─── KPI resolver ─────────────────────────────────────────────────────────────
 
-const KPI_MAP: { match: (t: string) => boolean; value: string; hint?: string }[] = [
-  { match: (t) => t.includes("lượt khám"),                                      value: "151",     hint: "+42% hôm qua" },
-  { match: (t) => t.includes("doanh thu") && !t.includes("tháng"),              value: "4.23 tỷ", hint: "+8% so kế hoạch" },
-  { match: (t) => t.includes("doanh thu") && t.includes("tháng"),               value: "₫ 42.3B", hint: "Mục tiêu 95%" },
-  { match: (t) => t.includes("chi phí"),                                         value: "₫ 38.1B", hint: "Tháng này" },
-  { match: (t) => t.includes("lợi nhuận"),                                       value: "₫ 4.2B",  hint: "+12.5% vs tháng trước" },
-  { match: (t) => t.includes("nội trú") || t.includes("bn nội"),                value: "312",     hint: "+14 so sáng nay" },
-  { match: (t) => t.includes("cấp cứu"),                                         value: "18",      hint: "3 ca nặng" },
-  { match: (t) => t.includes("bor") || t.includes("toàn viện"),                 value: "78.4%",   hint: "+2.1%" },
-  { match: (t) => t.includes("cảnh báo active") || t.includes("cảnh báo") && t.includes("active"), value: "8", hint: "8 cần xử lý ngay" },
-  { match: (t) => t.includes("cảnh báo") && !t.includes("active"),              value: "8",       hint: "Cần xử lý" },
-  { match: (t) => t.includes("nhập viện"),                                       value: "23",      hint: "Hôm nay" },
-  { match: (t) => t.includes("xuất viện"),                                       value: "18",      hint: "Hôm nay" },
-  { match: (t) => t.includes("chờ phòng"),                                       value: "7",       hint: "Đang chờ" },
-  { match: (t) => t.includes("đang mổ"),                                         value: "3",       hint: "Phòng đang hoạt động" },
-  { match: (t) => t.includes("news2"),                                            value: "8",       hint: "Cao – cần đánh giá" },
-  { match: (t) => t.includes("sofa"),                                             value: "6",       hint: "Nguy cơ vừa" },
-  { match: (t) => t.includes("nặng"),                                             value: "5",       hint: "Cần theo dõi tích cực" },
+const KPI_MAP: {
+  match: (t: string) => boolean;
+  value: string;
+  hint?: string;
+}[] = [
+  { match: (t) => t.includes("lượt khám"), value: "0", hint: "+42% hôm qua" },
+  {
+    match: (t) => t.includes("doanh thu") && !t.includes("tháng"),
+    value: "4.23 tỷ",
+    hint: "+8% so kế hoạch",
+  },
+  {
+    match: (t) => t.includes("doanh thu") && t.includes("tháng"),
+    value: "₫ 42.3B",
+    hint: "Mục tiêu 95%",
+  },
+  { match: (t) => t.includes("chi phí"), value: "₫ 38.1B", hint: "Tháng này" },
+  {
+    match: (t) => t.includes("lợi nhuận"),
+    value: "₫ 4.2B",
+    hint: "+12.5% vs tháng trước",
+  },
+  {
+    match: (t) => t.includes("nội trú") || t.includes("bn nội"),
+    value: "312",
+    hint: "+14 so sáng nay",
+  },
+  { match: (t) => t.includes("cấp cứu"), value: "18", hint: "3 ca nặng" },
+  {
+    match: (t) => t.includes("bor") || t.includes("toàn viện"),
+    value: "78.4%",
+    hint: "+2.1%",
+  },
+  {
+    match: (t) =>
+      t.includes("cảnh báo active") ||
+      (t.includes("cảnh báo") && t.includes("active")),
+    value: "8",
+    hint: "8 cần xử lý ngay",
+  },
+  {
+    match: (t) => t.includes("cảnh báo") && !t.includes("active"),
+    value: "8",
+    hint: "Cần xử lý",
+  },
+  { match: (t) => t.includes("nhập viện"), value: "23", hint: "Hôm nay" },
+  { match: (t) => t.includes("xuất viện"), value: "18", hint: "Hôm nay" },
+  { match: (t) => t.includes("chờ phòng"), value: "7", hint: "Đang chờ" },
+  {
+    match: (t) => t.includes("đang mổ"),
+    value: "3",
+    hint: "Phòng đang hoạt động",
+  },
+  { match: (t) => t.includes("news2"), value: "8", hint: "Cao – cần đánh giá" },
+  { match: (t) => t.includes("sofa"), value: "6", hint: "Nguy cơ vừa" },
+  {
+    match: (t) => t.includes("nặng"),
+    value: "5",
+    hint: "Cần theo dõi tích cực",
+  },
 ];
 
-function resolveKpiValue(w: ApiWidget): { value: string; hint?: string; accent?: string } {
+function resolveKpiValue(w: ApiWidget): {
+  value: string;
+  hint?: string;
+  accent?: string;
+} {
   const title = (w.title ?? "").toLowerCase();
   const cfg = safeJson(w.visualConfig) as { color?: string };
   const COLORS: Record<string, string> = {
-    blue: "#1677ff", green: "#52c41a", red: "#ff4d4f",
-    orange: "#fa8c16", purple: "#722ed1",
+    blue: "#1677ff",
+    green: "#52c41a",
+    red: "#ff4d4f",
+    orange: "#fa8c16",
+    purple: "#722ed1",
   };
   const accent = COLORS[cfg?.color ?? "blue"] ?? "#1677ff";
 
@@ -237,7 +461,11 @@ function resolveKpiValue(w: ApiWidget): { value: string; hint?: string; accent?:
 }
 
 function safeJson(s: string): Record<string, unknown> {
-  try { return JSON.parse(s) as Record<string, unknown>; } catch { return {}; }
+  try {
+    return JSON.parse(s) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
 }
 
 // ─── Main resolver ────────────────────────────────────────────────────────────
@@ -248,7 +476,15 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
   // ── KPI ──────────────────────────────────────────────────────────────────────
   if (type === "kpi") {
     const { value, hint, accent } = resolveKpiValue(widget);
-    return <KpiCard title={title ?? ""} value={value} hint={hint} accent={accent} className="h-full" />;
+    return (
+      <KpiCard
+        title={title ?? ""}
+        value={value}
+        hint={hint}
+        accent={accent}
+        className="h-full"
+      />
+    );
   }
 
   // ── Line chart ───────────────────────────────────────────────────────────────
@@ -263,7 +499,7 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
           series={[
             { key: "nhịp_tim", color: "#ff4d4f", name: "Nhịp tim (bpm)" },
             { key: "huyết_áp", color: "#1677ff", name: "HA tâm thu (mmHg)" },
-            { key: "spo2",     color: "#52c41a", name: "SpO2 (%)" },
+            { key: "spo2", color: "#52c41a", name: "SpO2 (%)" },
           ]}
           legend
         />
@@ -292,9 +528,12 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
   // ── Pie / donut ──────────────────────────────────────────────────────────────
   if (type === "pie_chart" || type === "donut_chart") {
     const tl = title?.toLowerCase() ?? "";
-    const pieData = tl.includes("doanh thu") || tl.includes("nguồn") ? PIE_REV_SRC
-      : tl.includes("chẩn đoán") || tl.includes("bệnh") ? PIE_DIAG
-      : PIE_DEPT;
+    const pieData =
+      tl.includes("doanh thu") || tl.includes("nguồn")
+        ? PIE_REV_SRC
+        : tl.includes("chẩn đoán") || tl.includes("bệnh")
+          ? PIE_DIAG
+          : PIE_DEPT;
     return (
       <ChartPie
         title={title}
@@ -313,11 +552,21 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
     return (
       <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] p-4 h-full flex flex-col justify-center items-center gap-2">
         {title && (
-          <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider m-0 text-center">{title}</p>
+          <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider m-0 text-center">
+            {title}
+          </p>
         )}
-        <p className="text-3xl font-bold tabular-nums m-0" style={{ color: barColor }}>{pct}%</p>
+        <p
+          className="text-3xl font-bold tabular-nums m-0"
+          style={{ color: barColor }}
+        >
+          {pct}%
+        </p>
         <div className="w-full bg-gray-100 dark:bg-[#30363d] rounded-full h-2">
-          <div className="h-2 rounded-full" style={{ width: `${pct}%`, background: barColor }} />
+          <div
+            className="h-2 rounded-full"
+            style={{ width: `${pct}%`, background: barColor }}
+          />
         </div>
       </div>
     );
@@ -330,10 +579,15 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
     return (
       <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] p-4 h-full flex flex-col overflow-hidden">
         {title && (
-          <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-3 m-0 shrink-0">{title}</p>
+          <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-3 m-0 shrink-0">
+            {title}
+          </p>
         )}
         <div className="flex-1 overflow-auto">
-          <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
+          <div
+            className="grid gap-1"
+            style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}
+          >
             {rows.flatMap((d) =>
               HOURS_8.map((h) => {
                 const v = Math.round(Math.random() * 100);
@@ -342,10 +596,12 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
                     key={`${d}-${h}`}
                     title={`${d} ${h}: ${v}`}
                     className="rounded-sm h-6"
-                    style={{ background: `rgba(22,119,255,${(v / 100).toFixed(2)})` }}
+                    style={{
+                      background: `rgba(22,119,255,${(v / 100).toFixed(2)})`,
+                    }}
                   />
                 );
-              })
+              }),
             )}
           </div>
         </div>
@@ -362,7 +618,13 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
         items={CAPACITY_ITEMS}
         maxValue={100}
         realtimeBadge
-        footerActions={[{ label: "18 khoa – Xem chi tiết →", variant: "link", color: "#1677ff" }]}
+        footerActions={[
+          {
+            label: "18 khoa – Xem chi tiết →",
+            variant: "link",
+            color: "#1677ff",
+          },
+        ]}
       />
     );
   }
@@ -382,7 +644,10 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
   // ── Tables ────────────────────────────────────────────────────────────────────
   if (type === "simple_table" || type === "advanced_table") {
     const tl = title?.toLowerCase() ?? "";
-    const tbl = tl.includes("thuốc") || tl.includes("dùng thuốc") ? TABLE_MEDS : TABLE_PATIENTS;
+    const tbl =
+      tl.includes("thuốc") || tl.includes("dùng thuốc")
+        ? TABLE_MEDS
+        : TABLE_PATIENTS;
     return (
       <DataTable
         title={title}
@@ -396,7 +661,8 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
 
   // ── Flow steps / patient flow stages ──────────────────────────────────────────
   if (type === "flow_steps" || type === "patient_flow_stages") {
-    const stages = type === "patient_flow_stages" ? FLOW_INPATIENT : FLOW_OUTPATIENT;
+    const stages =
+      type === "patient_flow_stages" ? FLOW_INPATIENT : FLOW_OUTPATIENT;
     return <FlowPipeline title={title} stages={stages} realtimeBadge />;
   }
 
@@ -429,12 +695,12 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
   // ── NEWS2 bars ────────────────────────────────────────────────────────────────
   if (type === "news2_bars") {
     const news2Data = [
-      { label: "SpO2",      value: 3 },
-      { label: "Nhịp thở",  value: 2 },
-      { label: "Nhịp tim",  value: 1 },
-      { label: "Nhiệt độ",  value: 0 },
-      { label: "Huyết áp",  value: 2 },
-      { label: "Tri giác",  value: 1 },
+      { label: "SpO2", value: 3 },
+      { label: "Nhịp thở", value: 2 },
+      { label: "Nhịp tim", value: 1 },
+      { label: "Nhiệt độ", value: 0 },
+      { label: "Huyết áp", value: 2 },
+      { label: "Tri giác", value: 1 },
     ];
     return <ChartBar title={title} data={news2Data} color="#ff4d4f" />;
   }
@@ -442,17 +708,25 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
   // ── Timeline / bullet list ────────────────────────────────────────────────────
   if (type === "timeline_vertical" || type === "bullet_list") {
     const tl = title?.toLowerCase() ?? "";
-    const items = tl.includes("dị ứng") || tl.includes("allerg") ? BULLET_DRUG_ALLERGY : BULLET_SCHEDULE;
+    const items =
+      tl.includes("dị ứng") || tl.includes("allerg")
+        ? BULLET_DRUG_ALLERGY
+        : BULLET_SCHEDULE;
     return <BulletList title={title} items={items} />;
   }
 
   // ── Filter widgets ─────────────────────────────────────────────────────────────
-  if (type === "filter_dropdown" || type === "filter_date_range" || type === "filter_search" || type === "filter_slider") {
+  if (
+    type === "filter_dropdown" ||
+    type === "filter_date_range" ||
+    type === "filter_search" ||
+    type === "filter_slider"
+  ) {
     const labels: Record<string, string> = {
-      filter_dropdown:   "Lọc theo khoa / chế độ",
+      filter_dropdown: "Lọc theo khoa / chế độ",
       filter_date_range: "Khoảng thời gian",
-      filter_search:     "Tìm kiếm bệnh nhân",
-      filter_slider:     "Phạm vi giá trị",
+      filter_search: "Tìm kiếm bệnh nhân",
+      filter_slider: "Phạm vi giá trị",
     };
     return (
       <div className="rounded-lg border border-dashed border-violet-300 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/20 p-3 h-full flex items-center gap-2">
@@ -470,7 +744,9 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
     return (
       <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] p-4 h-full overflow-auto">
         {title && (
-          <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-2 m-0">{title}</p>
+          <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-2 m-0">
+            {title}
+          </p>
         )}
         <p className="text-sm text-gray-700 dark:text-[#e6edf3] m-0 leading-relaxed">
           {cfg?.content ?? "Nội dung văn bản..."}
@@ -484,7 +760,9 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
     return (
       <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] p-4 h-full flex flex-col gap-2">
         {title && (
-          <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider m-0 shrink-0">{title}</p>
+          <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider m-0 shrink-0">
+            {title}
+          </p>
         )}
         <div className="flex-1 flex items-center justify-center">
           <p className="text-xs text-gray-400 dark:text-[#484f58] text-center">
@@ -498,8 +776,12 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
   // ── Fallback ──────────────────────────────────────────────────────────────────
   return (
     <div className="rounded-lg border border-dashed border-gray-300 dark:border-[#30363d] bg-gray-50 dark:bg-[#0d1117] p-4 h-full flex flex-col items-center justify-center gap-1 text-center">
-      <p className="text-[10px] font-mono text-gray-400 dark:text-[#484f58] m-0">{type}</p>
-      {title && <p className="text-xs text-gray-500 dark:text-[#8b949e] m-0">{title}</p>}
+      <p className="text-[10px] font-mono text-gray-400 dark:text-[#484f58] m-0">
+        {type}
+      </p>
+      {title && (
+        <p className="text-xs text-gray-500 dark:text-[#8b949e] m-0">{title}</p>
+      )}
     </div>
   );
 }
