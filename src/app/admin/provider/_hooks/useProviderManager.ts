@@ -42,20 +42,21 @@ export function useProviderManager() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
 
-    adminApi.listFullProviders()
-      .then((data) => {
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await adminApi.listFullProviders();
         if (!cancelled) setProviders(data.map(apiToProvider));
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setProviders(MOCK_PROVIDERS);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
 
+    load();
     return () => { cancelled = true; };
   }, [rev]);
 

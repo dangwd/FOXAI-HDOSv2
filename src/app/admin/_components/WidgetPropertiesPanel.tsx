@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Select, Tag, Input, Button, AutoComplete } from "antd";
+import { Select, Tag, Input, AutoComplete } from "antd";
 import { X } from "lucide-react";
 import type { WidgetSchemaEntry, ProviderInfo, OperationEntry } from "@/infrastructure/http/adminApi";
 import { CATEGORY_ORDER, CATEGORY_LABELS, CATEGORY_COLOR } from "../_lib/constants";
@@ -24,22 +24,29 @@ export function WidgetPropertiesPanel({
   onChange:   (updated: DesignerWidget) => void;
 }) {
   const [form, setForm] = useState<DesignerWidget>(widget);
+  // bindingsInput is kept as local text state; committed on blur to avoid
+  // re-parsing the comma-separated string on every keystroke.
   const [bindingsInput, setBindingsInput] = useState(widget.filterBindings.join(", "));
 
-  function set<K extends keyof DesignerWidget>(key: K, val: DesignerWidget[K]) {
-    setForm((prev) => ({ ...prev, [key]: val }));
-  }
-
-  const filteredOps = form.providerId
+  const entry          = catalog.find((e) => e.chartType === form.chartType);
+  const isFilterWidget = entry?.category === "filter";
+  const filteredOps    = form.providerId
     ? operations.filter((op) => op.providerId === form.providerId)
     : operations;
 
-  const entry = catalog.find((e) => e.chartType === form.chartType);
-  const isFilterWidget = entry?.category === "filter";
+  // Every field change immediately commits to the designer (sets isDirty=true).
+  function set<K extends keyof DesignerWidget>(key: K, val: DesignerWidget[K]) {
+    const updated = { ...form, [key]: val };
+    setForm(updated);
+    onChange(updated);
+  }
 
-  function handleApply() {
-    const bindings = bindingsInput.split(",").map((s) => s.trim()).filter(Boolean);
-    onChange({ ...form, filterBindings: bindings });
+  // Bindings parsed and committed on blur.
+  function commitBindings(raw: string) {
+    const bindings = raw.split(",").map((s) => s.trim()).filter(Boolean);
+    const updated = { ...form, filterBindings: bindings };
+    setForm(updated);
+    onChange(updated);
   }
 
   return (
@@ -50,19 +57,22 @@ export function WidgetPropertiesPanel({
           <p className="text-xs font-semibold text-gray-800 dark:text-[#e6edf3] m-0">Thuộc tính widget</p>
           {entry && (
             <div className="flex items-center gap-1 mt-0.5">
-              <Tag color={CATEGORY_COLOR[entry.category]} style={{ fontSize: 9, padding: "0 3px", lineHeight: "14px", margin: 0 }}>
+              <Tag
+                color={CATEGORY_COLOR[entry.category]}
+                style={{ fontSize: 9, padding: "0 3px", lineHeight: "14px", margin: 0 }}
+              >
                 {CATEGORY_LABELS[entry.category]}
               </Tag>
               <span className="text-[10px] text-gray-400 dark:text-[#484f58]">{entry.description}</span>
             </div>
           )}
         </div>
-        <Button
-          type="text"
-          size="small"
-          icon={<X size={13} />}
+        <button
           onClick={onClose}
-        />
+          className="w-6 h-6 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors"
+        >
+          <X size={13} />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
@@ -167,6 +177,7 @@ export function WidgetPropertiesPanel({
               size="small"
               value={bindingsInput}
               onChange={(e) => setBindingsInput(e.target.value)}
+              onBlur={(e) => commitBindings(e.target.value)}
               placeholder="filterKey1, filterKey2"
             />
           </Field>
@@ -198,12 +209,6 @@ export function WidgetPropertiesPanel({
           <span className="text-[9px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider shrink-0">KEY</span>
           <code className="text-[10px] text-gray-500 dark:text-[#8b949e] flex-1 truncate">{widget.widgetKey}</code>
         </div>
-      </div>
-
-      <div className="p-3 border-t border-gray-200 dark:border-[#30363d] shrink-0">
-        <Button type="primary" block onClick={handleApply}>
-          Áp dụng thay đổi
-        </Button>
       </div>
     </div>
   );

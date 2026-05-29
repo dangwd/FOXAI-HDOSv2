@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, Input, message, Tag, Tabs } from "antd";
 import { Plus, RefreshCw, X } from "lucide-react";
 import { useProviderManager } from "../provider/_hooks/useProviderManager";
@@ -39,31 +39,34 @@ function ProviderCard({
   saving:   boolean;
   onSave:   (id: string, ops: string[]) => Promise<void>;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [ops,     setOps]     = useState<string[]>(provider.operations);
-  const [input,   setInput]   = useState("");
+  const [editing,  setEditing]  = useState(false);
+  const [draftOps, setDraftOps] = useState<string[]>([]);
+  const [input,    setInput]    = useState("");
 
-  // Sync when provider refreshes (only while not editing)
-  useEffect(() => {
-    if (!editing) setOps(provider.operations);
-  }, [provider.operations, editing]);
+  // When not editing, ops are always from props; draft only lives during an edit session
+  const ops = editing ? draftOps : provider.operations;
 
   const statusMeta = STATUS_META[provider.status];
+
+  function startEdit() {
+    setDraftOps(provider.operations);
+    setEditing(true);
+  }
 
   function handleAdd() {
     const pattern = input.trim();
     if (!pattern) return;
-    if (!ops.includes(pattern)) setOps((prev) => [...prev, pattern]);
+    if (!draftOps.includes(pattern)) setDraftOps((prev) => [...prev, pattern]);
     setInput("");
   }
 
   function handleRemove(pattern: string) {
-    setOps((prev) => prev.filter((p) => p !== pattern));
+    setDraftOps((prev) => prev.filter((p) => p !== pattern));
   }
 
   async function handleSave() {
     try {
-      await onSave(provider.id, ops);
+      await onSave(provider.id, draftOps);
       setEditing(false);
     } catch {
       // error already reported by caller
@@ -71,7 +74,6 @@ function ProviderCard({
   }
 
   function handleCancel() {
-    setOps(provider.operations);
     setInput("");
     setEditing(false);
   }
@@ -106,7 +108,7 @@ function ProviderCard({
         </div>
 
         {!editing && (
-          <Button size="small" onClick={() => setEditing(true)}>
+          <Button size="small" onClick={startEdit}>
             Chỉnh sửa
           </Button>
         )}
@@ -272,7 +274,7 @@ export default function OperationsPage() {
     {
       key:      "registry",
       label:    "Operation Registry",
-      children: <OperationsTab providers={manager.providers} />,
+      children: <OperationsTab />,
     },
   ];
 

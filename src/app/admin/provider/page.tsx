@@ -252,7 +252,7 @@ export default function ProviderManagerPage() {
     {
       key: "operations",
       label: "Operations",
-      children: <OperationsTab providers={manager.providers} />,
+      children: <OperationsTab />,
     },
     {
       key: "credentials",
