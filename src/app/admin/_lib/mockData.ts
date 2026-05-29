@@ -241,4 +241,19 @@ export const mockAdminApi: AdminApiType = {
     void slug; void tabId;
     return { saved: widgets.length };
   },
+
+  // Module CRUD — not used through mockAdminApi; stubs satisfy type
+  createModule: async () => { throw new Error("use adminApi"); },
+  updateModule: async () => { throw new Error("use adminApi"); },
+  deleteModule: async () => { /* no-op */ },
+
+  // Provider / Operation CRUD — not used through mockAdminApi; stubs satisfy type
+  listFullProviders:  async () => { throw new Error("use adminApi"); },
+  createProvider:     async () => { throw new Error("use adminApi"); },
+  updateProvider:     async () => { throw new Error("use adminApi"); },
+  deleteProvider:     async () => { /* no-op */ },
+  listFullOperations: async () => { throw new Error("use adminApi"); },
+  createOperation:    async () => { throw new Error("use adminApi"); },
+  updateOperation:    async () => { throw new Error("use adminApi"); },
+  deleteOperation:    async () => { /* no-op */ },
 };

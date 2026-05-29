@@ -1,11 +1,11 @@
 "use client";
 
 import type { TableColumnsType } from "antd";
-import { Button, Input, Space, Table, Tag, Typography } from "antd";
-import { Plus, RefreshCw, Search } from "lucide-react";
+import { Button, Input, message, Space, Table, Tag, Tooltip, Typography } from "antd";
+import { CheckCircle2, MinusCircle, Plus, RefreshCw, Search } from "lucide-react";
 import { useState } from "react";
 import { useOperationManager } from "../_hooks/useOperationManager";
-import { OPERATION_HANDLER_META } from "../_lib/constants";
+import { OPERATION_HANDLER_META, OPERATION_STATUS_META, RESULT_CHART_TYPES } from "../_lib/constants";
 import type { Operation, OperationForm, Provider } from "../_lib/types";
 import { BLANK_OPERATION_FORM } from "../_lib/types";
 import { OperationFormDrawer } from "./OperationFormDrawer";
@@ -14,137 +14,173 @@ const { Text } = Typography;
 
 type DrawerState = { mode: "create" } | { mode: "edit"; target: Operation };
 
+const CHART_LABEL = Object.fromEntries(RESULT_CHART_TYPES.map((t) => [t.value, t.label]));
+
 function toForm(o: Operation): OperationForm {
   return {
-    pattern: o.pattern,
-    handler: o.handler,
-    providerId: o.providerId,
-    timeoutMs: o.timeoutMs,
-    cacheSeconds: o.cacheSeconds,
-    status: o.status,
+    pattern:         o.pattern,
+    handler:         o.handler,
+    providerId:      o.providerId,
+    timeoutMs:       o.timeoutMs,
+    cacheSeconds:    o.cacheSeconds,
+    idempotent:      o.idempotent,
+    resultChartType: o.resultChartType,
+    status:          o.status,
   };
 }
 
-// ─── Tab ──────────────────────────────────────────────────────────────────────
+function fmtCache(s: number): string {
+  if (s >= 3600) return `${s / 3600}h`;
+  if (s >= 60)   return `${s / 60}m`;
+  return `${s}s`;
+}
 
 export function OperationsTab({ providers }: { providers: Provider[] }) {
   const manager = useOperationManager();
   const [drawer, setDrawer] = useState<DrawerState | null>(null);
 
-  function handleSubmit(form: OperationForm) {
+  async function handleSubmit(form: OperationForm) {
     if (!drawer) return;
-    if (drawer.mode === "create") manager.create(form);
-    else manager.update(drawer.target.id, form);
-    setDrawer(null);
+    try {
+      if (drawer.mode === "create") await manager.create(form);
+      else await manager.update(drawer.target.id, form);
+      setDrawer(null);
+    } catch {
+      message.error(manager.error ?? "Thao tác thất bại");
+    }
   }
 
-  function handleDelete(op: Operation) {
+  async function handleDelete(op: Operation) {
     if (!confirm(`Xóa operation "${op.pattern}"?`)) return;
-    manager.remove(op.id);
+    await manager.remove(op.id);
   }
 
   const columns: TableColumnsType<Operation> = [
     {
-      title: "Pattern",
-      key: "pattern",
+      title:     "Operation Pattern",
+      key:       "pattern",
+      ellipsis:  true,
       render: (_, o) => (
-        <Text code className="!text-[12px] break-all leading-snug">
-          {o.pattern}
-        </Text>
+        <Tooltip title={o.pattern}>
+          <Text code className="!text-[12px] !leading-snug whitespace-nowrap">
+            {o.pattern}
+          </Text>
+        </Tooltip>
       ),
     },
     {
       title: "Handler",
-      key: "handler",
-      width: 110,
+      key:   "handler",
+      width: 100,
       render: (_, o) => {
-        const meta = OPERATION_HANDLER_META[o.handler];
+        const meta = OPERATION_HANDLER_META[o.handler] ?? OPERATION_HANDLER_META.provider;
         return (
-          <Tag
-            style={{
-              color: meta.color,
-              background: meta.bg,
-              border: "none",
-              fontWeight: 600,
-            }}
-          >
+          <Tag style={{ color: meta.color, background: meta.bg, border: "none", fontWeight: 600, margin: 0 }}>
             {meta.label}
           </Tag>
         );
       },
     },
     {
-      title: "Provider",
-      key: "provider",
-      width: 160,
-      render: (_, o) => (
-        <Text code className="!text-[11px]">
-          {o.providerId}
-        </Text>
-      ),
+      title: "Provider ID",
+      key:   "provider",
+      width: 150,
+      ellipsis: true,
+      render: (_, o) =>
+        o.handler === "provider" && o.providerId ? (
+          <Tooltip title={o.providerId}>
+            <Text code className="!text-[11px]">{o.providerId}</Text>
+          </Tooltip>
+        ) : (
+          <span className="text-gray-300 dark:text-[#484f58]">—</span>
+        ),
     },
     {
       title: "Timeout",
-      key: "timeout",
-      width: 110,
+      key:   "timeout",
+      width: 82,
+      align: "right" as const,
       render: (_, o) => (
-        <span className="text-[11px] text-gray-600 dark:text-[#8b949e]">
-          {o.timeoutMs.toLocaleString()} ms
+        <span className="text-[11px] tabular-nums text-gray-500 dark:text-[#8b949e]">
+          {(o.timeoutMs / 1000).toLocaleString()}s
         </span>
       ),
     },
     {
       title: "Cache",
-      key: "cache",
-      width: 80,
+      key:   "cache",
+      width: 70,
+      align: "center" as const,
       render: (_, o) =>
-        o.cacheSeconds === null ? (
-          <Text type="secondary">—</Text>
-        ) : (
-          <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-            {o.cacheSeconds >= 3600
-              ? `${o.cacheSeconds / 3600}h`
-              : o.cacheSeconds >= 60
-                ? `${o.cacheSeconds / 60}m`
-                : `${o.cacheSeconds}s`}
+        o.cacheSeconds !== null ? (
+          <span className="text-[11px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+            {fmtCache(o.cacheSeconds)}
           </span>
-        ),
-    },
-    {
-      title: "Trạng thái",
-      key: "status",
-      width: 100,
-      render: (_, o) =>
-        o.status === "active" ? (
-          <Tag color="success" style={{ fontWeight: 600 }}>
-            active
-          </Tag>
         ) : (
-          <Tag color="default" style={{ fontWeight: 600 }}>
-            inactive
-          </Tag>
+          <span className="text-gray-300 dark:text-[#484f58]">—</span>
         ),
     },
     {
-      title: "Thao tác",
-      key: "actions",
-      width: 100,
+      title: "Idempotent",
+      key:   "idempotent",
+      width: 92,
+      align: "center" as const,
+      render: (_, o) =>
+        o.idempotent ? (
+          <CheckCircle2 size={14} className="text-emerald-500 mx-auto" />
+        ) : (
+          <MinusCircle size={14} className="text-gray-300 dark:text-[#484f58] mx-auto" />
+        ),
+    },
+    {
+      title: "Widget",
+      key:   "chart",
+      width: 130,
+      ellipsis: true,
+      render: (_, o) =>
+        o.resultChartType ? (
+          <Tooltip title={o.resultChartType}>
+            <span className="text-[11px] text-violet-600 dark:text-violet-400 font-mono">
+              {CHART_LABEL[o.resultChartType] ?? o.resultChartType}
+            </span>
+          </Tooltip>
+        ) : (
+          <span className="text-gray-300 dark:text-[#484f58]">—</span>
+        ),
+    },
+    {
+      title: "Status",
+      key:   "status",
+      width: 95,
+      render: (_, o) => {
+        const meta = OPERATION_STATUS_META[o.status];
+        return (
+          <Tag style={{ color: meta.color, background: meta.bg, border: "none", fontWeight: 600, margin: 0 }}>
+            {meta.label}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: "",
+      key:   "actions",
+      width: 90,
       align: "right" as const,
       render: (_, o) => (
-        <Space size={8}>
+        <Space size={4}>
           <Button
-            type="link"
+            type="text"
             size="small"
-            className="!p-0"
+            className="!text-violet-600 dark:!text-violet-400 !px-2"
             onClick={() => setDrawer({ mode: "edit", target: o })}
           >
             Sửa
           </Button>
           <Button
-            type="link"
+            type="text"
             size="small"
             danger
-            className="!p-0"
+            className="!px-2"
             onClick={() => handleDelete(o)}
           >
             Xóa
@@ -155,19 +191,23 @@ export function OperationsTab({ providers }: { providers: Provider[] }) {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Toolbar */}
       <div className="flex items-center gap-3">
         <Input.Search
           value={manager.search}
           onChange={(e) => manager.setSearch(e.target.value)}
           onSearch={(v) => manager.setSearch(v)}
-          placeholder="Tìm pattern, provider..."
+          placeholder="Tìm pattern, provider, handler..."
           allowClear
-          style={{ maxWidth: 320 }}
+          style={{ maxWidth: 300 }}
         />
         <div className="flex-1" />
-        <Button icon={<RefreshCw size={14} />} onClick={manager.refresh}>
+        <Button
+          icon={<RefreshCw size={14} />}
+          onClick={manager.refresh}
+          loading={manager.loading}
+        >
           Làm mới
         </Button>
         <Button
@@ -185,12 +225,19 @@ export function OperationsTab({ providers }: { providers: Provider[] }) {
         dataSource={manager.filtered}
         rowKey="id"
         size="small"
-        pagination={false}
+        loading={manager.loading}
+        scroll={{ x: 900 }}
+        pagination={{
+          pageSize: 15,
+          showSizeChanger: false,
+          showTotal: (t) => `${t} operations`,
+          size: "small",
+        }}
         locale={{
           emptyText: (
-            <div className="flex flex-col items-center py-10 gap-2 text-gray-400">
-              <Search size={28} className="text-gray-300 dark:text-[#30363d]" />
-              <p className="text-sm m-0">Không tìm thấy operation nào</p>
+            <div className="flex flex-col items-center py-12 gap-2">
+              <Search size={28} className="text-gray-200 dark:text-[#30363d]" />
+              <p className="text-sm text-gray-400 m-0">Không tìm thấy operation nào</p>
             </div>
           ),
         }}
@@ -200,10 +247,7 @@ export function OperationsTab({ providers }: { providers: Provider[] }) {
       <OperationFormDrawer
         open={drawer !== null}
         isEdit={drawer?.mode === "edit"}
-        initial={
-          drawer?.mode === "edit" ? toForm(drawer.target) : BLANK_OPERATION_FORM
-        }
-        providers={providers}
+        initial={drawer?.mode === "edit" ? toForm(drawer.target) : BLANK_OPERATION_FORM}
         onSubmit={handleSubmit}
         onClose={() => setDrawer(null)}
       />

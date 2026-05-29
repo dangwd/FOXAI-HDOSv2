@@ -3,7 +3,7 @@
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import ReactGridLayout from "react-grid-layout/legacy";
 import { Button, Tooltip } from "antd";
@@ -22,7 +22,7 @@ import { WidgetPropertiesPanel }  from "./_components/WidgetPropertiesPanel";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-export default function DashboardDesignerPage() {
+function DashboardDesignerInner() {
   const { modules, catalog, providers, operations, loading, loadError, reload } = useAdminData();
   const searchParams = useSearchParams();
 
@@ -279,5 +279,13 @@ export default function DashboardDesignerPage() {
         )}
       </aside>
     </div>
+  );
+}
+
+export default function DashboardDesignerPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <DashboardDesignerInner />
+    </Suspense>
   );
 }

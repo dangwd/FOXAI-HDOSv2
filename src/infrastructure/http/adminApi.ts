@@ -1,11 +1,9 @@
-import axios from 'axios';
-import httpClient from './httpClient';
+import httpProvider from "./httpForProvider";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type WidgetCategory = 'visualization' | 'healthcare' | 'filter' | 'layout' | 'ai';
-
-export type ModuleGroup = 'dieu-hanh' | 'lam-sang' | 'quan-tri';
+export type WidgetCategory = "visualization" | "healthcare" | "filter" | "layout" | "ai";
+export type ModuleGroup    = "dieu-hanh" | "lam-sang" | "quan-tri";
 
 export interface AdminModule {
   id: string;
@@ -92,55 +90,129 @@ export interface UpsertWidgetRequest {
   filterKey?: string;
 }
 
-// ─── API functions ────────────────────────────────────────────────────────────
+// ─── Provider / Operation record types ───────────────────────────────────────
+
+export interface ProviderApiRecord {
+  id: string;
+  providerId: string;
+  displayName: string;
+  description?: string;
+  clientId: string;
+  operations: string[];
+  timeoutMs: number;
+  priority: number;
+  status: string;
+  circuitBreaker: {
+    failureThreshold: number;
+    windowSeconds: number;
+    cooldownSeconds: number;
+  };
+  maxConcurrentRequests: number;
+  createdAt: string;
+  lastConnectedAt?: string;
+}
+
+export interface OperationApiRecord {
+  id: string;
+  operationPattern: string;
+  handlerType: string;
+  providerId?: string;
+  timeoutMs: number;
+  cacheable: boolean;
+  cacheTtlSeconds: number | null;
+  idempotent: boolean;
+  resultChartType: string | null;
+  status: string;
+}
+
+// ─── API ──────────────────────────────────────────────────────────────────────
+// baseURL is already set to <NEXT_PUBLIC_API_URL>/api/v1 in httpProvider.
+// All paths below are relative to that base (leading "/" stripped by Axios combineURLs).
 
 export const adminApi = {
+
+  // ── Modules ──────────────────────────────────────────────────────────────
+
   listModules: (): Promise<AdminModule[]> =>
-    httpClient.get<AdminModule[]>('/api/v1/admin/modules').then((r) => r.data),
+    httpProvider.get<AdminModule[]>("/admin/modules").then((r) => r.data),
+
+  createModule: (body: object): Promise<AdminModule> =>
+    httpProvider.post<AdminModule>("/admin/modules", body).then((r) => r.data),
+
+  updateModule: (slug: string, body: object): Promise<AdminModule> =>
+    httpProvider.put<AdminModule>(`/admin/modules/${slug}`, body).then((r) => r.data),
+
+  deleteModule: (slug: string): Promise<void> =>
+    httpProvider.delete(`/admin/modules/${slug}`).then(() => undefined),
 
   listSchemas: (): Promise<WidgetSchemaEntry[]> =>
-    httpClient.get<WidgetSchemaEntry[]>('/api/v1/admin/schemas').then((r) => r.data),
+    httpProvider.get<WidgetSchemaEntry[]>("/admin/schemas").then((r) => r.data),
 
   listProviders: (): Promise<ProviderInfo[]> =>
-    httpClient.get<ProviderInfo[]>('/api/v1/admin/providers').then((r) => r.data),
+    httpProvider.get<ProviderApiRecord[]>("/admin/providers").then((r) =>
+      r.data.map((p) => ({ id: p.providerId, name: p.displayName })),
+    ),
 
   listOperations: (): Promise<OperationEntry[]> =>
-    httpClient.get<OperationEntry[]>('/api/v1/admin/operations').then((r) => r.data),
+    httpProvider.get<OperationApiRecord[]>("/admin/operations").then((r) =>
+      r.data.map((op) => ({ pattern: op.operationPattern, providerId: op.providerId ?? "" })),
+    ),
 
   getModuleLayout: (slug: string): Promise<ModuleLayout> =>
-    axios.get<ModuleLayout>(`/api/v1/modules/${slug}/layout`).then((r) => r.data),
+    httpProvider.get<ModuleLayout>(`/modules/${slug}/layout`).then((r) => r.data),
+
+  // ── Tabs ─────────────────────────────────────────────────────────────────
 
   createTab: (
     slug: string,
     body: { slug: string; label: string; sortOrder: number },
   ): Promise<{ id: string; slug: string }> =>
-    httpClient
-      .post<{ id: string; slug: string }>(`/api/v1/admin/modules/${slug}/tabs`, body)
+    httpProvider
+      .post<{ id: string; slug: string }>(`/admin/modules/${slug}/tabs`, body)
       .then((r) => r.data),
 
-  updateTab: (
-    slug: string,
-    tabId: string,
-    body: { label?: string; sortOrder?: number },
-  ): Promise<void> =>
-    httpClient
-      .put(`/api/v1/admin/modules/${slug}/tabs/${tabId}`, body)
-      .then(() => undefined),
+  updateTab: (slug: string, tabId: string, body: { label?: string; sortOrder?: number }): Promise<void> =>
+    httpProvider.put(`/admin/modules/${slug}/tabs/${tabId}`, body).then(() => undefined),
 
   deleteTab: (slug: string, tabId: string): Promise<void> =>
-    httpClient
-      .delete(`/api/v1/admin/modules/${slug}/tabs/${tabId}`)
-      .then(() => undefined),
+    httpProvider.delete(`/admin/modules/${slug}/tabs/${tabId}`).then(() => undefined),
+
+  // ── Widgets ───────────────────────────────────────────────────────────────
 
   saveWidgets: (
     slug: string,
     tabId: string,
     widgets: UpsertWidgetRequest[],
   ): Promise<{ saved: number }> =>
-    httpClient
-      .put<{ saved: number }>(
-        `/api/v1/admin/modules/${slug}/tabs/${tabId}/widgets`,
-        widgets,
-      )
+    httpProvider
+      .put<{ saved: number }>(`/admin/modules/${slug}/tabs/${tabId}/widgets`, widgets)
       .then((r) => r.data),
+
+  // ── Provider CRUD ─────────────────────────────────────────────────────────
+
+  listFullProviders: (): Promise<ProviderApiRecord[]> =>
+    httpProvider.get<ProviderApiRecord[]>("/admin/providers").then((r) => r.data),
+
+  createProvider: (body: object): Promise<ProviderApiRecord> =>
+    httpProvider.post<ProviderApiRecord>("/admin/providers", body).then((r) => r.data),
+
+  updateProvider: (providerId: string, body: object): Promise<ProviderApiRecord> =>
+    httpProvider.put<ProviderApiRecord>(`/admin/providers/${providerId}`, body).then((r) => r.data),
+
+  deleteProvider: (providerId: string): Promise<void> =>
+    httpProvider.delete(`/admin/providers/${providerId}`).then(() => undefined),
+
+  // ── Operation CRUD ────────────────────────────────────────────────────────
+
+  listFullOperations: (): Promise<OperationApiRecord[]> =>
+    httpProvider.get<OperationApiRecord[]>("/admin/operations").then((r) => r.data),
+
+  createOperation: (body: object): Promise<OperationApiRecord> =>
+    httpProvider.post<OperationApiRecord>("/admin/operations", body).then((r) => r.data),
+
+  updateOperation: (pattern: string, body: object): Promise<OperationApiRecord> =>
+    httpProvider.put<OperationApiRecord>(`/admin/operations/${encodeURIComponent(pattern)}`, body).then((r) => r.data),
+
+  deleteOperation: (pattern: string): Promise<void> =>
+    httpProvider.delete(`/admin/operations/${encodeURIComponent(pattern)}`).then(() => undefined),
 };

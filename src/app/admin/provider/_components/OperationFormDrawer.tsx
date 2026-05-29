@@ -1,28 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { Drawer, Form, Input, InputNumber, Select, Button, Space } from "antd";
+import { Checkbox, Drawer, Form, Input, InputNumber, Select, Button, Space } from "antd";
 import type { OperationForm, OperationHandler, OperationStatus } from "../_lib/types";
-import type { Provider } from "../_lib/types";
+import { OPERATION_STATUS_META, RESULT_CHART_TYPES } from "../_lib/constants";
 
-const HANDLERS: { value: OperationHandler; label: string; desc: string }[] = [
-  { value: "provider", label: "Provider",  desc: "Chuyển tiếp đến gRPC provider" },
-  { value: "cache",    label: "Cache",     desc: "Trả về từ cache, không gọi provider" },
-  { value: "local",    label: "Local",     desc: "Xử lý cục bộ, không cần provider" },
+const HANDLER_OPTIONS: { value: OperationHandler; label: string }[] = [
+  { value: "provider",   label: "provider"   },
+  { value: "datasource", label: "datasource" },
+  { value: "widget",     label: "widget"     },
+  { value: "admin",      label: "admin"      },
 ];
 
 export function OperationFormDrawer({
   open,
   isEdit,
   initial,
-  providers,
   onSubmit,
   onClose,
 }: {
   open:      boolean;
   isEdit:    boolean;
   initial:   OperationForm;
-  providers: Provider[];
   onSubmit:  (form: OperationForm) => void;
   onClose:   () => void;
 }) {
@@ -35,14 +34,12 @@ export function OperationFormDrawer({
     setForm((f) => ({ ...f, [k]: v }));
   }
 
-  const hasCache = form.cacheSeconds !== null;
-
   const footer = (
     <div className="flex justify-end">
       <Space>
-        <Button onClick={onClose}>Hủy</Button>
+        <Button onClick={onClose}>Huỷ</Button>
         <Button type="primary" onClick={() => onSubmit(form)}>
-          {isEdit ? "Lưu thay đổi" : "Thêm Operation"}
+          {isEdit ? "Lưu thay đổi" : "Thêm"}
         </Button>
       </Space>
     </div>
@@ -52,58 +49,60 @@ export function OperationFormDrawer({
     <Drawer
       open={open}
       onClose={onClose}
-      title={isEdit ? "Sửa Operation" : "Thêm Operation"}
-      styles={{ wrapper: { width: 480 } }}
+      title={isEdit ? "Sửa operation" : "Thêm operation mới"}
+      styles={{ wrapper: { width: 560 } }}
       footer={footer}
     >
       <Form layout="vertical" component="div">
 
-        <Form.Item label="Operation Pattern" required>
+        {/* Operation Pattern */}
+        <Form.Item
+          label={<span>Operation Pattern <span className="text-red-500">*</span></span>}
+        >
           <Input
             value={form.pattern}
             onChange={(e) => set("pattern", e.target.value)}
-            placeholder="report.dashboard.summary"
+            placeholder="report.my.operation"
+            className="font-mono"
           />
-          <div className="text-[10px] text-gray-400 mt-1">
-            Dot-separated pattern. Hỗ trợ wildcard: <code>report.*</code>
-          </div>
         </Form.Item>
 
-        <Form.Item label="Handler">
-          <div className="grid grid-cols-3 gap-2">
-            {HANDLERS.map((h) => (
-              <button
-                key={h.value}
-                type="button"
-                onClick={() => set("handler", h.value)}
-                className={`px-3 py-2.5 rounded-lg border-2 text-left transition-colors ${
-                  form.handler === h.value
-                    ? "border-violet-500 bg-violet-50 dark:bg-violet-900/20"
-                    : "border-gray-200 dark:border-[#30363d] hover:border-gray-300"
-                }`}
-              >
-                <p className="text-[11px] font-bold m-0 text-gray-700 dark:text-[#e6edf3]">{h.label}</p>
-                <p className="text-[9px] m-0 mt-0.5 text-gray-400 dark:text-[#484f58]">{h.desc}</p>
-              </button>
-            ))}
-          </div>
-        </Form.Item>
-
-        {form.handler === "provider" && (
-          <Form.Item label="Provider" required>
+        {/* Handler Type + Provider ID */}
+        <div className="grid grid-cols-2 gap-3">
+          <Form.Item label="Handler Type">
             <Select
-              value={form.providerId || undefined}
-              onChange={(v) => set("providerId", v)}
-              placeholder="Chọn provider"
-              options={providers.map((p) => ({
-                value: p.providerId,
-                label: `${p.displayName} (${p.providerId})`,
-              }))}
+              value={form.handler}
+              onChange={(v) => set("handler", v)}
+              options={HANDLER_OPTIONS}
+              className="w-full"
             />
           </Form.Item>
-        )}
+          <Form.Item label="Provider ID">
+            <Input
+              value={form.providerId}
+              onChange={(e) => set("providerId", e.target.value)}
+              placeholder="excel-provider"
+              className="font-mono"
+            />
+          </Form.Item>
+        </div>
 
+        {/* Result Chart Type + Timeout */}
         <div className="grid grid-cols-2 gap-3">
+          <Form.Item label="Result Chart Type">
+            <Select
+              allowClear
+              value={form.resultChartType ?? undefined}
+              onChange={(v) => set("resultChartType", v ?? null)}
+              placeholder="— none —"
+              options={RESULT_CHART_TYPES}
+              showSearch
+              filterOption={(input, opt) =>
+                (opt?.label ?? "").toLowerCase().includes(input.toLowerCase())
+              }
+              className="w-full"
+            />
+          </Form.Item>
           <Form.Item label="Timeout (ms)">
             <InputNumber
               className="w-full"
@@ -113,49 +112,74 @@ export function OperationFormDrawer({
               step={1000}
             />
           </Form.Item>
-          <Form.Item label={`Cache TTL${hasCache ? "" : " — tắt"}`}>
-            <Space.Compact className="w-full">
-              <InputNumber
-                className="flex-1 w-full"
-                value={form.cacheSeconds ?? undefined}
-                onChange={(v) => set("cacheSeconds", v ?? null)}
-                min={1}
-                placeholder="—"
-                disabled={!hasCache}
-              />
-              <Button
-                type={hasCache ? "primary" : "default"}
-                onClick={() => set("cacheSeconds", hasCache ? null : 60)}
-                style={hasCache ? { background: "#0ca678", borderColor: "#0ca678" } : undefined}
+        </div>
+
+        {/* Cache TTL + Cacheable + Idempotent */}
+        <div className="grid grid-cols-2 gap-3">
+          <Form.Item label="Cache TTL (giây)">
+            <InputNumber
+              className="w-full"
+              value={form.cacheSeconds ?? undefined}
+              onChange={(v) => set("cacheSeconds", v ?? null)}
+              min={1}
+              placeholder=""
+            />
+          </Form.Item>
+          <Form.Item label=" ">
+            <div className="flex items-center gap-5 h-8">
+              <Checkbox
+                checked={form.cacheSeconds !== null}
+                onChange={(e) => set("cacheSeconds", e.target.checked ? 60 : null)}
               >
-                {hasCache ? "Bật" : "Tắt"}
-              </Button>
-            </Space.Compact>
+                Cacheable
+              </Checkbox>
+              <Checkbox
+                checked={form.idempotent}
+                onChange={(e) => set("idempotent", e.target.checked)}
+              >
+                Idempotent
+              </Checkbox>
+            </div>
           </Form.Item>
         </div>
 
+        {/* Status — edit only */}
         {isEdit && (
           <Form.Item label="Trạng thái">
             <div className="flex gap-2">
-              {(["active", "inactive"] as OperationStatus[]).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => set("status", s)}
-                  className={`flex-1 py-2 rounded-lg border-2 text-[11px] font-semibold transition-colors ${
-                    form.status === s
-                      ? s === "active"
-                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400"
-                        : "border-gray-400 bg-gray-100 dark:bg-[#21262d] text-gray-600 dark:text-[#8b949e]"
-                      : "border-gray-200 dark:border-[#30363d] text-gray-400"
-                  }`}
-                >
-                  {s === "active" ? "Active" : "Inactive"}
-                </button>
-              ))}
+              {(["active", "deprecated", "disabled"] as OperationStatus[]).map((s) => {
+                const meta = OPERATION_STATUS_META[s];
+                const active = form.status === s;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => set("status", s)}
+                    className="flex-1 py-2 rounded-lg border-2 text-[11px] font-semibold transition-colors"
+                    style={
+                      active
+                        ? { borderColor: meta.color, background: meta.bg, color: meta.color }
+                        : { borderColor: "transparent", background: "transparent" }
+                    }
+                  >
+                    {meta.label}
+                  </button>
+                );
+              })}
             </div>
+            {form.status === "deprecated" && (
+              <p className="text-[10px] text-amber-500 mt-1 m-0">
+                Vẫn nhận request nhưng client nhận cảnh báo deprecation.
+              </p>
+            )}
+            {form.status === "disabled" && (
+              <p className="text-[10px] text-gray-400 mt-1 m-0">
+                Từ chối tất cả request (503).
+              </p>
+            )}
           </Form.Item>
         )}
+
       </Form>
     </Drawer>
   );

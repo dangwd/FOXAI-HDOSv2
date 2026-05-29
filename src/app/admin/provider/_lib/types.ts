@@ -59,28 +59,33 @@ export interface ProbeResult {
 
 // ─── Operation registry ───────────────────────────────────────────────────────
 
-export type OperationStatus  = 'active' | 'inactive';
-export type OperationHandler = 'provider' | 'cache' | 'local';
+export type OperationStatus  = 'active' | 'deprecated' | 'disabled';
+export type OperationHandler = 'provider' | 'datasource' | 'widget' | 'admin';
 
 export interface Operation {
-  id:            string;
-  pattern:       string;
-  handler:       OperationHandler;
-  providerId:    string;
-  timeoutMs:     number;
-  cacheSeconds:  number | null;
-  status:        OperationStatus;
+  id:              string;
+  pattern:         string;
+  handler:         OperationHandler;
+  providerId:      string;
+  timeoutMs:       number;
+  cacheSeconds:    number | null;
+  idempotent:      boolean;
+  resultChartType: string | null;
+  status:          OperationStatus;
 }
 
 export interface OperationForm {
-  pattern:      string;
-  handler:      OperationHandler;
-  providerId:   string;
-  timeoutMs:    number;
-  cacheSeconds: number | null;
-  status:       OperationStatus;
+  pattern:         string;
+  handler:         OperationHandler;
+  providerId:      string;
+  timeoutMs:       number;
+  cacheSeconds:    number | null;
+  idempotent:      boolean;
+  resultChartType: string | null;
+  status:          OperationStatus;
 }
 
 export const BLANK_OPERATION_FORM: OperationForm = {
-  pattern: '', handler: 'provider', providerId: '', timeoutMs: 30000, cacheSeconds: null, status: 'active',
+  pattern: '', handler: 'provider', providerId: '', timeoutMs: 30000,
+  cacheSeconds: null, idempotent: true, resultChartType: null, status: 'active',
 };

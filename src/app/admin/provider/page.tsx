@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Tabs, Button, Input, Table, Tag } from "antd";
+import { Tabs, Button, Input, Table, Tag, message } from "antd";
 import { Search, Plus, Key } from "lucide-react";
 import type { Provider, ProviderStatus } from "./_lib/types";
 import { BLANK_FORM, type ProviderForm } from "./_lib/types";
@@ -141,7 +141,8 @@ function ProvidersTab({
   onCredentials: (p: Provider) => void;
   onDelete:      (p: Provider) => void;
   onAdd:         () => void;
-}) {
+})
+ {
   const hasFilter = !!manager.search.trim() || manager.statusFilter !== "all";
 
   const statusOptions = [
@@ -193,6 +194,7 @@ function ProvidersTab({
       <ProviderTable
         providers={manager.filtered}
         hasFilter={hasFilter}
+        loading={manager.loading}
         onEdit={onEdit}
         onProbe={onProbe}
         onCredentials={onCredentials}
@@ -212,11 +214,15 @@ export default function ProviderManagerPage() {
   const [probeTarget, setProbeTarget] = useState<Provider | null>(null);
   const [credsTarget, setCredsTarget] = useState<Provider | null>(null);
 
-  function handleSubmit(form: ProviderForm) {
+  async function handleSubmit(form: ProviderForm) {
     if (!drawer) return;
-    if (drawer.mode === "create") manager.create(form);
-    else manager.update(drawer.target.id, form);
-    setDrawer(null);
+    try {
+      if (drawer.mode === "create") await manager.create(form);
+      else await manager.update(drawer.target.id, form);
+      setDrawer(null);
+    } catch {
+      message.error(manager.error ?? "Thao tác thất bại");
+    }
   }
 
   function handleDelete(p: Provider) {

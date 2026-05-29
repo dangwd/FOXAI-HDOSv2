@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Select, Tag, Input, Button } from "antd";
+import { Select, Tag, Input, Button, AutoComplete } from "antd";
 import { X } from "lucide-react";
 import type { WidgetSchemaEntry, ProviderInfo, OperationEntry } from "@/infrastructure/http/adminApi";
 import { CATEGORY_ORDER, CATEGORY_LABELS, CATEGORY_COLOR } from "../_lib/constants";
@@ -127,15 +127,17 @@ export function WidgetPropertiesPanel({
         </Field>
 
         <Field label="Operation">
-          <Select
+          <AutoComplete
             size="small"
-            value={form.operationPattern || undefined}
+            value={form.operationPattern}
             onChange={(v) => set("operationPattern", v ?? "")}
             allowClear
-            placeholder="Chọn operation..."
+            placeholder="Chọn hoặc nhập operation pattern..."
             style={{ width: "100%" }}
-            showSearch
             options={filteredOps.map((op) => ({ value: op.pattern, label: op.pattern }))}
+            filterOption={(input, option) =>
+              (option?.value as string ?? "").toLowerCase().includes(input.toLowerCase())
+            }
           />
         </Field>
 

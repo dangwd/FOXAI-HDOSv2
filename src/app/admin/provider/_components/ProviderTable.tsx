@@ -62,6 +62,7 @@ function OperationsCell({ ops }: { ops: string[] }) {
 export function ProviderTable({
   providers,
   hasFilter,
+  loading,
   onEdit,
   onProbe,
   onCredentials,
@@ -70,6 +71,7 @@ export function ProviderTable({
 }: {
   providers:     Provider[];
   hasFilter:     boolean;
+  loading?:      boolean;
   onEdit:        (p: Provider) => void;
   onProbe:       (p: Provider) => void;
   onCredentials: (p: Provider) => void;
@@ -181,6 +183,7 @@ export function ProviderTable({
       dataSource={providers}
       rowKey="id"
       size="small"
+      loading={loading}
       pagination={false}
       locale={{
         emptyText: (

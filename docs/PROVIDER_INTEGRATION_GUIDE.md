@@ -63,16 +63,16 @@ Browser / Widget
 
 **Các service liên quan:**
 
-| Service | Port | Vai trò |
-|---|---|---|
-| `gateway` | 5500 | Public ingress, xác thực JWT user |
-| `request-api` | 5000 | Nhận request, issue JWT cho provider |
-| `provider-bridge` | 5400 | gRPC server, quản lý kết nối từ provider |
-| `operation-router-worker` | — | Định tuyến operation đến đúng handler |
-| `response-dispatcher-worker` | — | Lưu kết quả, push SignalR về browser |
-| `postgres` | 5433 | Provider registry, operation registry, audit |
-| `redis` | 6380 | Session state, result cache, rate limit |
-| `rabbitmq` | 5672 | Message queue (High / Normal / Low) |
+| Service                      | Port | Vai trò                                      |
+| ---------------------------- | ---- | -------------------------------------------- |
+| `gateway`                    | 5500 | Public ingress, xác thực JWT user            |
+| `request-api`                | 5000 | Nhận request, issue JWT cho provider         |
+| `provider-bridge`            | 5400 | gRPC server, quản lý kết nối từ provider     |
+| `operation-router-worker`    | —    | Định tuyến operation đến đúng handler        |
+| `response-dispatcher-worker` | —    | Lưu kết quả, push SignalR về browser         |
+| `postgres`                   | 5433 | Provider registry, operation registry, audit |
+| `redis`                      | 6380 | Session state, result cache, rate limit      |
+| `rabbitmq`                   | 5672 | Message queue (High / Normal / Low)          |
 
 ---
 
@@ -149,14 +149,21 @@ max_concurrent_requests INT DEFAULT 8
 
 ### 3.2 Fallback polling
 
-Nếu SSE không nhận được kết quả sau X giây:
+Nếu SSE không nhận được kết quả sau X giây, frontend tự fallback:
 
 ```
 GET /api/v1/requests/{requestId}/result
-→ { status: "completed", result: {...} }
 ```
 
-Interval mặc định: **1500ms**, tối đa **40 lần** (~60 giây).
+**Các trạng thái trả về:**
+
+| HTTP            | `status`             | Ý nghĩa                                                  |
+| --------------- | -------------------- | -------------------------------------------------------- |
+| `200 OK`        | `completed`          | Kết quả có sẵn trong Redis, body có thêm `result: {...}` |
+| `202 Accepted`  | `in_flight`          | Request đang được xử lý, body có thêm `submittedAt`      |
+| `404 Not Found` | `orphan` / `expired` | Request không tìm thấy hoặc đã hết TTL                   |
+
+Interval mặc định: **3000ms** (tăng dần nếu in_flight kéo dài).
 
 ---
 
@@ -277,16 +284,16 @@ Truy cập: `https://<HDOS_HOST>` → đăng nhập với role **admin** → tab
 1. Nhấn **"Register Provider"**.
 2. Điền form:
 
-| Field | Bắt buộc | Mô tả | Ví dụ |
-|---|---|---|---|
-| Provider ID | ✓ | Slug duy nhất, lowercase-kebab | `ml-fraud-score` |
-| Display Name | ✓ | Tên hiển thị | `ML Fraud Scoring` |
-| Description | | Mô tả | `Real-time fraud detection` |
-| Client ID | ✓ | OAuth client ID (thường = Provider ID) | `ml-fraud-score` |
-| Client Secret | ✓ | Secret để lấy JWT (lưu lại ngay) | `s3cr3t-...` |
-| Operations | ✓ | Danh sách operation patterns | `ml.fraud.score`, `ml.risk.assess` |
-| Timeout (ms) | ✓ | Timeout mặc định cho operation | `30000` |
-| Priority | ✓ | 1 (cao) – 10 (thấp) | `5` |
+| Field         | Bắt buộc | Mô tả                                  | Ví dụ                              |
+| ------------- | -------- | -------------------------------------- | ---------------------------------- |
+| Provider ID   | ✓        | Slug duy nhất, lowercase-kebab         | `ml-fraud-score`                   |
+| Display Name  | ✓        | Tên hiển thị                           | `ML Fraud Scoring`                 |
+| Description   |          | Mô tả                                  | `Real-time fraud detection`        |
+| Client ID     | ✓        | OAuth client ID (thường = Provider ID) | `ml-fraud-score`                   |
+| Client Secret | ✓        | Secret để lấy JWT (lưu lại ngay)       | `s3cr3t-...`                       |
+| Operations    | ✓        | Danh sách operation patterns           | `ml.fraud.score`, `ml.risk.assess` |
+| Timeout (ms)  | ✓        | Timeout mặc định cho operation         | `30000`                            |
+| Priority      | ✓        | 1 (cao) – 10 (thấp)                    | `5`                                |
 
 3. Nhấn **Save** → provider được tạo với `status = active`.
 
@@ -296,11 +303,11 @@ Truy cập: `https://<HDOS_HOST>` → đăng nhập với role **admin** → tab
 
 Sau khi provider đã chạy và kết nối, nhấn **"Probe gRPC"** để kiểm tra:
 
-| Bước | Ý nghĩa |
-|---|---|
-| TLS Handshake ✓ | Provider kết nối được tới bridge |
-| JWT Accepted ✓ | Token hợp lệ và chưa hết hạn |
-| gRPC Welcome ✓ | Handshake thành công, session active |
+| Bước            | Ý nghĩa                              |
+| --------------- | ------------------------------------ |
+| TLS Handshake ✓ | Provider kết nối được tới bridge     |
+| JWT Accepted ✓  | Token hợp lệ và chưa hết hạn         |
+| gRPC Welcome ✓  | Handshake thành công, session active |
 
 Kết quả trả về `latencyMs` và `sessionId` khi thành công.
 
@@ -309,6 +316,38 @@ Kết quả trả về `latencyMs` và `sessionId` khi thành công.
 ## 6. Đăng ký provider qua API
 
 Tất cả endpoint đều yêu cầu `Authorization: Bearer <admin_jwt>` và role `admin`.
+
+### 6.0 Ghi chú về RequestEnvelope
+
+Khi submit request (`POST /api/v1/requests`), các field `TenantId` và `UserId` **phải khớp** với claim trong JWT của user:
+
+- `TenantId` phải bằng claim `tenant_id` trong token, ngược lại server trả `403 FORBIDDEN`.
+- Header `X-Connection-Id` (tùy chọn): gửi kèm SignalR connection ID của client để server push kết quả thẳng về tab đó.
+
+```http
+POST /api/v1/requests
+Authorization: Bearer <user_jwt>
+Content-Type: application/json
+X-Connection-Id: <signalr_connection_id>   (optional)
+
+{
+  "requestId": "01960000-0000-7000-8000-000000000001",
+  "operation": "report.sales.trend",
+  "params":    { "fromDate": "2026-05-01", "toDate": "2026-05-28", "groupBy": "day" },
+  "tenantId":  "<from_jwt>",
+  "userId":    "<from_jwt>",
+  "options": {
+    "priority":     "Normal",
+    "cacheSeconds": 300,
+    "progress":     false,
+    "timeoutMs":    null
+  }
+}
+```
+
+> `priority` nhận giá trị: `"High"` | `"Normal"` | `"Low"`.
+
+---
 
 ### 6.1 Đăng ký provider
 
@@ -329,6 +368,7 @@ Content-Type: application/json
 ```
 
 **Response `201 Created`:**
+
 ```json
 {
   "providerId": "ml-fraud-score",
@@ -370,6 +410,7 @@ POST /api/v1/admin/providers/{providerId}/probe
 ```
 
 **Response:**
+
 ```json
 {
   "tlsHandshake": true,
@@ -392,6 +433,7 @@ POST /api/v1/admin/providers/{providerId}/credentials/rotate
 ```
 
 **Response:**
+
 ```json
 {
   "newClientSecret": "rpf_live_xxxxxxxxxxxx",
@@ -433,10 +475,12 @@ POST /api/v1/admin/providers/{providerId}/bootstrap-token/regenerate
 ```
 
 Provider dùng bootstrap token để gọi:
+
 ```http
 POST /api/v1/providers/bootstrap
 Authorization: Bearer <bootstrap_token>
 ```
+
 → nhận lại `{ clientSecret: "..." }` và tự cấu hình.
 
 ### 7.5 Revoke credentials
@@ -528,22 +572,93 @@ Platform **validate params** theo JSON Schema trước khi gửi đến provider
 
 > **Quan trọng:** Nếu `required` không được khai báo đúng và widget gửi thiếu field, request sẽ bị từ chối với lỗi validation ngay tại `request-api` — không cần tốn round-trip đến provider.
 
+### 8.2b Thêm operation qua API
+
+```http
+POST /api/v1/admin/operations
+Authorization: Bearer <admin_jwt>
+Content-Type: application/json
+
+{
+  "operationPattern": "ml.fraud.score",
+  "handlerType":      "provider",
+  "providerId":       "ml-fraud-score",
+  "paramsSchemaJson": "{\"type\":\"object\",\"properties\":{\"transactionId\":{\"type\":\"string\"}},\"required\":[\"transactionId\"]}",
+  "timeoutMs":        45000,
+  "cacheable":        true,
+  "cacheTtlSeconds":  300,
+  "idempotent":       true,
+  "resultChartType":  "kpi_grid"
+}
+```
+
+**Cập nhật operation:**
+
+```http
+PUT /api/v1/admin/operations/ml.fraud.score
+Content-Type: application/json
+
+{
+  "handlerType":      "provider",
+  "providerId":       "ml-fraud-score",
+  "paramsSchemaJson": "...",
+  "timeoutMs":        60000,
+  "cacheable":        true,
+  "cacheTtlSeconds":  600,
+  "idempotent":       true,
+  "status":           "active",
+  "resultChartType":  "kpi_grid"
+}
+```
+
+**Xóa operation:**
+
+```http
+DELETE /api/v1/admin/operations/ml.fraud.score
+```
+
+> Pattern có dấu `.` phải URL-encode khi dùng curl: `ml%2Efraud%2Escore` → tuy nhiên server dùng catch-all route `{**pattern}` nên hầu hết client gửi thẳng cũng hoạt động.
+
+**Field `resultChartType`** ánh xạ operation sang loại widget mà Dashboard Designer tự động đề xuất:
+
+| Giá trị               | Widget tương ứng  |
+| --------------------- | ----------------- |
+| `kpi_grid`            | KpiGrid           |
+| `line_chart`          | LineChart         |
+| `bar_chart`           | BarChart          |
+| `gauge`               | Gauge             |
+| `heatmap`             | Heatmap           |
+| `scatter`             | Scatter           |
+| `funnel`              | Funnel            |
+| `timeline_vertical`   | Timeline          |
+| `alert_list`          | AlertList         |
+| `pivot_table`         | Table             |
+| `patient_flow_stages` | PatientFlowStages |
+| `bed_grid`            | BedGrid           |
+| `room_status_grid`    | RoomStatusGrid    |
+| `risk_tiers`          | RiskTiers         |
+| `flow_steps`          | FlowSteps         |
+| `news2_bars`          | News2Bars         |
+| `map_pins`            | MapPins           |
+
+---
+
 ### 8.3 Status của operation
 
-| Status | Ý nghĩa |
-|---|---|
-| `active` | Nhận request bình thường |
+| Status       | Ý nghĩa                             |
+| ------------ | ----------------------------------- |
+| `active`     | Nhận request bình thường            |
 | `deprecated` | Vẫn hoạt động nhưng cảnh báo client |
-| `disabled` | Từ chối tất cả request (503) |
+| `disabled`   | Từ chối tất cả request (503)        |
 
 ### 8.4 Handler types
 
-| handler_type | Ý nghĩa |
-|---|---|
-| `provider` | Route đến external provider qua bridge |
-| `datasource` | Built-in handler lấy data từ Postgres |
-| `widget` | Built-in handler cho widget-level operations |
-| `admin` | Administrative operations |
+| handler_type | Ý nghĩa                                      |
+| ------------ | -------------------------------------------- |
+| `provider`   | Route đến external provider qua bridge       |
+| `datasource` | Built-in handler lấy data từ Postgres        |
+| `widget`     | Built-in handler cho widget-level operations |
+| `admin`      | Administrative operations                    |
 
 ---
 
@@ -612,21 +727,43 @@ Bị rate limit upstream         → Trả FAILED + ErrorDetail.code = RATE_LIMI
 
 Excel Provider là provider mẫu đọc dữ liệu từ file `.xlsx` và phục vụ các report.
 
-### 10.1 Operations được đăng ký
+### 10.1 Operations được đăng ký (21 operations)
 
-| Operation Pattern | Mô tả | Params bắt buộc | Cache TTL |
-|---|---|---|---|
-| `report.dashboard.summary` | KPI tổng quan ngày | — | 60s |
-| `report.sales.trend` | Xu hướng doanh số | `fromDate`, `toDate`, `groupBy` | 300s |
-| `report.inventory.status` | Tồn kho hiện tại | — | 120s |
-| `report.regional.performance` | Hiệu suất theo vùng | `period` | 60s |
-| `report.channel.comparison` | So sánh kênh bán | — | 300s |
-| `report.product.detail` | Chi tiết sản phẩm | `productId` | 300s |
-| `report.top.performers` | Top sản phẩm/vùng | `limit`, `period` | 120s |
+**Business — Sales & Reports:**
+
+| Operation Pattern             | Widget type           | Params tùy chọn                 | Cache TTL   |
+| ----------------------------- | --------------------- | ------------------------------- | ----------- |
+| `report.dashboard.summary`    | KpiGrid               | —                               | 60s         |
+| `report.sales.trend`          | LineChart / AreaChart | `fromDate`, `toDate`, `groupBy` | 300s        |
+| `report.inventory.status`     | BarChart              | —                               | 120s        |
+| `report.regional.performance` | BarChart              | `period`                        | 60s         |
+| `report.channel.comparison`   | PieChart / DonutChart | —                               | 300s        |
+| `report.product.detail`       | Table                 | `productId`                     | 300s        |
+| `report.top.performers`       | Table                 | `limit`, `period`               | 120s        |
+| `report.sales.gauge`          | Gauge                 | —                               | 60s         |
+| `report.sales.heatmap`        | Heatmap               | `fromDate`, `toDate`            | 120s        |
+| `report.sales.scatter`        | Scatter               | `fromDate`, `toDate`            | 120s        |
+| `report.sales.funnel`         | Funnel                | `period` (week/month/quarter)   | 120s        |
+| `report.sales.timeline`       | Timeline              | `limit` (1-50)                  | 60s         |
+| `report.sales.alerts`         | AlertList             | —                               | không cache |
+| `report.sales.pivot`          | Table (pivot)         | `fromDate`, `toDate`            | 300s        |
+
+**Healthcare Demo:**
+
+| Operation Pattern          | Widget type       | Params tùy chọn                | Cache TTL   |
+| -------------------------- | ----------------- | ------------------------------ | ----------- |
+| `report.demo.patient.flow` | PatientFlowStages | —                              | không cache |
+| `report.demo.bed.status`   | BedGrid           | —                              | không cache |
+| `report.demo.room.status`  | RoomStatusGrid    | —                              | không cache |
+| `report.demo.risk.tiers`   | RiskTiers         | —                              | không cache |
+| `report.demo.flow.steps`   | FlowSteps         | —                              | không cache |
+| `report.demo.news2`        | News2Bars         | `levelFilter` (e.g. `"L2,L3"`) | không cache |
+| `report.demo.map.pins`     | MapPins           | —                              | không cache |
 
 ### 10.2 Response structure mẫu
 
 **report.dashboard.summary:**
+
 ```json
 {
   "totalRevenue": 1250000000,
@@ -637,19 +774,18 @@ Excel Provider là provider mẫu đọc dữ liệu từ file `.xlsx` và phụ
     "online": 680000000,
     "store": 570000000
   },
-  "alerts": [
-    { "level": "warning", "message": "Tồn kho sản phẩm B thấp" }
-  ]
+  "alerts": [{ "level": "warning", "message": "Tồn kho sản phẩm B thấp" }]
 }
 ```
 
 **report.sales.trend:**
+
 ```json
 {
   "labels": ["2026-05-01", "2026-05-02", "2026-05-03"],
   "series": [
-    { "name": "Online",  "data": [120000000, 135000000, 98000000] },
-    { "name": "Cửa hàng","data": [95000000,  110000000, 87000000] }
+    { "name": "Online", "data": [120000000, 135000000, 98000000] },
+    { "name": "Cửa hàng", "data": [95000000, 110000000, 87000000] }
   ]
 }
 ```
@@ -662,7 +798,7 @@ File Excel đặt trong volume `/app/ExcelData`. Cấu hình trong `appsettings.
 {
   "Provider": {
     "ProviderId": "excel-provider",
-    "ClientId":   "excel-provider",
+    "ClientId": "excel-provider",
     "ClientSecret": "<secret>",
     "TokenEndpoint": "http://request-api:5000/api/v1/providers/token",
     "BridgeGrpcUrl": "http://provider-bridge:5400"
@@ -697,10 +833,10 @@ services:
   my-new-provider:
     image: my-registry/my-provider:latest
     environment:
-      PROVIDER_ID:     my-new-provider
-      CLIENT_ID:       my-new-provider
-      CLIENT_SECRET:   "${MY_PROVIDER_SECRET:-dev-secret}"
-      TOKEN_ENDPOINT:  http://request-api:5000/api/v1/providers/token
+      PROVIDER_ID: my-new-provider
+      CLIENT_ID: my-new-provider
+      CLIENT_SECRET: "${MY_PROVIDER_SECRET:-dev-secret}"
+      TOKEN_ENDPOINT: http://request-api:5000/api/v1/providers/token
       BRIDGE_GRPC_URL: http://provider-bridge:5400
     depends_on:
       - request-api
@@ -737,13 +873,14 @@ Mỗi provider có config circuit breaker riêng, lưu trong cột `circuit_brea
 }
 ```
 
-| Field | Ý nghĩa |
-|---|---|
-| `failureThreshold` | Số lần thất bại trong window → trip circuit |
-| `windowSeconds` | Cửa sổ thời gian đếm lỗi |
-| `cooldownSeconds` | Thời gian circuit ở trạng thái OPEN trước khi thử lại |
+| Field              | Ý nghĩa                                               |
+| ------------------ | ----------------------------------------------------- |
+| `failureThreshold` | Số lần thất bại trong window → trip circuit           |
+| `windowSeconds`    | Cửa sổ thời gian đếm lỗi                              |
+| `cooldownSeconds`  | Thời gian circuit ở trạng thái OPEN trước khi thử lại |
 
 **Trạng thái circuit breaker:**
+
 - `CLOSED` → hoạt động bình thường
 - `OPEN` → reject request ngay (trả FAILED không gửi đến provider)
 - `HALF_OPEN` → cho qua 1 request thử; nếu thành công → CLOSED, thất bại → OPEN
@@ -805,6 +942,13 @@ curl -X POST http://localhost:5500/api/v1/requests \
 # Poll kết quả
 curl http://localhost:5500/api/v1/requests/test-001/result \
   -H "Authorization: Bearer $TOKEN"
+# → 200: { "status": "completed", "requestId": "test-001", "result": {...} }
+# → 202: { "status": "in_flight",  "requestId": "test-001", "submittedAt": "..." }
+# → 404: { "status": "orphan",     "requestId": "test-001" }
+
+# Hủy request đang chạy (best-effort, trả 202 ngay lập tức)
+curl -X POST http://localhost:5500/api/v1/requests/test-001/cancel \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ### 13.4 Kiểm tra Redis cache
@@ -820,19 +964,20 @@ TTL "result:report.dashboard.summary:..."
 ### 13.5 Kiểm tra RabbitMQ queues
 
 Truy cập `http://localhost:15672` (guest/guest):
+
 - `op-request-high`, `op-request-normal`, `op-request-low` — queue chờ xử lý
 - Nếu queue tăng không giảm → worker hoặc provider bị stuck
 
 ### 13.6 Các lỗi thường gặp
 
-| Lỗi | Nguyên nhân | Giải pháp |
-|---|---|---|
-| `No handler found for operation` | Operation chưa đăng ký hoặc `status != active` | Kiểm tra `operation_registry` trong DB |
-| `Parameter validation failed: required ["fromDate","toDate"]` | Widget thiếu params | Sửa `paramsTemplate` trong widget config |
-| `Provider session not found` | Provider chưa connect hoặc đã disconnect | Kiểm tra logs provider, restart nếu cần |
-| `Circuit breaker OPEN` | Provider trả lỗi quá nhiều | Xem logs provider, fix lỗi, đợi cooldown |
-| `JWT expired` | Provider không refresh token đúng lúc | Provider phải xử lý `RefreshAuthRequired` |
-| `RedisConnectionException: abortConnect` | Redis chưa ready lúc service start | Thêm `abortConnect=false` vào connection string |
+| Lỗi                                                           | Nguyên nhân                                    | Giải pháp                                       |
+| ------------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------- |
+| `No handler found for operation`                              | Operation chưa đăng ký hoặc `status != active` | Kiểm tra `operation_registry` trong DB          |
+| `Parameter validation failed: required ["fromDate","toDate"]` | Widget thiếu params                            | Sửa `paramsTemplate` trong widget config        |
+| `Provider session not found`                                  | Provider chưa connect hoặc đã disconnect       | Kiểm tra logs provider, restart nếu cần         |
+| `Circuit breaker OPEN`                                        | Provider trả lỗi quá nhiều                     | Xem logs provider, fix lỗi, đợi cooldown        |
+| `JWT expired`                                                 | Provider không refresh token đúng lúc          | Provider phải xử lý `RefreshAuthRequired`       |
+| `RedisConnectionException: abortConnect`                      | Redis chưa ready lúc service start             | Thêm `abortConnect=false` vào connection string |
 
 ---
 
@@ -840,36 +985,59 @@ Truy cập `http://localhost:15672` (guest/guest):
 
 ### API endpoints
 
-| Method | Path | Mô tả |
-|---|---|---|
-| `GET` | `/api/v1/admin/providers` | Danh sách providers |
-| `POST` | `/api/v1/admin/providers` | Đăng ký provider mới |
-| `PUT` | `/api/v1/admin/providers/{id}` | Cập nhật provider |
-| `POST` | `/api/v1/admin/providers/{id}/probe` | Test kết nối gRPC |
-| `POST` | `/api/v1/admin/providers/{id}/credentials/rotate` | Tạo secret mới |
-| `POST` | `/api/v1/admin/providers/{id}/credentials/revoke` | Vô hiệu hóa credentials |
-| `POST` | `/api/v1/admin/providers/{id}/credentials/set` | Đặt secret cụ thể |
-| `GET` | `/api/v1/admin/providers/{id}/credentials/reveal` | Xem plaintext secret |
-| `GET` | `/api/v1/admin/providers/{id}/bootstrap-token` | Xem bootstrap token |
-| `POST` | `/api/v1/admin/providers/{id}/bootstrap-token/regenerate` | Tạo bootstrap token mới |
-| `POST` | `/api/v1/providers/token` | Provider lấy JWT |
-| `POST` | `/api/v1/requests` | Submit operation request |
-| `GET` | `/api/v1/requests/{id}/result` | Poll kết quả |
+**Provider Management (yêu cầu role `admin`):**
+
+| Method | Path                                                      | Mô tả                      |
+| ------ | --------------------------------------------------------- | -------------------------- |
+| `GET`  | `/api/v1/admin/providers`                                 | Danh sách providers        |
+| `POST` | `/api/v1/admin/providers`                                 | Đăng ký provider mới       |
+| `PUT`  | `/api/v1/admin/providers/{id}`                            | Cập nhật provider          |
+| `POST` | `/api/v1/admin/providers/{id}/probe`                      | Test kết nối gRPC          |
+| `POST` | `/api/v1/admin/providers/{id}/credentials/rotate`         | Tạo secret mới (grace 60s) |
+| `POST` | `/api/v1/admin/providers/{id}/credentials/revoke`         | Vô hiệu hóa credentials    |
+| `POST` | `/api/v1/admin/providers/{id}/credentials/set`            | Đặt secret cụ thể          |
+| `GET`  | `/api/v1/admin/providers/{id}/credentials/reveal`         | Xem plaintext secret       |
+| `GET`  | `/api/v1/admin/providers/{id}/bootstrap-token`            | Xem bootstrap token        |
+| `POST` | `/api/v1/admin/providers/{id}/bootstrap-token/regenerate` | Tạo bootstrap token mới    |
+
+**Operation Registry (yêu cầu role `admin`):**
+
+| Method   | Path                                 | Mô tả                                              |
+| -------- | ------------------------------------ | -------------------------------------------------- |
+| `GET`    | `/api/v1/admin/operations`           | Danh sách operations (filter: `?resultChartType=`) |
+| `POST`   | `/api/v1/admin/operations`           | Thêm operation mới                                 |
+| `PUT`    | `/api/v1/admin/operations/{pattern}` | Cập nhật operation                                 |
+| `DELETE` | `/api/v1/admin/operations/{pattern}` | Xóa operation                                      |
+
+**Provider Auth (public):**
+
+| Method | Path                          | Mô tả                                 |
+| ------ | ----------------------------- | ------------------------------------- |
+| `POST` | `/api/v1/providers/token`     | Provider lấy JWT (client_credentials) |
+| `POST` | `/api/v1/providers/bootstrap` | Provider fetch secret lần đầu         |
+
+**Client Request API (yêu cầu Bearer user JWT):**
+
+| Method | Path                           | Mô tả                                         |
+| ------ | ------------------------------ | --------------------------------------------- |
+| `POST` | `/api/v1/requests`             | Submit operation request → `202 SubmitAck`    |
+| `GET`  | `/api/v1/requests/{id}/result` | Poll kết quả (completed / in_flight / orphan) |
+| `POST` | `/api/v1/requests/{id}/cancel` | Hủy request (best-effort, `202` ngay lập tức) |
 
 ### Port map
 
-| Service | Host port | Container port | Protocol |
-|---|---|---|---|
-| gateway | 5500 | 5500 | HTTP |
-| request-api | 5001 | 5000 | HTTP |
-| provider-bridge | 5400 | 5400 | gRPC/HTTP2 |
-| ingestion-api | 5100 | 5100 | HTTP |
-| realtime-hub | 5200 | 5200 | HTTP + SSE |
-| postgres | 5433 | 5432 | TCP |
-| redis | 6380 | 6379 | TCP |
-| rabbitmq | 5672 | 5672 | AMQP |
-| rabbitmq UI | 15672 | 15672 | HTTP |
-| keycloak | 8180 | 8080 | HTTP |
+| Service         | Host port | Container port | Protocol   |
+| --------------- | --------- | -------------- | ---------- |
+| gateway         | 5500      | 5500           | HTTP       |
+| request-api     | 5001      | 5000           | HTTP       |
+| provider-bridge | 5400      | 5400           | gRPC/HTTP2 |
+| ingestion-api   | 5100      | 5100           | HTTP       |
+| realtime-hub    | 5200      | 5200           | HTTP + SSE |
+| postgres        | 5433      | 5432           | TCP        |
+| redis           | 6380      | 6379           | TCP        |
+| rabbitmq        | 5672      | 5672           | AMQP       |
+| rabbitmq UI     | 15672     | 15672          | HTTP       |
+| keycloak        | 8180      | 8080           | HTTP       |
 
 ### Provider status lifecycle
 
@@ -884,4 +1052,4 @@ credentials_revoked → active  (sau khi rotate + cấu hình lại)
 
 ---
 
-*Tài liệu này được tạo tự động dựa trên phân tích codebase HDOS v3.0 — 2026-05-28.*
+_Tài liệu dựa trên phân tích codebase HDOS — cập nhật lần cuối: 2026-05-28 (bổ sung: cancel endpoint, polling states, 14 Excel operations mới, admin operations API, RequestEnvelope notes, resultChartType mapping)._

@@ -1,14 +1,23 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { adminApi } from "@/infrastructure/http/adminApi";
 import type { AdminModule, ModuleGroup } from "@/infrastructure/http/adminApi";
-import { MOCK_MODULES } from "../../_lib/mockData";
 import { GROUP_ORDER } from "../_lib/constants";
 import type { ModuleForm } from "../_lib/types";
 
 export function useModuleManager() {
-  const [modules, setModules] = useState<AdminModule[]>(MOCK_MODULES);
-  const [search, setSearch] = useState("");
+  const [modules, setModules] = useState<AdminModule[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [search,   setSearch]   = useState("");
+
+  useEffect(() => {
+    setLoading(true);
+    adminApi.listModules()
+      .then(setModules)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -31,56 +40,55 @@ export function useModuleManager() {
     return map;
   }, [filtered]);
 
-  function create(form: ModuleForm) {
-    setModules((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        slug: form.slug,
-        label: form.label,
-        icon: form.icon || form.label.slice(0, 2).toUpperCase(),
-        description: form.description,
-        sortOrder: form.sortOrder,
-        group: form.group as ModuleGroup,
-        roles: form.roles,
-        isActive: form.isActive,
-        isVisible: form.isVisible,
-        refreshInterval: form.refreshInterval ? Number(form.refreshInterval) : undefined,
-      },
-    ]);
+  async function create(form: ModuleForm) {
+    const body = {
+      slug:            form.slug,
+      label:           form.label,
+      icon:            form.icon || form.label.slice(0, 2).toUpperCase(),
+      description:     form.description,
+      sortOrder:       form.sortOrder,
+      group:           form.group,
+      roles:           form.roles,
+      isActive:        form.isActive,
+      isVisible:       form.isVisible,
+      refreshInterval: form.refreshInterval ? Number(form.refreshInterval) : undefined,
+    };
+    const created = await adminApi.createModule(body);
+    setModules((prev) => [...prev, created]);
   }
 
-  function update(id: string, form: ModuleForm) {
-    setModules((prev) =>
-      prev.map((m) =>
-        m.id !== id
-          ? m
-          : {
-              ...m,
-              slug: form.slug,
-              label: form.label,
-              icon: form.icon || m.icon,
-              description: form.description,
-              sortOrder: form.sortOrder,
-              group: form.group as ModuleGroup,
-              roles: form.roles,
-              isActive: form.isActive,
-              isVisible: form.isVisible,
-              refreshInterval: form.refreshInterval ? Number(form.refreshInterval) : undefined,
-            },
-      ),
-    );
+  async function update(id: string, form: ModuleForm) {
+    const target = modules.find((m) => m.id === id);
+    if (!target) return;
+    const body = {
+      slug:            form.slug,
+      label:           form.label,
+      icon:            form.icon || target.icon,
+      description:     form.description,
+      sortOrder:       form.sortOrder,
+      group:           form.group,
+      roles:           form.roles,
+      isActive:        form.isActive,
+      isVisible:       form.isVisible,
+      refreshInterval: form.refreshInterval ? Number(form.refreshInterval) : undefined,
+    };
+    const updated = await adminApi.updateModule(target.slug, body);
+    setModules((prev) => prev.map((m) => (m.id === id ? updated : m)));
   }
 
-  function remove(id: string) {
+  async function remove(id: string) {
+    const target = modules.find((m) => m.id === id);
+    if (!target) return;
+    await adminApi.deleteModule(target.slug);
     setModules((prev) => prev.filter((m) => m.id !== id));
   }
 
-  function toggleActive(id: string) {
-    setModules((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, isActive: !(m.isActive ?? true) } : m)),
-    );
+  async function toggleActive(id: string) {
+    const target = modules.find((m) => m.id === id);
+    if (!target) return;
+    const updated = await adminApi.updateModule(target.slug, { isActive: !(target.isActive ?? true) });
+    setModules((prev) => prev.map((m) => (m.id === id ? updated : m)));
   }
 
-  return { modules, filtered, grouped, search, setSearch, create, update, remove, toggleActive };
+  return { modules, filtered, grouped, loading, search, setSearch, create, update, remove, toggleActive };
 }
