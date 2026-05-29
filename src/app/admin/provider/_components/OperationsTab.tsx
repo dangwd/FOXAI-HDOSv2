@@ -6,7 +6,7 @@ import { CheckCircle2, MinusCircle, Plus, RefreshCw, Search } from "lucide-react
 import { useState } from "react";
 import { useOperationManager } from "../_hooks/useOperationManager";
 import { OPERATION_HANDLER_META, OPERATION_STATUS_META, RESULT_CHART_TYPES } from "../_lib/constants";
-import type { Operation, OperationForm, Provider } from "../_lib/types";
+import type { Operation, OperationForm } from "../_lib/types";
 import { BLANK_OPERATION_FORM } from "../_lib/types";
 import { OperationFormDrawer } from "./OperationFormDrawer";
 
@@ -35,7 +35,7 @@ function fmtCache(s: number): string {
   return `${s}s`;
 }
 
-export function OperationsTab({ providers }: { providers: Provider[] }) {
+export function OperationsTab() {
   const manager = useOperationManager();
   const [drawer, setDrawer] = useState<DrawerState | null>(null);
 

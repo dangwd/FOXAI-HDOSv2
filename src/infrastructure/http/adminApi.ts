@@ -2,6 +2,52 @@ import httpProvider from "./httpForProvider";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+// ── Menu / Report-screen types ────────────────────────────────────────────────
+
+export interface AdminMenuNode {
+  id:           string;
+  name:         string;
+  slug:         string;
+  icon:         string;
+  description:  string | null;
+  parentId:     string | null;
+  sortOrder:    number;
+  isVisible:    boolean;
+  createdAt:    string;
+  updatedAt:    string;
+  screenCount:  number;
+}
+
+export interface AdminScreen {
+  id:               string;
+  name:             string;
+  icon:             string;
+  status:           "draft" | "published";
+  sortOrder:        number;
+  widgetCount:      number;
+  refreshMode:      "none" | "timer" | "sse";
+  refreshIntervalS: number;
+}
+
+export interface AdminPermission {
+  id:             string;
+  principalType:  "role" | "user";
+  principalValue: string;
+  canView:        boolean;
+  canExport:      boolean;
+}
+
+export interface AdminWidgetDef {
+  id:          string;
+  widgetType:  "kpi" | "line" | "bar" | "pie" | "table" | "text";
+  title:       string;
+  colSpan:     number;
+  sortOrder:   number;
+  color:       string;
+  dataSource:  string | null;
+  config:      string;
+}
+
 export type WidgetCategory = "visualization" | "healthcare" | "filter" | "layout" | "ai";
 export type ModuleGroup    = "dieu-hanh" | "lam-sang" | "quan-tri";
 
@@ -215,4 +261,62 @@ export const adminApi = {
 
   deleteOperation: (pattern: string): Promise<void> =>
     httpProvider.delete(`/admin/operations/${encodeURIComponent(pattern)}`).then(() => undefined),
+
+  // ── Menu CRUD ─────────────────────────────────────────────────────────────
+
+  listAdminMenus: (): Promise<AdminMenuNode[]> =>
+    httpProvider.get<AdminMenuNode[]>("/admin/menus").then((r) => r.data),
+
+  createMenu: (body: object): Promise<AdminMenuNode> =>
+    httpProvider.post<AdminMenuNode>("/admin/menus", body).then((r) => r.data),
+
+  updateMenu: (id: string, body: object): Promise<void> =>
+    httpProvider.put(`/admin/menus/${id}`, body).then(() => undefined),
+
+  deleteMenu: (id: string): Promise<void> =>
+    httpProvider.delete(`/admin/menus/${id}`).then(() => undefined),
+
+  // ── Screen CRUD ───────────────────────────────────────────────────────────
+
+  listScreens: (menuId: string): Promise<AdminScreen[]> =>
+    httpProvider.get<AdminScreen[]>(`/admin/menus/${menuId}/screens`).then((r) => r.data),
+
+  createScreen: (menuId: string, body: object): Promise<AdminScreen> =>
+    httpProvider.post<AdminScreen>(`/admin/menus/${menuId}/screens`, body).then((r) => r.data),
+
+  updateScreen: (menuId: string, screenId: string, body: object): Promise<void> =>
+    httpProvider.put(`/admin/menus/${menuId}/screens/${screenId}`, body).then(() => undefined),
+
+  deleteScreen: (menuId: string, screenId: string): Promise<void> =>
+    httpProvider.delete(`/admin/menus/${menuId}/screens/${screenId}`).then(() => undefined),
+
+  saveScreen: (
+    menuId: string,
+    screenId: string,
+    body: object,
+  ): Promise<{ id: string; savedAt: string }> =>
+    httpProvider
+      .put<{ id: string; savedAt: string }>(`/admin/menus/${menuId}/screens/${screenId}/save`, body)
+      .then((r) => r.data),
+
+  // ── Widget individual CRUD ────────────────────────────────────────────────
+
+  listWidgets: (menuId: string, screenId: string): Promise<AdminWidgetDef[]> =>
+    httpProvider
+      .get<AdminWidgetDef[]>(`/admin/menus/${menuId}/screens/${screenId}/widgets`)
+      .then((r) => r.data),
+
+  // ── Permission CRUD ───────────────────────────────────────────────────────
+
+  listPerms: (menuId: string): Promise<AdminPermission[]> =>
+    httpProvider.get<AdminPermission[]>(`/admin/menus/${menuId}/permissions`).then((r) => r.data),
+
+  upsertPerm: (menuId: string, body: object): Promise<AdminPermission> =>
+    httpProvider.post<AdminPermission>(`/admin/menus/${menuId}/permissions`, body).then((r) => r.data),
+
+  updatePerm: (menuId: string, permId: string, body: object): Promise<void> =>
+    httpProvider.put(`/admin/menus/${menuId}/permissions/${permId}`, body).then(() => undefined),
+
+  deletePerm: (menuId: string, permId: string): Promise<void> =>
+    httpProvider.delete(`/admin/menus/${menuId}/permissions/${permId}`).then(() => undefined),
 };

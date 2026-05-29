@@ -12,11 +12,18 @@ export function useModuleManager() {
   const [search,   setSearch]   = useState("");
 
   useEffect(() => {
-    setLoading(true);
-    adminApi.listModules()
-      .then(setModules)
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    async function load() {
+      setLoading(true);
+      try {
+        const data = await adminApi.listModules();
+        setModules(data);
+      } catch {
+        // keep empty on failure
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
   }, []);
 
   const filtered = useMemo(() => {

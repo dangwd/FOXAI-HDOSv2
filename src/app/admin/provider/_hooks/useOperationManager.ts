@@ -44,20 +44,21 @@ export function useOperationManager() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
 
-    adminApi.listFullOperations()
-      .then((data) => {
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await adminApi.listFullOperations();
         if (!cancelled) setOperations(data.map(apiToOperation));
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setOperations(MOCK_OPERATIONS);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
 
+    load();
     return () => { cancelled = true; };
   }, [rev]);
 
