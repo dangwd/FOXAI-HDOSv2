@@ -1,17 +1,20 @@
 "use client";
 
+import { App, Button, Input, Table, Tabs, Tag } from "antd";
+import { Key, Plus, Search } from "lucide-react";
 import { useState } from "react";
-import { App, Tabs, Button, Input, Table, Tag } from "antd";
-import { Search, Plus, Key } from "lucide-react";
+import { CredentialsModal } from "./_components/CredentialsModal";
+import { OperationsTab } from "./_components/OperationsTab";
+import { ProbeModal } from "./_components/ProbeModal";
+import { ProviderFormDrawer } from "./_components/ProviderFormDrawer";
+import { ProviderTable } from "./_components/ProviderTable";
+import {
+  useProviderManager,
+  type StatusFilter,
+} from "./_hooks/useProviderManager";
+import { STATUS_META, STATUS_ORDER, providerColor } from "./_lib/constants";
 import type { Provider, ProviderStatus } from "./_lib/types";
 import { BLANK_FORM, type ProviderForm } from "./_lib/types";
-import { STATUS_META, STATUS_ORDER, providerColor } from "./_lib/constants";
-import { useProviderManager, type StatusFilter } from "./_hooks/useProviderManager";
-import { ProviderTable }       from "./_components/ProviderTable";
-import { ProviderFormDrawer }  from "./_components/ProviderFormDrawer";
-import { ProbeModal }          from "./_components/ProbeModal";
-import { CredentialsModal }    from "./_components/CredentialsModal";
-import { OperationsTab }       from "./_components/OperationsTab";
 
 // ─── Drawer state ─────────────────────────────────────────────────────────────
 
@@ -19,19 +22,19 @@ type DrawerState = { mode: "create" } | { mode: "edit"; target: Provider };
 
 function toForm(p: Provider): ProviderForm {
   return {
-    providerId:            p.providerId,
-    displayName:           p.displayName,
-    description:           p.description ?? "",
-    clientId:              p.clientId,
-    clientSecret:          "",
-    operationsText:        p.operations.join("\n"),
-    timeoutMs:             p.timeoutMs,
-    priority:              p.priority,
+    providerId: p.providerId,
+    displayName: p.displayName,
+    description: p.description ?? "",
+    clientId: p.clientId,
+    clientSecret: "",
+    operationsText: p.operations.join("\n"),
+    timeoutMs: p.timeoutMs,
+    priority: p.priority,
     maxConcurrentRequests: p.maxConcurrentRequests,
-    cbFailureThreshold:    p.circuitBreaker.failureThreshold,
-    cbWindowSeconds:       p.circuitBreaker.windowSeconds,
-    cbCooldownSeconds:     p.circuitBreaker.cooldownSeconds,
-    status:                p.status,
+    cbFailureThreshold: p.circuitBreaker.failureThreshold,
+    cbWindowSeconds: p.circuitBreaker.windowSeconds,
+    cbCooldownSeconds: p.circuitBreaker.cooldownSeconds,
+    status: p.status,
   };
 }
 
@@ -39,7 +42,10 @@ function toForm(p: Provider): ProviderForm {
 
 function StatsBar({ providers }: { providers: Provider[] }) {
   const counts = STATUS_ORDER.reduce<Record<ProviderStatus, number>>(
-    (acc, s) => ({ ...acc, [s]: providers.filter((p) => p.status === s).length }),
+    (acc, s) => ({
+      ...acc,
+      [s]: providers.filter((p) => p.status === s).length,
+    }),
     {} as Record<ProviderStatus, number>,
   );
   return (
@@ -49,7 +55,15 @@ function StatsBar({ providers }: { providers: Provider[] }) {
         const n = counts[s];
         if (!n) return null;
         return (
-          <Tag key={s} style={{ color: meta.color, background: meta.bg, border: "none", fontWeight: 600 }}>
+          <Tag
+            key={s}
+            style={{
+              color: meta.color,
+              background: meta.bg,
+              border: "none",
+              fontWeight: 600,
+            }}
+          >
             {n} {meta.label}
           </Tag>
         );
@@ -65,7 +79,7 @@ function CredentialsTab({
   onManage,
 }: {
   providers: Provider[];
-  onManage:  (p: Provider) => void;
+  onManage: (p: Provider) => void;
 }) {
   return (
     <Table
@@ -79,16 +93,24 @@ function CredentialsTab({
           key: "provider",
           render: (_, p) => {
             const color = providerColor(p.providerId);
-            const initials = p.providerId.split("-").slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
+            const initials = p.providerId
+              .split("-")
+              .slice(0, 2)
+              .map((w) => w[0]?.toUpperCase())
+              .join("");
             return (
               <div className="flex items-center gap-2">
                 <div
                   className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-bold shrink-0"
                   style={{ background: color }}
-                >{initials}</div>
+                >
+                  {initials}
+                </div>
                 <div>
                   <div className="font-semibold text-sm">{p.displayName}</div>
-                  <code className="text-[10px] text-gray-400">{p.providerId}</code>
+                  <code className="text-[10px] text-gray-400">
+                    {p.providerId}
+                  </code>
                 </div>
               </div>
             );
@@ -117,7 +139,13 @@ function CredentialsTab({
           width: 120,
           align: "right" as const,
           render: (_, p) => (
-            <Button size="small" icon={<Key size={12} />} onClick={() => onManage(p)}>Quản lý</Button>
+            <Button
+              size="small"
+              icon={<Key size={12} />}
+              onClick={() => onManage(p)}
+            >
+              Quản lý
+            </Button>
           ),
         },
       ]}
@@ -135,19 +163,21 @@ function ProvidersTab({
   onDelete,
   onAdd,
 }: {
-  manager:       ReturnType<typeof useProviderManager>;
-  onEdit:        (p: Provider) => void;
-  onProbe:       (p: Provider) => void;
+  manager: ReturnType<typeof useProviderManager>;
+  onEdit: (p: Provider) => void;
+  onProbe: (p: Provider) => void;
   onCredentials: (p: Provider) => void;
-  onDelete:      (p: Provider) => void;
-  onAdd:         () => void;
-})
- {
+  onDelete: (p: Provider) => void;
+  onAdd: () => void;
+}) {
   const hasFilter = !!manager.search.trim() || manager.statusFilter !== "all";
 
   const statusOptions = [
     { key: "all" as StatusFilter, label: "Tất cả" },
-    ...STATUS_ORDER.map((s) => ({ key: s as StatusFilter, label: STATUS_META[s].label })),
+    ...STATUS_ORDER.map((s) => ({
+      key: s as StatusFilter,
+      label: STATUS_META[s].label,
+    })),
   ];
 
   return (
@@ -182,11 +212,7 @@ function ProvidersTab({
 
         <div className="flex-1" />
 
-        <Button
-          type="primary"
-          icon={<Plus size={14} />}
-          onClick={onAdd}
-        >
+        <Button type="primary" icon={<Plus size={14} />} onClick={onAdd}>
           Đăng ký Provider
         </Button>
       </div>
@@ -211,7 +237,7 @@ export default function ProviderManagerPage() {
   const { message } = App.useApp();
   const manager = useProviderManager();
 
-  const [drawer,      setDrawer]      = useState<DrawerState | null>(null);
+  const [drawer, setDrawer] = useState<DrawerState | null>(null);
   const [probeTarget, setProbeTarget] = useState<Provider | null>(null);
   const [credsTarget, setCredsTarget] = useState<Provider | null>(null);
 
@@ -227,7 +253,12 @@ export default function ProviderManagerPage() {
   }
 
   function handleDelete(p: Provider) {
-    if (!confirm(`Xóa provider "${p.displayName}"? Hành động này không thể hoàn tác.`)) return;
+    if (
+      !confirm(
+        `Xóa provider "${p.displayName}"? Hành động này không thể hoàn tác.`,
+      )
+    )
+      return;
     manager.remove(p.id);
   }
 
@@ -268,12 +299,13 @@ export default function ProviderManagerPage() {
   ];
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-
+    <div className="p-6">
       {/* Page header */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-[#e6edf3] m-0">Quản trị hệ thống</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-[#e6edf3] m-0">
+            Quản trị hệ thống
+          </h1>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
             <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">
               Quản lý provider, operation registry và credentials.
@@ -298,7 +330,10 @@ export default function ProviderManagerPage() {
 
       {/* Probe modal */}
       {probeTarget && (
-        <ProbeModal provider={probeTarget} onClose={() => setProbeTarget(null)} />
+        <ProbeModal
+          provider={probeTarget}
+          onClose={() => setProbeTarget(null)}
+        />
       )}
 
       {/* Credentials modal */}
