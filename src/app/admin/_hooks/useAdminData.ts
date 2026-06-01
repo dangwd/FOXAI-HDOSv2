@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { AdminModule, WidgetSchemaEntry, ProviderInfo, OperationEntry } from "@/infrastructure/http/adminApi";
-import { mockAdminApi } from "../_lib/mockData";
+import { adminApi } from "@/infrastructure/http/adminApi";
 
-// Swap `mockAdminApi` → `adminApi` from "@/infrastructure/http/adminApi" when real API is ready.
-const api = mockAdminApi;
+const api = adminApi;
 
 export interface AdminDataState {
   modules:    AdminModule[];

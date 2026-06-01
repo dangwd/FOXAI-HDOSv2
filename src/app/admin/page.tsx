@@ -3,9 +3,11 @@
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import ReactGridLayout from "react-grid-layout/legacy";
-import { Tooltip } from "antd";
+import { Button, Tooltip } from "antd";
+import { Save, Check, RefreshCw, AlertTriangle, Palette } from "lucide-react";
 
 import { useAdminData } from "./_hooks/useAdminData";
 import { useDesignerState } from "./_hooks/useDesignerState";
@@ -17,18 +19,17 @@ import { TabBar }                 from "./_components/TabBar";
 import { DesignerCard }           from "./_components/DesignerCard";
 import { WidgetCatalogPanel }     from "./_components/WidgetCatalogPanel";
 import { WidgetPropertiesPanel }  from "./_components/WidgetPropertiesPanel";
-import { IconCheck }              from "./_components/shared";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-export default function DashboardDesignerPage() {
+function DashboardDesignerInner() {
   const { modules, catalog, providers, operations, loading, loadError, reload } = useAdminData();
+  const searchParams = useSearchParams();
 
-  const [_selectedSlug, setSelectedSlug] = useState<string>("");
+  const [_selectedSlug, setSelectedSlug] = useState<string>(searchParams.get("slug") ?? "");
   const [search,        setSearch]       = useState<string>("");
   const [rightTab,      setRightTab]     = useState<"palette" | "json">("palette");
 
-  // Derive active slug — auto-select first module once data is loaded, no useEffect needed.
   const selectedSlug = useMemo(
     () => _selectedSlug || modules[0]?.slug || "",
     [_selectedSlug, modules],
@@ -65,14 +66,11 @@ export default function DashboardDesignerPage() {
   if (loadError) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-400 dark:text-[#484f58]">
-        <div className="text-4xl">⚠️</div>
+        <AlertTriangle size={36} className="text-gray-400" />
         <p className="text-sm font-medium text-gray-600 dark:text-[#8b949e]">{loadError}</p>
-        <button
-          onClick={reload}
-          className="px-4 py-2 text-xs rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-medium transition-colors"
-        >
+        <Button icon={<RefreshCw size={14} />} onClick={reload} type="primary">
           Thử lại
-        </button>
+        </Button>
       </div>
     );
   }
@@ -96,9 +94,7 @@ export default function DashboardDesignerPage() {
               module={mod}
               active={mod.slug === selectedSlug}
               onClick={() => {
-                if (mod.slug !== selectedSlug) {
-                  setSelectedSlug(mod.slug);
-                }
+                if (mod.slug !== selectedSlug) setSelectedSlug(mod.slug);
               }}
             />
           ))}
@@ -136,27 +132,21 @@ export default function DashboardDesignerPage() {
             href={`/hdos?module=${selectedSlug}`}
             target="_blank"
             rel="noreferrer"
-            className="px-3 py-1.5 text-xs rounded-lg bg-gray-100 dark:bg-[#21262d] text-gray-600 dark:text-[#8b949e]
-              hover:bg-gray-200 dark:hover:bg-[#30363d] transition-colors shrink-0"
           >
-            Xem trực tiếp ↗
+            <Button size="small">Xem trực tiếp ↗</Button>
           </a>
 
-          <button
-            onClick={designer.handleSave}
+          <Button
+            type="primary"
+            size="small"
+            icon={designer.saveSuccess ? <Check size={14} /> : <Save size={14} />}
+            loading={designer.isSaving}
             disabled={!designer.isDirty || designer.isSaving}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-medium transition-all shrink-0
-              ${designer.saveSuccess
-                ? "bg-green-500 text-white"
-                : designer.isDirty
-                  ? "bg-violet-600 hover:bg-violet-700 text-white"
-                  : "bg-gray-100 dark:bg-[#21262d] text-gray-400 dark:text-[#484f58] cursor-default"
-              }`}
+            onClick={designer.handleSave}
+            style={designer.saveSuccess ? { background: "#22c55e", borderColor: "#22c55e" } : undefined}
           >
-            {designer.isSaving    ? <><span className="animate-spin inline-block">⟳</span> Đang lưu...</>
-            : designer.saveSuccess ? <><IconCheck size={12} /> Đã lưu!</>
-            :                        "Lưu cấu hình"}
-          </button>
+            {designer.isSaving ? "Đang lưu..." : designer.saveSuccess ? "Đã lưu!" : "Lưu cấu hình"}
+          </Button>
         </div>
 
         {/* Tab bar */}
@@ -190,7 +180,7 @@ export default function DashboardDesignerPage() {
             </div>
           ) : designer.widgets.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-400 dark:text-[#484f58] min-h-100">
-              <span className="text-5xl select-none">🎨</span>
+              <Palette size={40} className="text-gray-300 dark:text-[#30363d]" />
               <p className="text-sm font-medium m-0 text-gray-600 dark:text-[#8b949e]">Canvas đang trống</p>
               <p className="text-xs m-0 text-center">Kéo widget từ palette bên phải hoặc click để thêm</p>
             </div>
@@ -289,5 +279,13 @@ export default function DashboardDesignerPage() {
         )}
       </aside>
     </div>
+  );
+}
+
+export default function DashboardDesignerPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <DashboardDesignerInner />
+    </Suspense>
   );
 }

@@ -1,5 +1,9 @@
 import type { ScreenConfig } from "@/types/screen";
+import axios from "axios";
 import { NextResponse } from "next/server";
+
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://192.168.100.66:8000";
 
 /**
  * GET /api/screen/:id
@@ -25,7 +29,7 @@ const SCREENS: Record<string, ScreenConfig> = {
             type: "KpiCard",
             sse: { url: "/api/sse/dashboard", event: "kpi-visits" },
             props: {
-              title: "LƯỢT KHÁM HÔM NAY",
+              title: "LƯỢT KHÁM HÔM NAY 1",
               value: 151,
               accent: "#1677ff",
               hint: "+42% hôm qua",
@@ -529,7 +533,8 @@ const SCREENS: Record<string, ScreenConfig> = {
     title: "M06 · Tài chính (RCM + DRG)",
     badge: "Tài chính Kế toán",
     badgeColor: "#52c41a",
-    subtitle: "Revenue Cycle Management 10 bước · DRG Costing · Profitability Analysis",
+    subtitle:
+      "Revenue Cycle Management 10 bước · DRG Costing · Profitability Analysis",
     actions: [
       { label: "Báo cáo giao ban", variant: "default" },
       { label: "RPA BHYT", variant: "primary", color: "#cf1322" },
@@ -594,17 +599,17 @@ const SCREENS: Record<string, ScreenConfig> = {
                   height: 220,
                   legend: true,
                   series: [
-                    { key: "thucTe",  color: "#1677ff", name: "Thực tế" },
+                    { key: "thucTe", color: "#1677ff", name: "Thực tế" },
                     { key: "keHoach", color: "#52c41a", name: "Kế hoạch" },
                   ],
                   data: [
-                    { label: "6h",  thucTe: 0,    keHoach: 0.35 },
-                    { label: "7h",  thucTe: 0.02, keHoach: 0.35 },
-                    { label: "8h",  thucTe: 0,    keHoach: 0.35 },
-                    { label: "9h",  thucTe: 0,    keHoach: 0.35 },
-                    { label: "10h", thucTe: 0,    keHoach: 0.35 },
-                    { label: "11h", thucTe: 0,    keHoach: 0.35 },
-                    { label: "12h", thucTe: 0,    keHoach: 0.35 },
+                    { label: "6h", thucTe: 0, keHoach: 0.35 },
+                    { label: "7h", thucTe: 0.02, keHoach: 0.35 },
+                    { label: "8h", thucTe: 0, keHoach: 0.35 },
+                    { label: "9h", thucTe: 0, keHoach: 0.35 },
+                    { label: "10h", thucTe: 0, keHoach: 0.35 },
+                    { label: "11h", thucTe: 0, keHoach: 0.35 },
+                    { label: "12h", thucTe: 0, keHoach: 0.35 },
                   ],
                   unit: "tỷ",
                 },
@@ -616,13 +621,16 @@ const SCREENS: Record<string, ScreenConfig> = {
                   title: "💰 Phân loại doanh thu",
                   maxValue: 100,
                   items: [
-                    { label: "BHYT",       value: 0,  color: "#1677ff" },
-                    { label: "Viện phí",   value: 0,  color: "#52c41a" },
-                    { label: "Dịch vụ",    value: 0,  color: "#722ed1" },
-                    { label: "BH tư nhân", value: 0,  color: "#fa8c16" },
+                    { label: "BHYT", value: 0, color: "#1677ff" },
+                    { label: "Viện phí", value: 0, color: "#52c41a" },
+                    { label: "Dịch vụ", value: 0, color: "#722ed1" },
+                    { label: "BH tư nhân", value: 0, color: "#fa8c16" },
                   ],
                   footerActions: [
-                    { label: "0% KH tháng · Cập nhật realtime từ HIS", variant: "link" },
+                    {
+                      label: "0% KH tháng · Cập nhật realtime từ HIS",
+                      variant: "link",
+                    },
                   ],
                 },
               },
@@ -634,7 +642,8 @@ const SCREENS: Record<string, ScreenConfig> = {
                 type: "AlertBanner",
                 span: 24,
                 props: {
-                  message: "🔴 Cảnh báo sai lệch chỉ định/thanh toán — RPA quét 100% hồ sơ",
+                  message:
+                    "🔴 Cảnh báo sai lệch chỉ định/thanh toán — RPA quét 100% hồ sơ",
                   type: "error",
                   showIcon: false,
                 },
@@ -648,10 +657,10 @@ const SCREENS: Record<string, ScreenConfig> = {
                 span: 24,
                 props: {
                   columns: [
-                    { key: "nguon",     title: "Nguồn" },
-                    { key: "moTa",      title: "Mô tả" },
-                    { key: "soTien",    title: "Số tiền" },
-                    { key: "phatHien",  title: "Phát hiện" },
+                    { key: "nguon", title: "Nguồn" },
+                    { key: "moTa", title: "Mô tả" },
+                    { key: "soTien", title: "Số tiền" },
+                    { key: "phatHien", title: "Phát hiện" },
                     {
                       key: "action",
                       title: "Action",
@@ -661,25 +670,25 @@ const SCREENS: Record<string, ScreenConfig> = {
                   ],
                   data: [
                     {
-                      nguon:      "Khoa Nội-01",
-                      moTa:       "Chỉ định vs thanh toán lệch 1.2%",
-                      soTien:     "12.5 triệu",
-                      phatHien:   "RPA 09:45",
-                      action:     "Xem",
+                      nguon: "Khoa Nội-01",
+                      moTa: "Chỉ định vs thanh toán lệch 1.2%",
+                      soTien: "12.5 triệu",
+                      phatHien: "RPA 09:45",
+                      action: "Xem",
                     },
                     {
-                      nguon:      "BN26000398",
-                      moTa:       "Tạm ứng còn 8% — cần nạp",
-                      soTien:     "2.1 triệu",
-                      phatHien:   "Trước XV",
-                      action:     "Liên hệ BN",
+                      nguon: "BN26000398",
+                      moTa: "Tạm ứng còn 8% — cần nạp",
+                      soTien: "2.1 triệu",
+                      phatHien: "Trước XV",
+                      action: "Liên hệ BN",
                     },
                     {
-                      nguon:      "BHYT-0441",
-                      moTa:       "Sai mã ICD J18.9 → J22",
-                      soTien:     "3.8 triệu",
-                      phatHien:   "RPA 08:20",
-                      action:     "Sửa mã",
+                      nguon: "BHYT-0441",
+                      moTa: "Sai mã ICD J18.9 → J22",
+                      soTien: "3.8 triệu",
+                      phatHien: "RPA 08:20",
+                      action: "Sửa mã",
                     },
                   ],
                 },
@@ -699,7 +708,8 @@ const SCREENS: Record<string, ScreenConfig> = {
                 type: "AlertBanner",
                 span: 24,
                 props: {
-                  message: "📋 Revenue Cycle Management — 10 bước (tháng 4/2026)",
+                  message:
+                    "📋 Revenue Cycle Management — 10 bước (tháng 4/2026)",
                   type: "info",
                   showIcon: false,
                 },
@@ -760,21 +770,21 @@ const SCREENS: Record<string, ScreenConfig> = {
                 span: 24,
                 props: {
                   columns: [
-                    { key: "hoSo",    title: "Hồ sơ" },
-                    { key: "bn",      title: "BN" },
-                    { key: "dichVu",  title: "Dịch vụ" },
-                    { key: "soTien",  title: "Số tiền" },
+                    { key: "hoSo", title: "Hồ sơ" },
+                    { key: "bn", title: "BN" },
+                    { key: "dichVu", title: "Dịch vụ" },
+                    { key: "soTien", title: "Số tiền" },
                     {
                       key: "ketQua",
                       title: "Kết quả",
                       render: "tag",
                       tagColors: {
-                        "OK":       "green",
-                        "Lỗi":     "red",
+                        OK: "green",
+                        Lỗi: "red",
                         "Từ chối": "red",
                       },
                     },
-                    { key: "lyDo",   title: "Lý do" },
+                    { key: "lyDo", title: "Lý do" },
                     {
                       key: "action",
                       title: "Action",
@@ -784,31 +794,31 @@ const SCREENS: Record<string, ScreenConfig> = {
                   ],
                   data: [
                     {
-                      hoSo:    "BHYT-26-0841",
-                      bn:      "Nguyễn Văn An",
-                      dichVu:  "ICU ngày",
-                      soTien:  "8.5 tr",
-                      ketQua:  "OK",
-                      lyDo:    "—",
-                      action:  "Nộp",
+                      hoSo: "BHYT-26-0841",
+                      bn: "Nguyễn Văn An",
+                      dichVu: "ICU ngày",
+                      soTien: "8.5 tr",
+                      ketQua: "OK",
+                      lyDo: "—",
+                      action: "Nộp",
                     },
                     {
-                      hoSo:    "BHYT-26-0840",
-                      bn:      "Trần Thị B",
-                      dichVu:  "Phẫu thuật",
-                      soTien:  "25.0 tr",
-                      ketQua:  "Lỗi",
-                      lyDo:    "Sai ICD",
-                      action:  "Sửa",
+                      hoSo: "BHYT-26-0840",
+                      bn: "Trần Thị B",
+                      dichVu: "Phẫu thuật",
+                      soTien: "25.0 tr",
+                      ketQua: "Lỗi",
+                      lyDo: "Sai ICD",
+                      action: "Sửa",
                     },
                     {
-                      hoSo:    "BHYT-26-0837",
-                      bn:      "Hoàng V.E",
-                      dichVu:  "Siêu âm tim",
-                      soTien:  "1.8 tr",
-                      ketQua:  "Từ chối",
-                      lyDo:    "Sai khoa",
-                      action:  "Re-submit",
+                      hoSo: "BHYT-26-0837",
+                      bn: "Hoàng V.E",
+                      dichVu: "Siêu âm tim",
+                      soTien: "1.8 tr",
+                      ketQua: "Từ chối",
+                      lyDo: "Sai khoa",
+                      action: "Re-submit",
                     },
                   ],
                 },
@@ -876,69 +886,69 @@ const SCREENS: Record<string, ScreenConfig> = {
                 span: 24,
                 props: {
                   columns: [
-                    { key: "drgCode",    title: "DRG Code" },
-                    { key: "tenNhom",    title: "Tên nhóm bệnh" },
-                    { key: "caThang",    title: "Ca/tháng" },
-                    { key: "chiPhiTb",   title: "Chi phí TB" },
-                    { key: "dinhMuc",    title: "Định mức BYT" },
+                    { key: "drgCode", title: "DRG Code" },
+                    { key: "tenNhom", title: "Tên nhóm bệnh" },
+                    { key: "caThang", title: "Ca/tháng" },
+                    { key: "chiPhiTb", title: "Chi phí TB" },
+                    { key: "dinhMuc", title: "Định mức BYT" },
                     {
                       key: "margin",
                       title: "Margin",
                       render: "tag",
                       tagColors: {
-                        "+6.2%":  "green",
-                        "+9.0%":  "green",
-                        "+7.5%":  "green",
-                        "+5.1%":  "green",
+                        "+6.2%": "green",
+                        "+9.0%": "green",
+                        "+7.5%": "green",
+                        "+5.1%": "green",
                         "-13.6%": "red",
                       },
                     },
-                    { key: "cmiWeight",  title: "CMI Weight" },
+                    { key: "cmiWeight", title: "CMI Weight" },
                   ],
                   data: [
                     {
-                      drgCode:   "DRG-470",
-                      tenNhom:   "Thay khớp háng toàn phần",
-                      caThang:   12,
-                      chiPhiTb:  "45.2 tr",
-                      dinhMuc:   "48.0 tr",
-                      margin:    "+6.2%",
+                      drgCode: "DRG-470",
+                      tenNhom: "Thay khớp háng toàn phần",
+                      caThang: 12,
+                      chiPhiTb: "45.2 tr",
+                      dinhMuc: "48.0 tr",
+                      margin: "+6.2%",
                       cmiWeight: "3.24",
                     },
                     {
-                      drgCode:   "DRG-066",
-                      tenNhom:   "Đột quỵ não có can thiệp",
-                      caThang:   22,
-                      chiPhiTb:  "32.1 tr",
-                      dinhMuc:   "35.0 tr",
-                      margin:    "+9.0%",
+                      drgCode: "DRG-066",
+                      tenNhom: "Đột quỵ não có can thiệp",
+                      caThang: 22,
+                      chiPhiTb: "32.1 tr",
+                      dinhMuc: "35.0 tr",
+                      margin: "+9.0%",
                       cmiWeight: "2.47",
                     },
                     {
-                      drgCode:   "DRG-291",
-                      tenNhom:   "Suy tim nặng có MCC",
-                      caThang:   8,
-                      chiPhiTb:  "28.4 tr",
-                      dinhMuc:   "25.0 tr",
-                      margin:    "-13.6%",
+                      drgCode: "DRG-291",
+                      tenNhom: "Suy tim nặng có MCC",
+                      caThang: 8,
+                      chiPhiTb: "28.4 tr",
+                      dinhMuc: "25.0 tr",
+                      margin: "-13.6%",
                       cmiWeight: "2.18",
                     },
                     {
-                      drgCode:   "DRG-193",
-                      tenNhom:   "Bệnh phổi nặng có MCC",
-                      caThang:   15,
-                      chiPhiTb:  "18.6 tr",
-                      dinhMuc:   "20.0 tr",
-                      margin:    "+7.5%",
+                      drgCode: "DRG-193",
+                      tenNhom: "Bệnh phổi nặng có MCC",
+                      caThang: 15,
+                      chiPhiTb: "18.6 tr",
+                      dinhMuc: "20.0 tr",
+                      margin: "+7.5%",
                       cmiWeight: "1.86",
                     },
                     {
-                      drgCode:   "DRG-310",
-                      tenNhom:   "Tim mạch can thiệp PCI",
-                      caThang:   18,
-                      chiPhiTb:  "52.3 tr",
-                      dinhMuc:   "55.0 tr",
-                      margin:    "+5.1%",
+                      drgCode: "DRG-310",
+                      tenNhom: "Tim mạch can thiệp PCI",
+                      caThang: 18,
+                      chiPhiTb: "52.3 tr",
+                      dinhMuc: "55.0 tr",
+                      margin: "+5.1%",
                       cmiWeight: "4.12",
                     },
                   ],
@@ -973,10 +983,10 @@ const SCREENS: Record<string, ScreenConfig> = {
                 span: 24,
                 props: {
                   columns: [
-                    { key: "khoa",          title: "Khoa" },
+                    { key: "khoa", title: "Khoa" },
                     { key: "doanhThuThang", title: "Doanh thu tháng" },
-                    { key: "chiPhiTT",      title: "Chi phí TT" },
-                    { key: "chiPhiGT",      title: "Chi phí GT" },
+                    { key: "chiPhiTT", title: "Chi phí TT" },
+                    { key: "chiPhiGT", title: "Chi phí GT" },
                     {
                       key: "margin",
                       title: "Margin",
@@ -984,78 +994,78 @@ const SCREENS: Record<string, ScreenConfig> = {
                       tagColors: {
                         "+18.4%": "green",
                         "+12.1%": "green",
-                        "+9.6%":  "green",
-                        "+7.2%":  "green",
-                        "-4.3%":  "red",
+                        "+9.6%": "green",
+                        "+7.2%": "green",
+                        "-4.3%": "red",
                         "+22.7%": "green",
                       },
                     },
-                    { key: "revBedDay",  title: "Revenue/Bed/Day" },
+                    { key: "revBedDay", title: "Revenue/Bed/Day" },
                     {
                       key: "xuHuong",
                       title: "Xu hướng",
                       render: "tag",
                       tagColors: {
-                        "↑ Tăng":    "green",
+                        "↑ Tăng": "green",
                         "→ Ổn định": "blue",
-                        "↓ Giảm":    "red",
+                        "↓ Giảm": "red",
                       },
                     },
                   ],
                   data: [
                     {
-                      khoa:          "Tim mạch can thiệp",
+                      khoa: "Tim mạch can thiệp",
                       doanhThuThang: "1.24 tỷ",
-                      chiPhiTT:      "980 tr",
-                      chiPhiGT:      "1.01 tỷ",
-                      margin:        "+22.7%",
-                      revBedDay:     "4.2 tr",
-                      xuHuong:       "↑ Tăng",
+                      chiPhiTT: "980 tr",
+                      chiPhiGT: "1.01 tỷ",
+                      margin: "+22.7%",
+                      revBedDay: "4.2 tr",
+                      xuHuong: "↑ Tăng",
                     },
                     {
-                      khoa:          "ICU / Hồi sức",
+                      khoa: "ICU / Hồi sức",
                       doanhThuThang: "890 tr",
-                      chiPhiTT:      "728 tr",
-                      chiPhiGT:      "748 tr",
-                      margin:        "+18.4%",
-                      revBedDay:     "3.8 tr",
-                      xuHuong:       "↑ Tăng",
+                      chiPhiTT: "728 tr",
+                      chiPhiGT: "748 tr",
+                      margin: "+18.4%",
+                      revBedDay: "3.8 tr",
+                      xuHuong: "↑ Tăng",
                     },
                     {
-                      khoa:          "Ngoại tổng quát",
+                      khoa: "Ngoại tổng quát",
                       doanhThuThang: "645 tr",
-                      chiPhiTT:      "562 tr",
-                      chiPhiGT:      "575 tr",
-                      margin:        "+12.1%",
-                      revBedDay:     "2.1 tr",
-                      xuHuong:       "→ Ổn định",
+                      chiPhiTT: "562 tr",
+                      chiPhiGT: "575 tr",
+                      margin: "+12.1%",
+                      revBedDay: "2.1 tr",
+                      xuHuong: "→ Ổn định",
                     },
                     {
-                      khoa:          "Nội tổng quát",
+                      khoa: "Nội tổng quát",
                       doanhThuThang: "420 tr",
-                      chiPhiTT:      "374 tr",
-                      chiPhiGT:      "381 tr",
-                      margin:        "+9.6%",
-                      revBedDay:     "1.4 tr",
-                      xuHuong:       "→ Ổn định",
+                      chiPhiTT: "374 tr",
+                      chiPhiGT: "381 tr",
+                      margin: "+9.6%",
+                      revBedDay: "1.4 tr",
+                      xuHuong: "→ Ổn định",
                     },
                     {
-                      khoa:          "Sản khoa",
+                      khoa: "Sản khoa",
                       doanhThuThang: "380 tr",
-                      chiPhiTT:      "352 tr",
-                      chiPhiGT:      "358 tr",
-                      margin:        "+7.2%",
-                      revBedDay:     "1.8 tr",
-                      xuHuong:       "↑ Tăng",
+                      chiPhiTT: "352 tr",
+                      chiPhiGT: "358 tr",
+                      margin: "+7.2%",
+                      revBedDay: "1.8 tr",
+                      xuHuong: "↑ Tăng",
                     },
                     {
-                      khoa:          "Ung bướu",
+                      khoa: "Ung bướu",
                       doanhThuThang: "510 tr",
-                      chiPhiTT:      "532 tr",
-                      chiPhiGT:      "544 tr",
-                      margin:        "-4.3%",
-                      revBedDay:     "2.3 tr",
-                      xuHuong:       "↓ Giảm",
+                      chiPhiTT: "532 tr",
+                      chiPhiGT: "544 tr",
+                      margin: "-4.3%",
+                      revBedDay: "2.3 tr",
+                      xuHuong: "↓ Giảm",
                     },
                   ],
                 },
@@ -1071,9 +1081,7 @@ const SCREENS: Record<string, ScreenConfig> = {
     title: "BÁO CÁO DOANH THU VÀ LƯỢT KHÁM THEO KHOA",
     subtitle: "Hệ thống quản lý dữ liệu lâm sàng chính xác",
     live: true,
-    actions: [
-      { label: "↺ Làm mới", variant: "primary", color: "#1677ff" },
-    ],
+    actions: [{ label: "↺ Làm mới", variant: "primary", color: "#1677ff" }],
     rows: [
       {
         components: [
@@ -1153,7 +1161,8 @@ const SCREENS: Record<string, ScreenConfig> = {
     title: "M05 · AI Lâm sàng",
     badge: "CDSS + Sepsis + Radiology AI + Voice EMR",
     badgeColor: "#722ed1",
-    subtitle: "AI gợi ý — BS quyết định · Human-in-the-loop · Tuân thủ nghiêm ngặt",
+    subtitle:
+      "AI gợi ý — BS quyết định · Human-in-the-loop · Tuân thủ nghiêm ngặt",
     rows: [
       // Row 1: 5 KPIs
       {
@@ -1218,7 +1227,8 @@ const SCREENS: Record<string, ScreenConfig> = {
             span: 12,
             props: {
               message: "💊 CDSS tại điểm kê đơn — 5 lớp kiểm tra",
-              description: "⚠ Cảnh báo dị ứng đang chờ xác nhận · Tương tác thuốc: 2 · Liều bất thường: 1",
+              description:
+                "⚠ Cảnh báo dị ứng đang chờ xác nhận · Tương tác thuốc: 2 · Liều bất thường: 1",
               type: "warning",
               showIcon: false,
             },
@@ -1228,7 +1238,8 @@ const SCREENS: Record<string, ScreenConfig> = {
             span: 12,
             props: {
               message: "·· Sepsis Alert Monitoring — NEWS2 Realtime",
-              description: "Cập nhật mỗi 15 phút · 10 alert trong 24h · 3 ca đã chuyển ICU · Không có alert mới",
+              description:
+                "Cập nhật mỗi 15 phút · 10 alert trong 24h · 3 ca đã chuyển ICU · Không có alert mới",
               type: "info",
               showIcon: false,
             },
@@ -1259,13 +1270,20 @@ const SCREENS: Record<string, ScreenConfig> = {
               title: "🏥 Sepsis Bundle 1h Compliance (tháng này)",
               maxValue: 100,
               items: [
-                { label: "Lactate đo trong 1h",       value: 0,  color: "#ff4d4f" },
-                { label: "Cấy máu trước kháng sinh",  value: 0,  color: "#ff4d4f" },
-                { label: "Kháng sinh phổ rộng 1h",    value: 0,  color: "#ff4d4f" },
-                { label: "Bolus dịch 30ml/kg",        value: 0,  color: "#ff4d4f" },
+                { label: "Lactate đo trong 1h", value: 0, color: "#ff4d4f" },
+                {
+                  label: "Cấy máu trước kháng sinh",
+                  value: 0,
+                  color: "#ff4d4f",
+                },
+                { label: "Kháng sinh phổ rộng 1h", value: 0, color: "#ff4d4f" },
+                { label: "Bolus dịch 30ml/kg", value: 0, color: "#ff4d4f" },
               ],
               footerActions: [
-                { label: "Overall 1h bundle compliance: 0% · Mục tiêu ≥90%", variant: "link" },
+                {
+                  label: "Overall 1h bundle compliance: 0% · Mục tiêu ≥90%",
+                  variant: "link",
+                },
               ],
             },
           },
@@ -1516,7 +1534,10 @@ const SCREENS: Record<string, ScreenConfig> = {
           {
             type: "AlertBanner",
             span: 24,
-            props: { message: "Clinical Pathway chuẩn quốc tế — đang phát triển", type: "info" },
+            props: {
+              message: "Clinical Pathway chuẩn quốc tế — đang phát triển",
+              type: "info",
+            },
           },
         ],
       },
@@ -1528,10 +1549,11 @@ const SCREENS: Record<string, ScreenConfig> = {
     title: "M03 - Cận lâm sàng (XN + CĐHA)",
     badge: "LS · PACS",
     badgeColor: "#1677ff",
-    subtitle: "XN · Clinical Values · AI Radiology · PACS/LIS Integration · HLT Hub AI",
+    subtitle:
+      "XN · Clinical Values · AI Radiology · PACS/LIS Integration · HLT Hub AI",
     actions: [
-      { label: "Sync LIS",     variant: "default" },
-      { label: "PACS Viewer",  variant: "primary", color: "#1677ff" },
+      { label: "Sync LIS", variant: "default" },
+      { label: "PACS Viewer", variant: "primary", color: "#1677ff" },
     ],
     tabs: [
       // ── Tab 1: Xét nghiệm (LIS) ──────────────────────────────────────────
@@ -1590,7 +1612,8 @@ const SCREENS: Record<string, ScreenConfig> = {
                 span: 24,
                 props: {
                   message: "🔴  Critical Values — Cần xác nhận trong 30 phút",
-                  description: "18 giá trị nguy hiểm đang chờ bác sĩ điều trị xác nhận.",
+                  description:
+                    "18 giá trị nguy hiểm đang chờ bác sĩ điều trị xác nhận.",
                   type: "error",
                   showIcon: false,
                 },
@@ -1604,9 +1627,9 @@ const SCREENS: Record<string, ScreenConfig> = {
                 span: 24,
                 props: {
                   columns: [
-                    { key: "bn",         title: "BN / MHB" },
+                    { key: "bn", title: "BN / MHB" },
                     { key: "xetNghiem", title: "Xét nghiệm" },
-                    { key: "ketQua",    title: "Kết quả" },
+                    { key: "ketQua", title: "Kết quả" },
                     { key: "reference", title: "Reference" },
                     { key: "bsDieuTri", title: "BS điều trị" },
                     {
@@ -1615,8 +1638,8 @@ const SCREENS: Record<string, ScreenConfig> = {
                       render: "tag",
                       tagColors: {
                         "Chưa xác nhận": "orange",
-                        "Đã push":       "blue",
-                        "Đã xác nhận":   "green",
+                        "Đã push": "blue",
+                        "Đã xác nhận": "green",
                       },
                     },
                     {
@@ -1628,49 +1651,49 @@ const SCREENS: Record<string, ScreenConfig> = {
                   ],
                   data: [
                     {
-                      bn:         "Nguyễn Văn An · Tim mạch",
-                      xetNghiem:  "Troponin I",
-                      ketQua:     "15.4 ng/mL",
-                      reference:  "> 8.84",
-                      bsDieuTri:  "BS. Hà (ICU)",
-                      trangThai:  "Chưa xác nhận",
-                      hanhDong:   "Xác nhận",
+                      bn: "Nguyễn Văn An · Tim mạch",
+                      xetNghiem: "Troponin I",
+                      ketQua: "15.4 ng/mL",
+                      reference: "> 8.84",
+                      bsDieuTri: "BS. Hà (ICU)",
+                      trangThai: "Chưa xác nhận",
+                      hanhDong: "Xác nhận",
                     },
                     {
-                      bn:         "Trần Thị Bình · Huyết học",
-                      xetNghiem:  "Kali máu",
-                      ketQua:     "2.2 mmol/L",
-                      reference:  "3.5 – 5.8",
-                      bsDieuTri:  "BS. Hà (ICU)",
-                      trangThai:  "Đã push",
-                      hanhDong:   "Xác nhận",
+                      bn: "Trần Thị Bình · Huyết học",
+                      xetNghiem: "Kali máu",
+                      ketQua: "2.2 mmol/L",
+                      reference: "3.5 – 5.8",
+                      bsDieuTri: "BS. Hà (ICU)",
+                      trangThai: "Đã push",
+                      hanhDong: "Xác nhận",
                     },
                     {
-                      bn:         "Lê Văn Cường · Nội tổng quát",
-                      xetNghiem:  "Glucose",
-                      ketQua:     "28.4 mmol/L",
-                      reference:  "3.9 – 6.1",
-                      bsDieuTri:  "BS. Minh (Nội)",
-                      trangThai:  "Chưa xác nhận",
-                      hanhDong:   "Xác nhận",
+                      bn: "Lê Văn Cường · Nội tổng quát",
+                      xetNghiem: "Glucose",
+                      ketQua: "28.4 mmol/L",
+                      reference: "3.9 – 6.1",
+                      bsDieuTri: "BS. Minh (Nội)",
+                      trangThai: "Chưa xác nhận",
+                      hanhDong: "Xác nhận",
                     },
                     {
-                      bn:         "Phạm Thị Dung · Sản khoa",
-                      xetNghiem:  "Hb",
-                      ketQua:     "5.8 g/dL",
-                      reference:  "12 – 16",
-                      bsDieuTri:  "BS. Lan (Sản)",
-                      trangThai:  "Chưa xác nhận",
-                      hanhDong:   "Xác nhận",
+                      bn: "Phạm Thị Dung · Sản khoa",
+                      xetNghiem: "Hb",
+                      ketQua: "5.8 g/dL",
+                      reference: "12 – 16",
+                      bsDieuTri: "BS. Lan (Sản)",
+                      trangThai: "Chưa xác nhận",
+                      hanhDong: "Xác nhận",
                     },
                     {
-                      bn:         "Hoàng Văn Em · Thần kinh",
-                      xetNghiem:  "NH3",
-                      ketQua:     "195 μmol/L",
-                      reference:  "11 – 48",
-                      bsDieuTri:  "BS. Đức (Thần kinh)",
-                      trangThai:  "Đã xác nhận",
-                      hanhDong:   "Chi tiết",
+                      bn: "Hoàng Văn Em · Thần kinh",
+                      xetNghiem: "NH3",
+                      ketQua: "195 μmol/L",
+                      reference: "11 – 48",
+                      bsDieuTri: "BS. Đức (Thần kinh)",
+                      trangThai: "Đã xác nhận",
+                      hanhDong: "Chi tiết",
                     },
                   ],
                 },
@@ -1686,12 +1709,48 @@ const SCREENS: Record<string, ScreenConfig> = {
                   title: "TAT thực tế theo loại XN (phút)",
                   maxValue: 130,
                   items: [
-                    { label: "Huyết học STAT",   value: 39, secondaryValue: 59,  color: "#52c41a", secondaryColor: "#faad14" },
-                    { label: "Huyết học thường", value: 43, secondaryValue: 60,  color: "#52c41a", secondaryColor: "#faad14" },
-                    { label: "Sinh hóa STAT",    value: 58, secondaryValue: 60,  color: "#faad14", secondaryColor: "#faad14" },
-                    { label: "Sinh hóa thường",  value: 63, secondaryValue: 90,  color: "#52c41a", secondaryColor: "#faad14" },
-                    { label: "Vi sinh (sơ bộ)",  value: 18, secondaryValue: 24,  color: "#52c41a", secondaryColor: "#faad14" },
-                    { label: "Miễn dịch",        value: 90, secondaryValue: 120, color: "#faad14", secondaryColor: "#faad14" },
+                    {
+                      label: "Huyết học STAT",
+                      value: 39,
+                      secondaryValue: 59,
+                      color: "#52c41a",
+                      secondaryColor: "#faad14",
+                    },
+                    {
+                      label: "Huyết học thường",
+                      value: 43,
+                      secondaryValue: 60,
+                      color: "#52c41a",
+                      secondaryColor: "#faad14",
+                    },
+                    {
+                      label: "Sinh hóa STAT",
+                      value: 58,
+                      secondaryValue: 60,
+                      color: "#faad14",
+                      secondaryColor: "#faad14",
+                    },
+                    {
+                      label: "Sinh hóa thường",
+                      value: 63,
+                      secondaryValue: 90,
+                      color: "#52c41a",
+                      secondaryColor: "#faad14",
+                    },
+                    {
+                      label: "Vi sinh (sơ bộ)",
+                      value: 18,
+                      secondaryValue: 24,
+                      color: "#52c41a",
+                      secondaryColor: "#faad14",
+                    },
+                    {
+                      label: "Miễn dịch",
+                      value: 90,
+                      secondaryValue: 120,
+                      color: "#faad14",
+                      secondaryColor: "#faad14",
+                    },
                   ],
                 },
               },
@@ -1702,11 +1761,11 @@ const SCREENS: Record<string, ScreenConfig> = {
                   title: "Trạng thái mẫu realtime",
                   footer: "QC violations: 8 · Chờ check lại · Retry sensor",
                   stages: [
-                    { label: "Ordered",     value: 212, color: "#1677ff" },
-                    { label: "In Transit",  value: 42,  color: "#faad14" },
-                    { label: "Received",    value: 264, color: "#722ed1" },
-                    { label: "In Process",  value: 186, color: "#13c2c2" },
-                    { label: "Final",       value: 56,  color: "#52c41a" },
+                    { label: "Ordered", value: 212, color: "#1677ff" },
+                    { label: "In Transit", value: 42, color: "#faad14" },
+                    { label: "Received", value: 264, color: "#722ed1" },
+                    { label: "In Process", value: 186, color: "#13c2c2" },
+                    { label: "Final", value: 56, color: "#52c41a" },
                   ],
                 },
               },
@@ -1770,27 +1829,33 @@ const SCREENS: Record<string, ScreenConfig> = {
                 span: 24,
                 props: {
                   columns: [
-                    { key: "accession",  title: "Accession #" },
-                    { key: "bn",         title: "Bệnh nhân" },
+                    { key: "accession", title: "Accession #" },
+                    { key: "bn", title: "Bệnh nhân" },
                     {
                       key: "modality",
                       title: "Modality",
                       render: "tag",
-                      tagColors: { CT: "blue", MRI: "purple", XR: "cyan", US: "green", PET: "orange" },
+                      tagColors: {
+                        CT: "blue",
+                        MRI: "purple",
+                        XR: "cyan",
+                        US: "green",
+                        PET: "orange",
+                      },
                     },
-                    { key: "chiDinh",   title: "Chỉ định" },
+                    { key: "chiDinh", title: "Chỉ định" },
                     {
                       key: "trangThai",
                       title: "Trạng thái",
                       render: "tag",
                       tagColors: {
                         "Chờ thực hiện": "orange",
-                        "Đang chụp":     "blue",
-                        "Chờ đọc":       "purple",
+                        "Đang chụp": "blue",
+                        "Chờ đọc": "purple",
                         "Đã có kết quả": "green",
                       },
                     },
-                    { key: "bsDoc",     title: "BS đọc" },
+                    { key: "bsDoc", title: "BS đọc" },
                     {
                       key: "hanhDong",
                       title: "Hành động",
@@ -1801,48 +1866,48 @@ const SCREENS: Record<string, ScreenConfig> = {
                   data: [
                     {
                       accession: "ACC-26041001",
-                      bn:         "Nguyễn Văn An",
-                      modality:   "CT",
-                      chiDinh:    "CT Ngực không cản quang",
-                      trangThai:  "Đã có kết quả",
-                      bsDoc:      "BS. Minh",
-                      hanhDong:   "Xem PACS",
+                      bn: "Nguyễn Văn An",
+                      modality: "CT",
+                      chiDinh: "CT Ngực không cản quang",
+                      trangThai: "Đã có kết quả",
+                      bsDoc: "BS. Minh",
+                      hanhDong: "Xem PACS",
                     },
                     {
                       accession: "ACC-26041002",
-                      bn:         "Trần Thị Bình",
-                      modality:   "MRI",
-                      chiDinh:    "MRI Sọ não có cản từ",
-                      trangThai:  "Chờ đọc",
-                      bsDoc:      "—",
-                      hanhDong:   "Phân công",
+                      bn: "Trần Thị Bình",
+                      modality: "MRI",
+                      chiDinh: "MRI Sọ não có cản từ",
+                      trangThai: "Chờ đọc",
+                      bsDoc: "—",
+                      hanhDong: "Phân công",
                     },
                     {
                       accession: "ACC-26041003",
-                      bn:         "Lê Văn Cường",
-                      modality:   "XR",
-                      chiDinh:    "X-quang Ngực thẳng",
-                      trangThai:  "Đã có kết quả",
-                      bsDoc:      "BS. Hà",
-                      hanhDong:   "Xem PACS",
+                      bn: "Lê Văn Cường",
+                      modality: "XR",
+                      chiDinh: "X-quang Ngực thẳng",
+                      trangThai: "Đã có kết quả",
+                      bsDoc: "BS. Hà",
+                      hanhDong: "Xem PACS",
                     },
                     {
                       accession: "ACC-26041004",
-                      bn:         "Phạm Thị Dung",
-                      modality:   "US",
-                      chiDinh:    "Siêu âm bụng tổng quát",
-                      trangThai:  "Đang chụp",
-                      bsDoc:      "BS. Lan",
-                      hanhDong:   "Theo dõi",
+                      bn: "Phạm Thị Dung",
+                      modality: "US",
+                      chiDinh: "Siêu âm bụng tổng quát",
+                      trangThai: "Đang chụp",
+                      bsDoc: "BS. Lan",
+                      hanhDong: "Theo dõi",
                     },
                     {
                       accession: "ACC-26041005",
-                      bn:         "Hoàng Văn Em",
-                      modality:   "CT",
-                      chiDinh:    "CT Não khẩn — đột quỵ",
-                      trangThai:  "Chờ thực hiện",
-                      bsDoc:      "—",
-                      hanhDong:   "Ưu tiên",
+                      bn: "Hoàng Văn Em",
+                      modality: "CT",
+                      chiDinh: "CT Não khẩn — đột quỵ",
+                      trangThai: "Chờ thực hiện",
+                      bsDoc: "—",
+                      hanhDong: "Ưu tiên",
                     },
                   ],
                 },
@@ -1906,8 +1971,10 @@ const SCREENS: Record<string, ScreenConfig> = {
                 type: "AlertBanner",
                 span: 24,
                 props: {
-                  message: "🤖 AI phát hiện 3 ca nghi ngờ bất thường — cần bác sĩ xác nhận",
-                  description: "Tràn dịch màng phổi · Tổn thương nghi ác tính · Xuất huyết não nhỏ",
+                  message:
+                    "🤖 AI phát hiện 3 ca nghi ngờ bất thường — cần bác sĩ xác nhận",
+                  description:
+                    "Tràn dịch màng phổi · Tổn thương nghi ác tính · Xuất huyết não nhỏ",
                   type: "warning",
                   showIcon: false,
                 },
@@ -1921,24 +1988,24 @@ const SCREENS: Record<string, ScreenConfig> = {
                 span: 24,
                 props: {
                   columns: [
-                    { key: "accession",  title: "Accession #" },
-                    { key: "bn",         title: "Bệnh nhân" },
+                    { key: "accession", title: "Accession #" },
+                    { key: "bn", title: "Bệnh nhân" },
                     {
                       key: "modality",
                       title: "Modality",
                       render: "tag",
                       tagColors: { CT: "blue", MRI: "purple", XR: "cyan" },
                     },
-                    { key: "aiFindings",  title: "AI Findings" },
-                    { key: "confidence",  title: "Confidence" },
+                    { key: "aiFindings", title: "AI Findings" },
+                    { key: "confidence", title: "Confidence" },
                     {
                       key: "trangThai",
                       title: "Trạng thái",
                       render: "tag",
                       tagColors: {
                         "Chờ BS xác nhận": "orange",
-                        "BS đã xác nhận":  "green",
-                        "False positive":  "default",
+                        "BS đã xác nhận": "green",
+                        "False positive": "default",
                       },
                     },
                     {
@@ -1950,31 +2017,31 @@ const SCREENS: Record<string, ScreenConfig> = {
                   ],
                   data: [
                     {
-                      accession:   "ACC-26041001",
-                      bn:           "Nguyễn Văn An",
-                      modality:     "CT",
-                      aiFindings:   "Tràn dịch màng phổi phải",
-                      confidence:   "91%",
-                      trangThai:    "Chờ BS xác nhận",
-                      hanhDong:     "Xem AI",
+                      accession: "ACC-26041001",
+                      bn: "Nguyễn Văn An",
+                      modality: "CT",
+                      aiFindings: "Tràn dịch màng phổi phải",
+                      confidence: "91%",
+                      trangThai: "Chờ BS xác nhận",
+                      hanhDong: "Xem AI",
                     },
                     {
-                      accession:   "ACC-26041003",
-                      bn:           "Lê Văn Cường",
-                      modality:     "XR",
-                      aiFindings:   "Mờ đáy phổi trái",
-                      confidence:   "78%",
-                      trangThai:    "BS đã xác nhận",
-                      hanhDong:     "Chi tiết",
+                      accession: "ACC-26041003",
+                      bn: "Lê Văn Cường",
+                      modality: "XR",
+                      aiFindings: "Mờ đáy phổi trái",
+                      confidence: "78%",
+                      trangThai: "BS đã xác nhận",
+                      hanhDong: "Chi tiết",
                     },
                     {
-                      accession:   "ACC-26041005",
-                      bn:           "Hoàng Văn Em",
-                      modality:     "CT",
-                      aiFindings:   "Xuất huyết não nhỏ vùng đỉnh",
-                      confidence:   "96%",
-                      trangThai:    "Chờ BS xác nhận",
-                      hanhDong:     "Xem AI",
+                      accession: "ACC-26041005",
+                      bn: "Hoàng Văn Em",
+                      modality: "CT",
+                      aiFindings: "Xuất huyết não nhỏ vùng đỉnh",
+                      confidence: "96%",
+                      trangThai: "Chờ BS xác nhận",
+                      hanhDong: "Xem AI",
                     },
                   ],
                 },
@@ -1991,9 +2058,10 @@ const SCREENS: Record<string, ScreenConfig> = {
     title: "M04 - Phẫu thuật & Gây mê",
     badge: "OR + GMHS",
     badgeColor: "#1677ff",
-    subtitle: "Lịch phòng mổ · OR Utilization · Tracking ca mổ · Kiểm soát nhiễm khuẩn",
+    subtitle:
+      "Lịch phòng mổ · OR Utilization · Tracking ca mổ · Kiểm soát nhiễm khuẩn",
     actions: [
-      { label: "Lịch tuần",  variant: "default" },
+      { label: "Lịch tuần", variant: "default" },
       { label: "OR cấp cứu", variant: "primary", color: "#cf1322" },
     ],
     rows: [
@@ -2051,14 +2119,48 @@ const SCREENS: Record<string, ScreenConfig> = {
             props: {
               title: "🟢 Trạng thái 8 phòng mổ — Realtime",
               rooms: [
-                { code: "OR-01", procedure: "Nội soi tiêu hóa",     status: "active",    hint: "Sắp xong" },
-                { code: "OR-02", procedure: "Cắt ruột thừa nội soi", status: "active",    hint: "Sắp xong" },
-                { code: "OR-03", procedure: "Thay khớp háng",        status: "active",    hint: "Sắp xong" },
-                { code: "OR-04", procedure: "Sinh mổ lần 2",         status: "preparing", hint: "Sắp bắt đầu" },
-                { code: "OR-05", procedure: "CABG (Bắc cầu vành)",   status: "active",    hint: "Sắp xong" },
-                { code: "OR-06", procedure: "Mổ lấy thai",           status: "active",    hint: "Sắp xong" },
-                { code: "OR-07",                                      status: "cleaning" },
-                { code: "OR-08",                                      status: "available", hint: "Dự phòng cấp cứu" },
+                {
+                  code: "OR-01",
+                  procedure: "Nội soi tiêu hóa",
+                  status: "active",
+                  hint: "Sắp xong",
+                },
+                {
+                  code: "OR-02",
+                  procedure: "Cắt ruột thừa nội soi",
+                  status: "active",
+                  hint: "Sắp xong",
+                },
+                {
+                  code: "OR-03",
+                  procedure: "Thay khớp háng",
+                  status: "active",
+                  hint: "Sắp xong",
+                },
+                {
+                  code: "OR-04",
+                  procedure: "Sinh mổ lần 2",
+                  status: "preparing",
+                  hint: "Sắp bắt đầu",
+                },
+                {
+                  code: "OR-05",
+                  procedure: "CABG (Bắc cầu vành)",
+                  status: "active",
+                  hint: "Sắp xong",
+                },
+                {
+                  code: "OR-06",
+                  procedure: "Mổ lấy thai",
+                  status: "active",
+                  hint: "Sắp xong",
+                },
+                { code: "OR-07", status: "cleaning" },
+                {
+                  code: "OR-08",
+                  status: "available",
+                  hint: "Dự phòng cấp cứu",
+                },
               ],
             },
           },
@@ -2085,13 +2187,16 @@ const SCREENS: Record<string, ScreenConfig> = {
               maxValue: 100,
               items: [
                 { label: "Chỉ phẫu thuật 3/0", value: 85, color: "#52c41a" },
-                { label: "Dao điện đầu nhỏ",   value: 8,  color: "#ff4d4f" },
+                { label: "Dao điện đầu nhỏ", value: 8, color: "#ff4d4f" },
                 { label: "Găng tay pt size 7", value: 23, color: "#faad14" },
-                { label: "Gạc vô trùng",       value: 62, color: "#52c41a" },
-                { label: "Van tim sinh học",    value: 40, color: "#52c41a" },
+                { label: "Gạc vô trùng", value: 62, color: "#52c41a" },
+                { label: "Van tim sinh học", value: 40, color: "#52c41a" },
               ],
               footerActions: [
-                { label: "⚠ Dao điện đầu nhỏ đã đặt auto-order → M07", variant: "link" },
+                {
+                  label: "⚠ Dao điện đầu nhỏ đã đặt auto-order → M07",
+                  variant: "link",
+                },
               ],
             },
           },
@@ -2107,10 +2212,28 @@ const SCREENS: Record<string, ScreenConfig> = {
     rows: [
       {
         components: [
-          { type: "KpiCard", props: { title: "Chỉ số đạt chuẩn",  value: "87%", accent: "#52c41a", hint: "↑ 2% so tháng trước", hintColor: "#52c41a" } },
-          { type: "KpiCard", props: { title: "Sự cố đang xử lý",  value: 4,     accent: "#ff4d4f" } },
-          { type: "KpiCard", props: { title: "RCA chờ phê duyệt", value: 2,     accent: "#faad14" } },
-          { type: "KpiCard", props: { title: "Audit tháng này",    value: 18,    accent: "#1677ff" } },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Chỉ số đạt chuẩn",
+              value: "87%",
+              accent: "#52c41a",
+              hint: "↑ 2% so tháng trước",
+              hintColor: "#52c41a",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: { title: "Sự cố đang xử lý", value: 4, accent: "#ff4d4f" },
+          },
+          {
+            type: "KpiCard",
+            props: { title: "RCA chờ phê duyệt", value: 2, accent: "#faad14" },
+          },
+          {
+            type: "KpiCard",
+            props: { title: "Audit tháng này", value: 18, accent: "#1677ff" },
+          },
         ],
       },
       {
@@ -2118,7 +2241,11 @@ const SCREENS: Record<string, ScreenConfig> = {
           {
             type: "AlertBanner",
             span: 24,
-            props: { message: "Module Chất lượng & ATBT đang phát triển — dữ liệu mô phỏng", type: "info" },
+            props: {
+              message:
+                "Module Chất lượng & ATBT đang phát triển — dữ liệu mô phỏng",
+              type: "info",
+            },
           },
         ],
       },
@@ -2132,10 +2259,36 @@ const SCREENS: Record<string, ScreenConfig> = {
     rows: [
       {
         components: [
-          { type: "KpiCard", props: { title: "NPS tháng này",     value: 72,    accent: "#52c41a", hint: "↑ 4 điểm", hintColor: "#52c41a" } },
-          { type: "KpiCard", props: { title: "Thời gian chờ TB",  value: "23 p",accent: "#1677ff" } },
-          { type: "KpiCard", props: { title: "Phản hồi tiêu cực", value: 8,     accent: "#ff4d4f" } },
-          { type: "KpiCard", props: { title: "Check-in digital",  value: "61%", accent: "#722ed1" } },
+          {
+            type: "KpiCard",
+            props: {
+              title: "NPS tháng này",
+              value: 72,
+              accent: "#52c41a",
+              hint: "↑ 4 điểm",
+              hintColor: "#52c41a",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Thời gian chờ TB",
+              value: "23 p",
+              accent: "#1677ff",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: { title: "Phản hồi tiêu cực", value: 8, accent: "#ff4d4f" },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Check-in digital",
+              value: "61%",
+              accent: "#722ed1",
+            },
+          },
         ],
       },
       {
@@ -2143,7 +2296,11 @@ const SCREENS: Record<string, ScreenConfig> = {
           {
             type: "AlertBanner",
             span: 24,
-            props: { message: "Module Patient Journey đang phát triển — dữ liệu mô phỏng", type: "info" },
+            props: {
+              message:
+                "Module Patient Journey đang phát triển — dữ liệu mô phỏng",
+              type: "info",
+            },
           },
         ],
       },
@@ -2157,10 +2314,32 @@ const SCREENS: Record<string, ScreenConfig> = {
     rows: [
       {
         components: [
-          { type: "KpiCard", props: { title: "Kết nối active",   value: 14,    accent: "#52c41a" } },
-          { type: "KpiCard", props: { title: "API calls / giờ",  value: "2.4k",accent: "#1677ff" } },
-          { type: "KpiCard", props: { title: "Lỗi 24h qua",      value: 3,     accent: "#ff4d4f", hint: "SLA: < 5", hintColor: "#52c41a" } },
-          { type: "KpiCard", props: { title: "Latency TB (ms)",   value: 142,   accent: "#faad14" } },
+          {
+            type: "KpiCard",
+            props: { title: "Kết nối active", value: 14, accent: "#52c41a" },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "API calls / giờ",
+              value: "2.4k",
+              accent: "#1677ff",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Lỗi 24h qua",
+              value: 3,
+              accent: "#ff4d4f",
+              hint: "SLA: < 5",
+              hintColor: "#52c41a",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: { title: "Latency TB (ms)", value: 142, accent: "#faad14" },
+          },
         ],
       },
       {
@@ -2168,7 +2347,11 @@ const SCREENS: Record<string, ScreenConfig> = {
           {
             type: "AlertBanner",
             span: 24,
-            props: { message: "Module Ecosystem Integration đang phát triển — dữ liệu mô phỏng", type: "info" },
+            props: {
+              message:
+                "Module Ecosystem Integration đang phát triển — dữ liệu mô phỏng",
+              type: "info",
+            },
           },
         ],
       },
@@ -2182,10 +2365,38 @@ const SCREENS: Record<string, ScreenConfig> = {
     rows: [
       {
         components: [
-          { type: "KpiCard", props: { title: "Revenue YTD (tỷ)",     value: "48.2", accent: "#52c41a", hint: "↑ 12% so kế hoạch", hintColor: "#52c41a" } },
-          { type: "KpiCard", props: { title: "EBITDA Margin",         value: "18%",  accent: "#1677ff" } },
-          { type: "KpiCard", props: { title: "Patient Satisfaction",  value: "4.3",  accent: "#722ed1", hint: "/ 5.0", hintColor: "#8b949e" } },
-          { type: "KpiCard", props: { title: "Market Share (%)",      value: "23.1", accent: "#fa8c16" } },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Revenue YTD (tỷ)",
+              value: "48.2",
+              accent: "#52c41a",
+              hint: "↑ 12% so kế hoạch",
+              hintColor: "#52c41a",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: { title: "EBITDA Margin", value: "18%", accent: "#1677ff" },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Patient Satisfaction",
+              value: "4.3",
+              accent: "#722ed1",
+              hint: "/ 5.0",
+              hintColor: "#8b949e",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Market Share (%)",
+              value: "23.1",
+              accent: "#fa8c16",
+            },
+          },
         ],
       },
       {
@@ -2193,7 +2404,11 @@ const SCREENS: Record<string, ScreenConfig> = {
           {
             type: "AlertBanner",
             span: 24,
-            props: { message: "Module Executive KPI đang phát triển — dữ liệu mô phỏng", type: "info" },
+            props: {
+              message:
+                "Module Executive KPI đang phát triển — dữ liệu mô phỏng",
+              type: "info",
+            },
           },
         ],
       },
@@ -2207,10 +2422,38 @@ const SCREENS: Record<string, ScreenConfig> = {
     rows: [
       {
         components: [
-          { type: "KpiCard", props: { title: "Cuộc hội thoại / ngày", value: 340, accent: "#1677ff" } },
-          { type: "KpiCard", props: { title: "Tỉ lệ giải quyết",      value: "78%",accent: "#52c41a", hint: "↑ 5% tuần trước", hintColor: "#52c41a" } },
-          { type: "KpiCard", props: { title: "Escalate to human",      value: 22,   accent: "#faad14" } },
-          { type: "KpiCard", props: { title: "CSAT score",             value: "4.1",accent: "#722ed1", hint: "/ 5.0", hintColor: "#8b949e" } },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Cuộc hội thoại / ngày",
+              value: 340,
+              accent: "#1677ff",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Tỉ lệ giải quyết",
+              value: "78%",
+              accent: "#52c41a",
+              hint: "↑ 5% tuần trước",
+              hintColor: "#52c41a",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: { title: "Escalate to human", value: 22, accent: "#faad14" },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "CSAT score",
+              value: "4.1",
+              accent: "#722ed1",
+              hint: "/ 5.0",
+              hintColor: "#8b949e",
+            },
+          },
         ],
       },
       {
@@ -2218,7 +2461,11 @@ const SCREENS: Record<string, ScreenConfig> = {
           {
             type: "AlertBanner",
             span: 24,
-            props: { message: "Module AI Chatbot & Voice đang phát triển — dữ liệu mô phỏng", type: "info" },
+            props: {
+              message:
+                "Module AI Chatbot & Voice đang phát triển — dữ liệu mô phỏng",
+              type: "info",
+            },
           },
         ],
       },
@@ -2232,10 +2479,32 @@ const SCREENS: Record<string, ScreenConfig> = {
     rows: [
       {
         components: [
-          { type: "KpiCard", props: { title: "Tổng nhân viên",        value: 1240,  accent: "#1677ff" } },
-          { type: "KpiCard", props: { title: "Chứng chỉ hết hạn",     value: 14,    accent: "#ff4d4f", hint: "Trong 30 ngày tới", hintColor: "#faad14" } },
-          { type: "KpiCard", props: { title: "CME giờ TB (năm)",      value: "42h", accent: "#52c41a" } },
-          { type: "KpiCard", props: { title: "Tuyển dụng đang mở",    value: 8,     accent: "#722ed1" } },
+          {
+            type: "KpiCard",
+            props: { title: "Tổng nhân viên", value: 1240, accent: "#1677ff" },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Chứng chỉ hết hạn",
+              value: 14,
+              accent: "#ff4d4f",
+              hint: "Trong 30 ngày tới",
+              hintColor: "#faad14",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "CME giờ TB (năm)",
+              value: "42h",
+              accent: "#52c41a",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: { title: "Tuyển dụng đang mở", value: 8, accent: "#722ed1" },
+          },
         ],
       },
       {
@@ -2243,7 +2512,11 @@ const SCREENS: Record<string, ScreenConfig> = {
           {
             type: "AlertBanner",
             span: 24,
-            props: { message: "Module Nhân sự & Credentialing đang phát triển — dữ liệu mô phỏng", type: "info" },
+            props: {
+              message:
+                "Module Nhân sự & Credentialing đang phát triển — dữ liệu mô phỏng",
+              type: "info",
+            },
           },
         ],
       },
@@ -2253,22 +2526,47 @@ const SCREENS: Record<string, ScreenConfig> = {
   "population-health": {
     title: "Population Health",
     badge: "NEW",
-    subtitle: "Epidemiology · Risk stratification · Preventive care · Cohort analytics",
+    subtitle:
+      "Epidemiology · Risk stratification · Preventive care · Cohort analytics",
     rows: [
       {
         components: [
           {
             type: "AlertBanner",
             span: 24,
-            props: { message: "Population Health Management — đang phát triển", type: "info" },
+            props: {
+              message: "Population Health Management — đang phát triển",
+              type: "info",
+            },
           },
         ],
       },
       {
         components: [
-          { type: "KpiCard", props: { title: "Bệnh nhân theo dõi",   value: "12.4k", accent: "#1677ff" } },
-          { type: "KpiCard", props: { title: "Nguy cơ cao (30d)",    value: 284,     accent: "#ff4d4f" } },
-          { type: "KpiCard", props: { title: "Chương trình phòng bệnh", value: 6,   accent: "#52c41a" } },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Bệnh nhân theo dõi",
+              value: "12.4k",
+              accent: "#1677ff",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Nguy cơ cao (30d)",
+              value: 284,
+              accent: "#ff4d4f",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Chương trình phòng bệnh",
+              value: 6,
+              accent: "#52c41a",
+            },
+          },
         ],
       },
     ],
@@ -2284,15 +2582,27 @@ const SCREENS: Record<string, ScreenConfig> = {
           {
             type: "AlertBanner",
             span: 24,
-            props: { message: "Research Platform đang phát triển", type: "info" },
+            props: {
+              message: "Research Platform đang phát triển",
+              type: "info",
+            },
           },
         ],
       },
       {
         components: [
-          { type: "KpiCard", props: { title: "Nghiên cứu active",    value: 7,     accent: "#1677ff" } },
-          { type: "KpiCard", props: { title: "Bệnh nhân tuyển",      value: 183,   accent: "#722ed1" } },
-          { type: "KpiCard", props: { title: "Bài báo năm nay",      value: 12,    accent: "#52c41a" } },
+          {
+            type: "KpiCard",
+            props: { title: "Nghiên cứu active", value: 7, accent: "#1677ff" },
+          },
+          {
+            type: "KpiCard",
+            props: { title: "Bệnh nhân tuyển", value: 183, accent: "#722ed1" },
+          },
+          {
+            type: "KpiCard",
+            props: { title: "Bài báo năm nay", value: 12, accent: "#52c41a" },
+          },
         ],
       },
     ],
@@ -2301,22 +2611,43 @@ const SCREENS: Record<string, ScreenConfig> = {
   "multi-hospital": {
     title: "Multi-Hospital Network",
     badge: "NEW",
-    subtitle: "Network analytics · Benchmarking · Resource sharing · Transfer hub",
+    subtitle:
+      "Network analytics · Benchmarking · Resource sharing · Transfer hub",
     rows: [
       {
         components: [
           {
             type: "AlertBanner",
             span: 24,
-            props: { message: "Multi-Hospital Network đang phát triển", type: "info" },
+            props: {
+              message: "Multi-Hospital Network đang phát triển",
+              type: "info",
+            },
           },
         ],
       },
       {
         components: [
-          { type: "KpiCard", props: { title: "Cơ sở trong mạng",    value: 5,     accent: "#1677ff" } },
-          { type: "KpiCard", props: { title: "Chuyển viện hôm nay", value: 8,     accent: "#faad14" } },
-          { type: "KpiCard", props: { title: "Tổng BN toàn mạng",   value: "2.1k",accent: "#722ed1" } },
+          {
+            type: "KpiCard",
+            props: { title: "Cơ sở trong mạng", value: 5, accent: "#1677ff" },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Chuyển viện hôm nay",
+              value: 8,
+              accent: "#faad14",
+            },
+          },
+          {
+            type: "KpiCard",
+            props: {
+              title: "Tổng BN toàn mạng",
+              value: "2.1k",
+              accent: "#722ed1",
+            },
+          },
         ],
       },
     ],
@@ -2328,9 +2659,19 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const config = SCREENS[id];
-  if (!config) {
-    return NextResponse.json({ error: "Screen not found" }, { status: 404 });
+
+  // Try real backend first, fall back to local dummy data for demo
+  try {
+    const res = await axios.get<ScreenConfig>(
+      `${BACKEND_URL}/api/screen/${id}`,
+      { timeout: 3000 },
+    );
+    return NextResponse.json(res.data);
+  } catch {
+    const fallback = SCREENS[id];
+    if (!fallback) {
+      return NextResponse.json({ error: "Screen not found" }, { status: 404 });
+    }
+    return NextResponse.json(fallback);
   }
-  return NextResponse.json(config);
 }

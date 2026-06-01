@@ -3,13 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Layout, LayoutItem } from "react-grid-layout";
 import type { WidgetSchemaEntry, ModuleTabApi } from "@/infrastructure/http/adminApi";
-import { mockAdminApi } from "../_lib/mockData";
+import { adminApi } from "@/infrastructure/http/adminApi";
 import { fromApiWidget, makeBlankWidget, findNextY } from "../_lib/widgetUtils";
 import { DEFAULT_SIZES } from "../_lib/constants";
 import type { DesignerWidget } from "../_lib/types";
 
-// Swap `mockAdminApi` → `adminApi` from "@/infrastructure/http/adminApi" when real API is ready.
-const api = mockAdminApi;
+const api = adminApi;
 
 export type TabMeta = Pick<ModuleTabApi, "id" | "label">;
 
@@ -107,14 +106,42 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
       try {
         const layout = await api.getModuleLayout(selectedSlug);
         if (cancelled) return;
-        const tabList = layout.tabs.map((t) => ({ id: t.id, label: t.label }));
+
+        const validTabs = layout.tabs.filter((t) => t.id);
+        if (validTabs.length === 0) {
+          // Module has no tabs yet — create a real one via API so saves work immediately
+          let tabId: string;
+          const tabLabel = "Tab chính";
+          try {
+            const created = await api.createTab(selectedSlug, {
+              slug:      "main",
+              label:     tabLabel,
+              sortOrder: 0,
+            });
+            if (cancelled) return;
+            tabId = created.id;
+          } catch {
+            if (cancelled) return;
+            // API unavailable — local placeholder; save will create the tab later
+            tabId = `__local_${Date.now().toString(36)}`;
+          }
+          setSelectedKey(null);
+          setTabs([{ id: tabId, label: tabLabel }]);
+          setWidgetsByTab(new Map([[tabId, []]]));
+          setActiveTabId(tabId);
+          setLoadedSlug(selectedSlug);
+          setIsDirty(false);
+          return;
+        }
+
+        const tabList = validTabs.map((t) => ({ id: t.id, label: t.label }));
         const newMap = new Map<string, DesignerWidget[]>();
-        layout.tabs.forEach((t) => newMap.set(t.id, t.widgets.map(fromApiWidget)));
-        const defaultTab = layout.tabs.find((t) => t.isDefault) ?? layout.tabs[0];
+        validTabs.forEach((t) => newMap.set(t.id, t.widgets.map(fromApiWidget)));
+        const defaultTab = validTabs.find((t) => t.isDefault) ?? validTabs[0];
         setSelectedKey(null);
         setTabs(tabList);
         setWidgetsByTab(newMap);
-        setActiveTabId(defaultTab?.id ?? "");
+        setActiveTabId(defaultTab.id);
         setLoadedSlug(selectedSlug);
         setIsDirty(false);
       } catch {
@@ -253,11 +280,35 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
 
   // ── Save ─────────────────────────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
-    if (!isDirty || isSaving || !selectedSlug || !activeTabId) return;
+    if (!isDirty || isSaving || !selectedSlug) return;
     setIsSaving(true);
     setSaveError(null);
     try {
-      const currentWidgets = widgetsByTab.get(activeTabId) ?? [];
+      // If the tab is a local placeholder (or missing), create a real one first.
+      let saveTabId = activeTabId;
+      const isLocalTab = !saveTabId || saveTabId.startsWith("__local_");
+      if (isLocalTab) {
+        const localLabel = tabs.find((t) => t.id === saveTabId)?.label ?? "Tab chính";
+        const created = await api.createTab(selectedSlug, {
+          slug:      "main",
+          label:     localLabel,
+          sortOrder: 0,
+        });
+        const oldId   = saveTabId;
+        saveTabId     = created.id;
+        setTabs((prev) => prev.map((t) => t.id === oldId ? { id: saveTabId, label: t.label } : t));
+        setWidgetsByTab((prev) => {
+          const current = prev.get(oldId) ?? [];
+          const m = new Map(prev);
+          m.delete(oldId);
+          m.set(saveTabId, current);
+          return m;
+        });
+        setActiveTabId(saveTabId);
+      }
+
+      // activeTabId is still the old value in this closure; use saveTabId for the key
+      const currentWidgets = widgetsByTab.get(activeTabId) ?? widgetsByTab.get(saveTabId) ?? [];
       const payload = currentWidgets.map((w) => ({
         widgetKey:        w.widgetKey,
         title:            w.title            || undefined,
@@ -275,7 +326,7 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
         interactions:     w.interactions,
         filterKey:        w.filterKey        || undefined,
       }));
-      await api.saveWidgets(selectedSlug, activeTabId, payload);
+      await api.saveWidgets(selectedSlug, saveTabId, payload);
       setIsDirty(false);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2500);
@@ -284,7 +335,7 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
     } finally {
       setIsSaving(false);
     }
-  }, [isDirty, isSaving, selectedSlug, activeTabId, widgetsByTab]);
+  }, [isDirty, isSaving, selectedSlug, activeTabId, widgetsByTab, tabs]);
 
   return {
     tabs, activeTabId, widgetsByTab, widgets, selectedKey, selectedWidget,

@@ -1,0 +1,66 @@
+# Provider overlay — dùng kết hợp với docker-compose.yml
+# Dùng: docker compose -f docker-compose.yml -f docker-compose.providers.yml up -d
+#
+# Providers kết nối đến backend HDOS tại HDOS_HOST (192.168.100.60).
+# Secrets được load từ .env.providers (không commit file đó).
+
+name: hdos
+
+x-provider-common: &provider-common
+  restart: unless-stopped
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  networks:
+    - providers
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  # ── Excel Provider ──────────────────────────────────────────────────────────
+  excel-provider:
+    <<: *provider-common
+    image: "${EXCEL_PROVIDER_IMAGE:-foxai/excel-provider:latest}"
+    container_name: hdos-excel-provider
+    volumes:
+      - excel-data:/app/ExcelData
+    env_file:
+      - .env.providers
+    environment:
+      PROVIDER_ID:     excel-provider
+      CLIENT_ID:       excel-provider
+      CLIENT_SECRET:   "${EXCEL_PROVIDER_SECRET}"
+      TOKEN_ENDPOINT:  "${HDOS_TOKEN_ENDPOINT:-https://192.168.100.60:8443/api/v1/providers/token}"
+      BRIDGE_GRPC_URL: "${HDOS_BRIDGE_GRPC_URL:-https://192.168.100.60:5400}"
+      PROVIDER_VERSION: "1.0.0"
+      LOG_LEVEL:        "${LOG_LEVEL:-Information}"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ── Thêm provider khác bên dưới ────────────────────────────────────────────
+  # my-new-provider:
+  #   <<: *provider-common
+  #   image: "my-registry/my-provider:latest"
+  #   env_file:
+  #     - .env.providers
+  #   environment:
+  #     PROVIDER_ID:     my-new-provider
+  #     CLIENT_ID:       my-new-provider
+  #     CLIENT_SECRET:   "${MY_PROVIDER_SECRET}"
+  #     TOKEN_ENDPOINT:  "${HDOS_TOKEN_ENDPOINT:-https://192.168.100.60:8443/api/v1/providers/token}"
+  #     BRIDGE_GRPC_URL: "${HDOS_BRIDGE_GRPC_URL:-https://192.168.100.60:5400}"
+
+volumes:
+  excel-data:
+    name: hdos_excel_data
+
+networks:
+  providers:
+    name: hdos_providers
+    driver: bridge
