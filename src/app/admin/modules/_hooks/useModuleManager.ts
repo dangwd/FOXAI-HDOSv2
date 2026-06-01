@@ -1,32 +1,42 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { App } from "antd";
 import { adminApi } from "@/infrastructure/http/adminApi";
-import type { AdminModule, ModuleGroup } from "@/infrastructure/http/adminApi";
-import { GROUP_ORDER } from "../_lib/constants";
+import type { AdminModule, ModuleGroupRecord } from "@/infrastructure/http/adminApi";
+import { groupColorBySlug } from "../_lib/constants";
 import type { ModuleForm } from "../_lib/types";
 
 export function useModuleManager() {
   const { message } = App.useApp();
-  const [modules, setModules] = useState<AdminModule[]>([]);
+  const [modules,  setModules]  = useState<AdminModule[]>([]);
+  const [groups,   setGroups]   = useState<ModuleGroupRecord[]>([]);
   const [loading,  setLoading]  = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [search,   setSearch]   = useState("");
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      try {
-        const data = await adminApi.listModules();
-        setModules(data);
-      } catch {
-        // keep empty on failure
-      } finally {
-        setLoading(false);
-      }
+  const reload = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [data, grps] = await Promise.all([
+        adminApi.listModules(),
+        adminApi.listModuleGroups(),
+      ]);
+      const mods = Array.isArray(data) ? data : (data as { items?: AdminModule[] }).items ?? [];
+      const groupList = Array.isArray(grps) ? grps : (grps as { items?: ModuleGroupRecord[] }).items ?? [];
+      setModules(mods);
+      setGroups(groupList.slice().sort((a, b) => a.sortOrder - b.sortOrder));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setLoadError(msg);
+      console.error("[ModuleManager] load failed:", err);
+    } finally {
+      setLoading(false);
     }
-    load();
   }, []);
+
+  useEffect(() => { reload(); }, [reload]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -39,31 +49,40 @@ export function useModuleManager() {
     );
   }, [modules, search]);
 
+  // keyed by groupSlug, ordered by groups.sortOrder
   const grouped = useMemo(() => {
-    const map = new Map<ModuleGroup, AdminModule[]>();
-    for (const g of GROUP_ORDER) map.set(g, []);
+    const map = new Map<string, AdminModule[]>();
+    for (const g of groups) map.set(g.slug, []);
     for (const m of filtered) {
-      const g = m.group ?? "dieu-hanh";
-      map.get(g)?.push(m);
+      const key = m.groupSlug ?? "";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(m);
     }
     return map;
-  }, [filtered]);
+  }, [filtered, groups]);
+
+  function groupColor(groupSlug: string): string {
+    return groupColorBySlug(groupSlug, groups);
+  }
 
   async function create(form: ModuleForm): Promise<void> {
+    if (!form.groupId || !form.slug.trim() || !form.label.trim()) {
+      throw new Error("Thiếu thông tin bắt buộc: nhóm, slug, tên");
+    }
     const body = {
-      slug:            form.slug,
-      label:           form.label,
-      icon:            form.icon || form.label.slice(0, 2).toUpperCase(),
-      description:     form.description,
-      sortOrder:       form.sortOrder,
-      group:           form.group,
-      roles:           form.roles,
-      isActive:        form.isActive,
-      isVisible:       form.isVisible,
-      refreshInterval: form.refreshInterval ? Number(form.refreshInterval) : undefined,
+      groupId:                form.groupId,
+      slug:                   form.slug.trim(),
+      label:                  form.label.trim(),
+      icon:                   form.icon || form.label.slice(0, 2).toUpperCase(),
+      description:            form.description,
+      sortOrder:              form.sortOrder,
+      requiredRoles:          form.requiredRoles.length ? form.requiredRoles : null,
+      isActive:               form.isActive,
+      isVisible:              form.isVisible,
+      refreshIntervalSeconds: form.refreshIntervalSeconds ? Number(form.refreshIntervalSeconds) : null,
     };
-    const created = await adminApi.createModule(body);
-    setModules((prev) => [...prev, created]);
+    await adminApi.createModule(body);
+    await reload();
     message.success("Tạo module thành công");
   }
 
@@ -71,19 +90,19 @@ export function useModuleManager() {
     const target = modules.find((m) => m.id === id);
     if (!target) return;
     const body = {
-      slug:            form.slug,
-      label:           form.label,
-      icon:            form.icon || target.icon,
-      description:     form.description,
-      sortOrder:       form.sortOrder,
-      group:           form.group,
-      roles:           form.roles,
-      isActive:        form.isActive,
-      isVisible:       form.isVisible,
-      refreshInterval: form.refreshInterval ? Number(form.refreshInterval) : undefined,
+      groupId:                form.groupId,
+      slug:                   form.slug.trim(),
+      label:                  form.label.trim(),
+      icon:                   form.icon || target.icon,
+      description:            form.description,
+      sortOrder:              form.sortOrder,
+      requiredRoles:          form.requiredRoles.length ? form.requiredRoles : null,
+      isActive:               form.isActive,
+      isVisible:              form.isVisible,
+      refreshIntervalSeconds: form.refreshIntervalSeconds ? Number(form.refreshIntervalSeconds) : null,
     };
-    const updated = await adminApi.updateModule(target.slug, body);
-    setModules((prev) => prev.map((m) => (m.id === id ? updated : m)));
+    await adminApi.updateModule(target.slug, body);
+    await reload();
     message.success("Cập nhật module thành công");
   }
 
@@ -91,17 +110,17 @@ export function useModuleManager() {
     const target = modules.find((m) => m.id === id);
     if (!target) return;
     await adminApi.deleteModule(target.slug);
-    setModules((prev) => prev.filter((m) => m.id !== id));
+    await reload();
     message.success("Đã xóa module");
   }
 
   async function toggleActive(id: string): Promise<void> {
     const target = modules.find((m) => m.id === id);
     if (!target) return;
-    const updated = await adminApi.updateModule(target.slug, { isActive: !(target.isActive ?? true) });
-    setModules((prev) => prev.map((m) => (m.id === id ? updated : m)));
+    await adminApi.updateModule(target.slug, { isActive: !(target.isActive ?? true) });
+    await reload();
     message.success("Đã cập nhật trạng thái");
   }
 
-  return { modules, filtered, grouped, loading, search, setSearch, create, update, remove, toggleActive };
+  return { modules, groups, filtered, grouped, loading, loadError, search, setSearch, groupColor, create, update, remove, toggleActive };
 }

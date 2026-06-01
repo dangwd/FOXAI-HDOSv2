@@ -1,31 +1,8 @@
 'use client';
-import {
-  DashboardOutlined,
-  MedicineBoxOutlined,
-  BankOutlined,
-  RobotOutlined,
-  DollarOutlined,
-  ShoppingCartOutlined,
-  AlertOutlined,
-  CarOutlined,
-  ApartmentOutlined,
-  DeploymentUnitOutlined,
-} from '@ant-design/icons';
+import { ICON_REGISTRY } from "@/shared/icons";
+import { LayoutDashboard } from "lucide-react";
 
-const ICON_MAP: Record<string, React.ComponentType<{ style?: React.CSSProperties }>> = {
-  dashboard: DashboardOutlined,
-  stethoscope: MedicineBoxOutlined,
-  bed: BankOutlined,
-  brain: RobotOutlined,
-  chart: DollarOutlined,
-  package: ShoppingCartOutlined,
-  alert: AlertOutlined,
-  ambulance: CarOutlined,
-  layers: ApartmentOutlined,
-  path: DeploymentUnitOutlined,
-};
-
-export default function MenuIcon({ name }: { name: string }) {
-  const Icon = ICON_MAP[name] ?? DashboardOutlined;
-  return <Icon style={{ fontSize: 15 }} />;
+export default function MenuIcon({ name, size = 15 }: { name: string; size?: number }) {
+  const Icon = ICON_REGISTRY[name] ?? LayoutDashboard;
+  return <Icon size={size} />;
 }
