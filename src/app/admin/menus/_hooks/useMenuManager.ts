@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { App } from "antd";
 import { adminApi } from "@/infrastructure/http/adminApi";
 import type { AdminMenuNode, AdminScreen, AdminPermission, AdminWidgetDef } from "@/infrastructure/http/adminApi";
 import type { DesignerState, DesignerWidget, MenuUpsertForm } from "../_lib/types";
@@ -25,6 +26,7 @@ function apiWidgetToDesigner(w: AdminWidgetDef): DesignerWidget {
 }
 
 export function useMenuManager() {
+  const { message } = App.useApp();
   const [menus,    setMenus]    = useState<AdminMenuNode[]>([]);
   const [screens,  setScreens]  = useState<AdminScreen[]>([]);
   const [perms,    setPerms]    = useState<AdminPermission[]>([]);
@@ -99,6 +101,7 @@ export function useMenuManager() {
     setMenus((prev) => [...prev, created]);
     setSelId(created.id);
     setTab("screens");
+    message.success("Tạo menu thành công");
   }
 
   async function updateMenuInfo(partial: Partial<MenuUpsertForm>): Promise<void> {
@@ -113,6 +116,7 @@ export function useMenuManager() {
           : m,
       ));
       setInfoEdit(null);
+      message.success("Cập nhật menu thành công");
     } catch (err: unknown) {
       setError((err as Error)?.message ?? "Lưu thất bại");
       throw err;
@@ -125,6 +129,7 @@ export function useMenuManager() {
     await adminApi.deleteMenu(id);
     setMenus((prev) => prev.filter((m) => m.id !== id));
     if (selId === id) setSelId(null);
+    message.success("Đã xóa menu");
   }
 
   // ── Screen CRUD ────────────────────────────────────────────────────────────
@@ -140,6 +145,7 @@ export function useMenuManager() {
     });
     setScreens((prev) => [...prev, created]);
     setMenus((prev) => prev.map((m) => m.id === selId ? { ...m, screenCount: m.screenCount + 1 } : m));
+    message.success("Tạo màn hình thành công");
   }
 
   async function deleteScreen(screenId: string): Promise<void> {
@@ -147,6 +153,7 @@ export function useMenuManager() {
     await adminApi.deleteScreen(selId, screenId);
     setScreens((prev) => prev.filter((s) => s.id !== screenId));
     setMenus((prev) => prev.map((m) => m.id === selId ? { ...m, screenCount: Math.max(0, m.screenCount - 1) } : m));
+    message.success("Đã xóa màn hình");
   }
 
   // ── Designer open/close ────────────────────────────────────────────────────
@@ -215,6 +222,7 @@ export function useMenuManager() {
       const sc = await adminApi.listScreens(designer.menuId);
       setScreens(sc);
       setDesigner(null);
+      message.success("Đã lưu màn hình thành công");
       return result as unknown as void;
     } catch (err: unknown) {
       setError((err as Error)?.message ?? "Lưu thất bại");
@@ -238,6 +246,7 @@ export function useMenuManager() {
       );
       return idx >= 0 ? prev.map((p, i) => i === idx ? created : p) : [...prev, created];
     });
+    message.success("Đã thêm phân quyền");
   }
 
   async function togglePerm(permId: string, field: "canView" | "canExport"): Promise<void> {
@@ -258,9 +267,11 @@ export function useMenuManager() {
     setPerms((prev) => prev.filter((p) => p.id !== permId));
     try {
       await adminApi.deletePerm(selId, permId);
+      message.success("Đã xóa phân quyền");
     } catch {
       const sc = await adminApi.listPerms(selId).catch(() => []);
       setPerms(sc);
+      message.error("Xóa phân quyền thất bại");
     }
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useThemeStore } from "@/store/themeStore";
-import { ConfigProvider } from "antd";
+import { App, ConfigProvider } from "antd";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -451,7 +451,9 @@ export default function AdminLayout({
         <AdminSidebar />
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <AdminTopBar />
-          <main className="flex-1 overflow-y-auto">{children}</main>
+          <App className="flex-1 min-h-0 flex flex-col">
+            <main className="flex-1 overflow-y-auto">{children}</main>
+          </App>
         </div>
       </div>
     </ConfigProvider>

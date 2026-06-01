@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { App } from "antd";
 import { adminApi } from "@/infrastructure/http/adminApi";
 import type { AdminModule, ModuleGroup } from "@/infrastructure/http/adminApi";
 import { GROUP_ORDER } from "../_lib/constants";
 import type { ModuleForm } from "../_lib/types";
 
 export function useModuleManager() {
+  const { message } = App.useApp();
   const [modules, setModules] = useState<AdminModule[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [search,   setSearch]   = useState("");
@@ -47,7 +49,7 @@ export function useModuleManager() {
     return map;
   }, [filtered]);
 
-  async function create(form: ModuleForm) {
+  async function create(form: ModuleForm): Promise<void> {
     const body = {
       slug:            form.slug,
       label:           form.label,
@@ -62,9 +64,10 @@ export function useModuleManager() {
     };
     const created = await adminApi.createModule(body);
     setModules((prev) => [...prev, created]);
+    message.success("Tạo module thành công");
   }
 
-  async function update(id: string, form: ModuleForm) {
+  async function update(id: string, form: ModuleForm): Promise<void> {
     const target = modules.find((m) => m.id === id);
     if (!target) return;
     const body = {
@@ -81,20 +84,23 @@ export function useModuleManager() {
     };
     const updated = await adminApi.updateModule(target.slug, body);
     setModules((prev) => prev.map((m) => (m.id === id ? updated : m)));
+    message.success("Cập nhật module thành công");
   }
 
-  async function remove(id: string) {
+  async function remove(id: string): Promise<void> {
     const target = modules.find((m) => m.id === id);
     if (!target) return;
     await adminApi.deleteModule(target.slug);
     setModules((prev) => prev.filter((m) => m.id !== id));
+    message.success("Đã xóa module");
   }
 
-  async function toggleActive(id: string) {
+  async function toggleActive(id: string): Promise<void> {
     const target = modules.find((m) => m.id === id);
     if (!target) return;
     const updated = await adminApi.updateModule(target.slug, { isActive: !(target.isActive ?? true) });
     setModules((prev) => prev.map((m) => (m.id === id ? updated : m)));
+    message.success("Đã cập nhật trạng thái");
   }
 
   return { modules, filtered, grouped, loading, search, setSearch, create, update, remove, toggleActive };
