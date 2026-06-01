@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Tabs, Button, Input, Table, Tag, message } from "antd";
+import { App, Tabs, Button, Input, Table, Tag } from "antd";
 import { Search, Plus, Key } from "lucide-react";
 import type { Provider, ProviderStatus } from "./_lib/types";
 import { BLANK_FORM, type ProviderForm } from "./_lib/types";
@@ -208,6 +208,7 @@ function ProvidersTab({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProviderManagerPage() {
+  const { message } = App.useApp();
   const manager = useProviderManager();
 
   const [drawer,      setDrawer]      = useState<DrawerState | null>(null);

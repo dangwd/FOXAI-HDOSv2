@@ -1,7 +1,7 @@
 "use client";
 
 import type { TableColumnsType } from "antd";
-import { Button, Input, message, Space, Table, Tag, Tooltip, Typography } from "antd";
+import { App, Button, Input, Space, Table, Tag, Tooltip, Typography } from "antd";
 import { CheckCircle2, MinusCircle, Plus, RefreshCw, Search } from "lucide-react";
 import { useState } from "react";
 import { useOperationManager } from "../_hooks/useOperationManager";
@@ -36,14 +36,20 @@ function fmtCache(s: number): string {
 }
 
 export function OperationsTab() {
+  const { message } = App.useApp();
   const manager = useOperationManager();
   const [drawer, setDrawer] = useState<DrawerState | null>(null);
 
   async function handleSubmit(form: OperationForm) {
     if (!drawer) return;
     try {
-      if (drawer.mode === "create") await manager.create(form);
-      else await manager.update(drawer.target.id, form);
+      if (drawer.mode === "create") {
+        await manager.create(form);
+        message.success("Tạo operation thành công");
+      } else {
+        await manager.update(drawer.target.id, form);
+        message.success("Cập nhật operation thành công");
+      }
       setDrawer(null);
     } catch {
       message.error(manager.error ?? "Thao tác thất bại");

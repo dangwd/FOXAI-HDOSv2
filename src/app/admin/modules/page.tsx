@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input } from "antd";
+import { App, Button, Input } from "antd";
 import { Search, Plus } from "lucide-react";
 import type { AdminModule } from "@/infrastructure/http/adminApi";
 import { useModuleManager } from "./_hooks/useModuleManager";
@@ -33,22 +33,28 @@ function toForm(m: AdminModule): ModuleForm {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ModuleManagerPage() {
+  const { message } = App.useApp();
   const manager = useModuleManager();
   const [drawer, setDrawer] = useState<DrawerState | null>(null);
 
-  function handleSubmit(form: ModuleForm) {
+  async function handleSubmit(form: ModuleForm) {
     if (!drawer) return;
-    if (drawer.mode === "create") {
-      manager.create(form);
-    } else {
-      manager.update(drawer.target.id, form);
+    try {
+      if (drawer.mode === "create") await manager.create(form);
+      else await manager.update(drawer.target.id, form);
+      setDrawer(null);
+    } catch {
+      message.error("Thao tác thất bại. Vui lòng thử lại.");
     }
-    setDrawer(null);
   }
 
-  function handleDelete(module: AdminModule) {
+  async function handleDelete(module: AdminModule) {
     if (!confirm(`Xóa module "${module.label}"? Hành động này không thể hoàn tác.`)) return;
-    manager.remove(module.id);
+    try {
+      await manager.remove(module.id);
+    } catch {
+      message.error("Xóa thất bại. Vui lòng thử lại.");
+    }
   }
 
   const drawerTitle =

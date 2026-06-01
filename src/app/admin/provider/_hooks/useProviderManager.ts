@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { App } from "antd";
 import { MOCK_PROVIDERS } from "../_lib/constants";
 import type { Provider, ProviderForm, ProviderStatus } from "../_lib/types";
 import { adminApi, type ProviderApiRecord } from "@/infrastructure/http/adminApi";
@@ -30,6 +31,7 @@ function formToOps(form: ProviderForm): string[] {
 }
 
 export function useProviderManager() {
+  const { message } = App.useApp();
   const [providers,    setProviders]    = useState<Provider[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [saving,       setSaving]       = useState(false);
@@ -95,6 +97,7 @@ export function useProviderManager() {
         },
       });
       setProviders((prev) => [apiToProvider(created), ...prev]);
+      message.success("Đăng ký provider thành công");
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Không thể tạo provider";
       setError(msg);
@@ -125,6 +128,7 @@ export function useProviderManager() {
         },
       });
       setProviders((prev) => prev.map((p) => p.id === id ? apiToProvider(updated) : p));
+      message.success("Cập nhật provider thành công");
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Không thể cập nhật provider";
       setError(msg);
@@ -134,8 +138,17 @@ export function useProviderManager() {
     }
   }
 
-  function remove(id: string): void {
+  async function remove(id: string): Promise<void> {
+    const target = providers.find((p) => p.id === id);
+    if (!target) return;
     setProviders((prev) => prev.filter((p) => p.id !== id));
+    try {
+      await adminApi.deleteProvider(target.providerId);
+      message.success("Đã xóa provider");
+    } catch {
+      setProviders((prev) => [target, ...prev]);
+      message.error("Xóa provider thất bại");
+    }
   }
 
   async function setStatus(id: string, status: ProviderStatus): Promise<void> {

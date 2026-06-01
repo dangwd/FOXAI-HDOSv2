@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, message, Tag, Tabs } from "antd";
+import { App, Button, Input, Tag, Tabs } from "antd";
 import { Plus, RefreshCw, X } from "lucide-react";
 import { useProviderManager } from "../provider/_hooks/useProviderManager";
 import { OperationsTab } from "../provider/_components/OperationsTab";
@@ -240,6 +240,7 @@ function ByProviderTab({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function OperationsPage() {
+  const { message } = App.useApp();
   const manager = useProviderManager();
 
   async function handleSaveOps(id: string, operations: string[]) {

@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useRef, useState } from "react";
-import { Button, Input, InputNumber, message, Select, Space } from "antd";
+import { App, Button, Input, InputNumber, Select, Space } from "antd";
 import {
   ArrowLeft, BarChart2, GripVertical, LineChart, Palette, PieChart,
   Save, Table2, TrendingUp, Type, X,
@@ -73,7 +73,7 @@ function WidgetCard({
   return (
     <div
       style={{ gridColumn: `span ${widget.span}` }}
-      className={`relative group ${dragging ? "opacity-40" : ""}`}
+      className={`relative group min-w-0 ${dragging ? "opacity-40" : ""}`}
       draggable
       onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; onDragStart(); }}
       onDragEnd={onDragEnd}
@@ -370,6 +370,7 @@ export function ScreenDesigner({
   onClose:  () => void;
   onChange: (s: DesignerState) => void;
 }) {
+  const { message } = App.useApp();
   const [dragFromPalType, setDragFromPalType] = useState<WidgetType | null>(null);
   const [dragCanvasIdx,   setDragCanvasIdx]   = useState<number | null>(null);
   const [dropTarget,      setDropTarget]      = useState<{ idx: number; side: "before" | "after" } | null>(null);
@@ -431,7 +432,8 @@ export function ScreenDesigner({
     e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const colWidth = canvas.clientWidth / 12;
+    // subtract p-4 padding (32px) and 11 gaps of gap-3 (132px) → actual column width
+    const colWidth = (canvas.clientWidth - 32 - 132) / 12;
     resizeRef.current = { idx, startX: e.clientX, startSpan: state.widgets[idx].span };
 
     function onMove(me: MouseEvent) {
@@ -588,7 +590,7 @@ export function ScreenDesigner({
         {/* Canvas */}
         <div
           ref={canvasRef}
-          className="flex-1 overflow-y-auto p-4"
+          className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-4"
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleCanvasDrop}
         >
@@ -599,7 +601,7 @@ export function ScreenDesigner({
               <p className="text-xs m-0 text-center">Kéo widget từ palette bên trái hoặc click để thêm</p>
             </div>
           ) : (
-            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(12, 1fr)" }}>
+            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(12, minmax(0, 1fr))" }}>
               {state.widgets.map((w, idx) => (
                 <WidgetCard
                   key={w.id}
