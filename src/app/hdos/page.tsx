@@ -2,9 +2,8 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ScreenRenderer }  from "@/components/ScreenRenderer";
 import { ModuleRenderer }  from "@/components/ModuleRenderer";
-import type { ScreenConfig } from "@/types/screen";
+import { getAdminToken } from "@/infrastructure/http/httpForProvider";
 import type { ModuleLayout } from "@/infrastructure/http/adminApi";
 
 const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
@@ -29,7 +28,6 @@ function PageSkeleton() {
 type PageState =
   | { kind: "loading" }
   | { kind: "module"; layout: ModuleLayout }
-  | { kind: "screen"; config: ScreenConfig }
   | { kind: "error"; message: string };
 
 function HdosContent({ moduleId }: { moduleId: string }) {
@@ -39,20 +37,13 @@ function HdosContent({ moduleId }: { moduleId: string }) {
     let cancelled = false;
 
     async function load() {
-      // 1. Try module layout (admin-configured, react-grid-layout based)
-      const modRes = await fetch(`/api/v1/modules/${moduleId}/layout`);
+      const token = await getAdminToken();
+      const authHeaders: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const modRes = await fetch(`/api/v1/modules/${moduleId}/layout`, { headers: authHeaders });
       if (!cancelled && modRes.ok) {
         const layout = (await modRes.json()) as ModuleLayout;
         if (!cancelled) setState({ kind: "module", layout });
-        return;
-      }
-
-      // 2. Fall back to legacy ScreenConfig
-      const scRes = await fetch(`/api/screen/${moduleId}`);
-      if (cancelled) return;
-      if (scRes.ok) {
-        const config = (await scRes.json()) as ScreenConfig;
-        if (!cancelled) setState({ kind: "screen", config });
         return;
       }
 
@@ -76,9 +67,7 @@ function HdosContent({ moduleId }: { moduleId: string }) {
     );
   }
 
-  if (state.kind === "module") return <ModuleRenderer layout={state.layout} />;
-
-  return <ScreenRenderer config={state.config} />;
+  return <ModuleRenderer layout={state.layout} />;
 }
 
 function HdosPageContent() {
