@@ -89,3 +89,7 @@ httpProvider.interceptors.response.use(
 );
 
 export default httpProvider;
+
+export async function getAdminToken(): Promise<string | null> {
+  return ensureAdminToken();
+}

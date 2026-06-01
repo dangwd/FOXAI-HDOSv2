@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { App, Button, Input, Tag, Tabs } from "antd";
+import { App, Button, Input, Tabs, Tag } from "antd";
 import { Plus, RefreshCw, X } from "lucide-react";
-import { useProviderManager } from "../provider/_hooks/useProviderManager";
+import { useState } from "react";
 import { OperationsTab } from "../provider/_components/OperationsTab";
+import { useProviderManager } from "../provider/_hooks/useProviderManager";
 import { STATUS_META } from "../provider/_lib/constants";
 import type { Provider, ProviderForm } from "../provider/_lib/types";
 
@@ -12,19 +12,19 @@ import type { Provider, ProviderForm } from "../provider/_lib/types";
 
 function toForm(p: Provider): ProviderForm {
   return {
-    providerId:            p.providerId,
-    displayName:           p.displayName,
-    description:           p.description ?? "",
-    clientId:              p.clientId,
-    clientSecret:          "",
-    operationsText:        p.operations.join("\n"),
-    timeoutMs:             p.timeoutMs,
-    priority:              p.priority,
+    providerId: p.providerId,
+    displayName: p.displayName,
+    description: p.description ?? "",
+    clientId: p.clientId,
+    clientSecret: "",
+    operationsText: p.operations.join("\n"),
+    timeoutMs: p.timeoutMs,
+    priority: p.priority,
     maxConcurrentRequests: p.maxConcurrentRequests,
-    cbFailureThreshold:    p.circuitBreaker.failureThreshold,
-    cbWindowSeconds:       p.circuitBreaker.windowSeconds,
-    cbCooldownSeconds:     p.circuitBreaker.cooldownSeconds,
-    status:                p.status,
+    cbFailureThreshold: p.circuitBreaker.failureThreshold,
+    cbWindowSeconds: p.circuitBreaker.windowSeconds,
+    cbCooldownSeconds: p.circuitBreaker.cooldownSeconds,
+    status: p.status,
   };
 }
 
@@ -36,12 +36,12 @@ function ProviderCard({
   onSave,
 }: {
   provider: Provider;
-  saving:   boolean;
-  onSave:   (id: string, ops: string[]) => Promise<void>;
+  saving: boolean;
+  onSave: (id: string, ops: string[]) => Promise<void>;
 }) {
-  const [editing,  setEditing]  = useState(false);
+  const [editing, setEditing] = useState(false);
   const [draftOps, setDraftOps] = useState<string[]>([]);
-  const [input,    setInput]    = useState("");
+  const [input, setInput] = useState("");
 
   // When not editing, ops are always from props; draft only lives during an edit session
   const ops = editing ? draftOps : provider.operations;
@@ -80,7 +80,6 @@ function ProviderCard({
 
   return (
     <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-[#30363d] rounded-xl p-4 space-y-3">
-
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -90,12 +89,12 @@ function ProviderCard({
             </span>
             <Tag
               style={{
-                color:      statusMeta.color,
+                color: statusMeta.color,
                 background: statusMeta.bg,
-                border:     "none",
+                border: "none",
                 fontWeight: 600,
-                fontSize:   11,
-                margin:     0,
+                fontSize: 11,
+                margin: 0,
                 lineHeight: "18px",
               }}
             >
@@ -201,10 +200,10 @@ function ByProviderTab({
   onSave,
 }: {
   providers: Provider[];
-  loading:   boolean;
-  saving:    boolean;
+  loading: boolean;
+  saving: boolean;
   onRefresh: () => void;
-  onSave:    (id: string, ops: string[]) => Promise<void>;
+  onSave: (id: string, ops: string[]) => Promise<void>;
 }) {
   return (
     <div className="space-y-4">
@@ -260,8 +259,8 @@ export default function OperationsPage() {
 
   const tabItems = [
     {
-      key:      "by-provider",
-      label:    "Operations theo Provider",
+      key: "by-provider",
+      label: "Operations theo Provider",
       children: (
         <ByProviderTab
           providers={manager.providers}
@@ -273,15 +272,14 @@ export default function OperationsPage() {
       ),
     },
     {
-      key:      "registry",
-      label:    "Operation Registry",
+      key: "registry",
+      label: "Operation Registry",
       children: <OperationsTab />,
     },
   ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-
+    <div className="p-6">
       {/* Page header */}
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-900 dark:text-[#e6edf3] m-0">

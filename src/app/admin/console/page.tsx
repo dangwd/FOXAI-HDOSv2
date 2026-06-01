@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button, Input, InputNumber, Select } from "antd";
 import { Loader2, Wifi } from "lucide-react";
-import httpProvider from "@/infrastructure/http/httpForProvider";
-import useAuthStore from "@/core/auth/authStore";
+import httpProvider, { getAdminToken } from "@/infrastructure/http/httpForProvider";
 import { poolSubscribe } from "@/core/sse/ssePool";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -218,19 +217,21 @@ export default function ConsolePage() {
   const pollingRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   const logEndRef      = useRef<HTMLDivElement>(null);
 
-  // auth
-  const accessToken = useAuthStore((s) => s.accessToken);
-  const user        = useAuthStore((s) => s.user);
+  // auth — dùng admin KC token, không phải main auth store
+  const [sseUrl, setSseUrl] = useState<string | null>(null);
+  useLayoutEffect(() => {
+    getAdminToken().then((token) => {
+      if (!token) return;
+      const base = process.env.NEXT_PUBLIC_SSE_URL ?? "/notifications/sse";
+      setSseUrl(`${base}?access_token=${encodeURIComponent(token)}`);
+    });
+  }, []);
 
   // derived
   const result        = pushed ?? polled ?? null;
   const isTerminal    = !!result && TERMINAL.includes(result.status);
   const isRunning     = submitting || (!!requestId && !isTerminal);
   const displayStatus = result?.status ?? (requestId ? "Queued" as RequestStatus : null);
-
-  const sseUrl = accessToken
-    ? `${process.env.NEXT_PUBLIC_SSE_URL ?? "/notifications/sse"}?access_token=${encodeURIComponent(accessToken)}`
-    : null;
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -328,9 +329,10 @@ export default function ConsolePage() {
     setParamsError(null);
     setSubmitError(null);
 
-    const newId   = uid();
-    const userId  = user?.id ?? "admin";
-    const tenantId = parseJwtClaim(accessToken, "tenant_id") ?? userId;
+    const newId    = uid();
+    const rawToken = await getAdminToken();
+    const userId   = parseJwtClaim(rawToken, "sub") ?? "anonymous";
+    const tenantId = parseJwtClaim(rawToken, "tenant_id") ?? userId;
 
     // reset previous run
     setSubmitting(true);
@@ -379,10 +381,10 @@ export default function ConsolePage() {
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="flex flex-col h-full overflow-hidden">
 
       {/* Header */}
-      <div className="mb-5 shrink-0">
+      <div className="shrink-0 px-6 py-4 border-b border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117]">
         <h1 className="text-xl font-bold text-gray-900 dark:text-[#e6edf3] m-0">Test Console</h1>
         <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0 mt-0.5">
           Gửi operation request thủ công và theo dõi kết quả theo thời gian thực.
@@ -390,7 +392,7 @@ export default function ConsolePage() {
       </div>
 
       {/* 2-column grid */}
-      <div className="flex-1 min-h-0 grid xl:grid-cols-[1fr_400px] gap-5">
+      <div className="flex-1 min-h-0 grid xl:grid-cols-[1fr_400px] gap-5 p-6">
 
         {/* ── Cột trái ── */}
         <div className="flex flex-col gap-4 overflow-y-auto min-h-0 pr-0.5">

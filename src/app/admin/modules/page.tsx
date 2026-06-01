@@ -1,32 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { App, Button, Input } from "antd";
-import { Search, Plus } from "lucide-react";
 import type { AdminModule } from "@/infrastructure/http/adminApi";
+import { App, Button, Input } from "antd";
+import { Plus, Search } from "lucide-react";
+import { useState } from "react";
+import { ModuleFormDrawer } from "./_components/ModuleFormDrawer";
+import { ModuleTable } from "./_components/ModuleTable";
 import { useModuleManager } from "./_hooks/useModuleManager";
 import { BLANK_FORM, type ModuleForm } from "./_lib/types";
-import { ModuleTable } from "./_components/ModuleTable";
-import { ModuleFormDrawer } from "./_components/ModuleFormDrawer";
 
 // ─── Drawer state ─────────────────────────────────────────────────────────────
 
-type DrawerState =
-  | { mode: "create" }
-  | { mode: "edit"; target: AdminModule };
+type DrawerState = { mode: "create" } | { mode: "edit"; target: AdminModule };
 
 function toForm(m: AdminModule): ModuleForm {
   return {
-    group:           m.group ?? "",
-    slug:            m.slug,
-    label:           m.label,
-    icon:            m.icon,
-    description:     m.description,
-    sortOrder:       m.sortOrder,
+    group: m.group ?? "",
+    slug: m.slug,
+    label: m.label,
+    icon: m.icon,
+    description: m.description,
+    sortOrder: m.sortOrder,
     refreshInterval: m.refreshInterval?.toString() ?? "",
-    isActive:        m.isActive ?? true,
-    isVisible:       m.isVisible ?? true,
-    roles:           m.roles ?? [],
+    isActive: m.isActive ?? true,
+    isVisible: m.isVisible ?? true,
+    roles: m.roles ?? [],
   };
 }
 
@@ -49,7 +47,12 @@ export default function ModuleManagerPage() {
   }
 
   async function handleDelete(module: AdminModule) {
-    if (!confirm(`Xóa module "${module.label}"? Hành động này không thể hoàn tác.`)) return;
+    if (
+      !confirm(
+        `Xóa module "${module.label}"? Hành động này không thể hoàn tác.`,
+      )
+    )
+      return;
     try {
       await manager.remove(module.id);
     } catch {
@@ -64,8 +67,7 @@ export default function ModuleManagerPage() {
     drawer?.mode === "edit" ? toForm(drawer.target) : BLANK_FORM;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-
+    <div className="p-6">
       {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <div>
