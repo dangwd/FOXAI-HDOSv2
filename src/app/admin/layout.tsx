@@ -229,7 +229,7 @@ function AdminSidebar() {
   const isDark = theme === "dark";
 
   return (
-    <aside className="w-60 h-screen bg-white dark:bg-[#0d1117] border-r border-gray-200 dark:border-[#30363d] flex flex-col shrink-0">
+    <aside className="w-64 h-screen bg-white dark:bg-[#0d1117] border-r border-gray-200 dark:border-[#30363d] flex flex-col shrink-0">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-4 border-b border-gray-100 dark:border-[#30363d]">
         <div className="w-7 h-7 rounded bg-violet-600 flex items-center justify-center text-white">
@@ -275,14 +275,14 @@ function AdminSidebar() {
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
                     ${
                       isActive
-                        ? "bg-blue-600 text-white font-medium"
+                        ? "bg-violet-50 dark:bg-[#2d2542] text-violet-600 dark:text-violet-400 font-medium"
                         : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3]"
                     }`}
                 >
                   <span
                     className={
                       isActive
-                        ? "text-white"
+                        ? "text-violet-600 dark:text-violet-400"
                         : "text-gray-400 dark:text-[#8b949e]"
                     }
                   >
