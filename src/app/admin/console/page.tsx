@@ -309,10 +309,6 @@ export default function ConsolePage() {
     return stopPolling;
   }, [requestId, stopPolling]);
 
-  useEffect(() => {
-    if (isTerminal) stopPolling();
-  }, [isTerminal, stopPolling]);
-
   // ── Actions ───────────────────────────────────────────────────────────────────
 
   function pickOperation(op: string) {
