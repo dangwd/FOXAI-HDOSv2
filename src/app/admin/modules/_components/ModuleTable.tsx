@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Table, Switch, Button, Space, Tag, Typography } from "antd";
+import { Table, Switch, Button, Space, Tag, Typography, Popconfirm } from "antd";
 import type { TableColumnsType } from "antd";
 import type { AdminModule, ModuleGroupRecord } from "@/infrastructure/http/adminApi";
 import { Inbox, LayoutDashboard } from "lucide-react";
@@ -179,7 +179,16 @@ export function ModuleTable({
               <Button size="small" icon={<LayoutDashboard size={12} />}>Canvas</Button>
             </Link>
             <Button size="small" onClick={() => onEdit(row)}>Sửa</Button>
-            <Button size="small" danger onClick={() => onDelete(row)}>Xóa</Button>
+            <Popconfirm
+              title={`Xóa module "${row.label}"?`}
+              description="Hành động này không thể hoàn tác."
+              onConfirm={() => onDelete(row)}
+              okText="Xóa"
+              cancelText="Hủy"
+              okButtonProps={{ danger: true }}
+            >
+              <Button size="small" danger>Xóa</Button>
+            </Popconfirm>
           </Space>
         );
       },

@@ -150,6 +150,25 @@ function IconBoxes() {
   );
 }
 
+function IconForms() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M3 9h18" />
+      <path d="M9 21V9" />
+    </svg>
+  );
+}
+
 function IconBack() {
   return (
     <svg
@@ -215,6 +234,7 @@ const MENU_ITEMS = [
   { href: "/admin/modules", label: "Quản lý Module", Icon: IconBoxes },
   { href: "/admin", label: "Thiết kế Báo cáo", Icon: IconPencil },
   { href: "/admin/menus", label: "Quản lý Menu BC", Icon: IconMenu },
+  { href: "/admin/forms", label: "DynamicForm Builder", Icon: IconForms },
   { href: "/admin/provider", label: "Quản trị Provider", Icon: IconSettings },
   { href: "/admin/operations", label: "Quản lý Operations", Icon: IconList },
   { href: "/admin/console", label: "Test Console", Icon: IconTerminal },
@@ -394,11 +414,15 @@ export default function AdminLayout({
         },
         components: {
           Table: {
-            headerBg: dk ? "#0d1117" : "#f9fafb",
-            headerColor: dk ? "#8b949e" : "#6b7280",
-            rowHoverBg: dk ? "#1c2128" : "rgba(0,0,0,0.02)",
-            borderColor: dk ? "#21262d" : "#f0f0f0",
-            cellPaddingBlock: 8,
+            // header sáng hơn body để tạo hierarchy, không hoà vào page background
+            headerBg:         dk ? "#1c2128" : "#f0f2f5",
+            headerColor:      dk ? "#cdd3de" : "#374151",
+            headerSplitColor: dk ? "#30363d" : "#d1d5db",
+            // row
+            rowHoverBg: dk ? "#21262d" : "rgba(124,58,237,0.04)",
+            // border rõ hơn
+            borderColor: dk ? "#30363d" : "#e2e8f0",
+            cellPaddingBlock:  8,
             cellPaddingInline: 12,
           },
           Drawer: {
@@ -452,7 +476,7 @@ export default function AdminLayout({
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <AdminTopBar />
           <App className="flex-1 min-h-0 flex flex-col">
-            <main className="flex-1 overflow-y-auto">{children}</main>
+            <main className="flex-1 overflow-y-auto admin-main">{children}</main>
           </App>
         </div>
       </div>

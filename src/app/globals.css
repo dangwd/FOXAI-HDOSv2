@@ -13,3 +13,13 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/* Admin tables — card appearance */
+.admin-main .ant-table-wrapper {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.dark .admin-main .ant-table-wrapper {
+  border-color: #30363d;
+}

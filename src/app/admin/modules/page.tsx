@@ -48,12 +48,6 @@ export default function ModuleManagerPage() {
   }
 
   async function handleDelete(module: AdminModule) {
-    if (
-      !confirm(
-        `Xóa module "${module.label}"? Hành động này không thể hoàn tác.`,
-      )
-    )
-      return;
     try {
       await manager.remove(module.id);
     } catch {
@@ -90,7 +84,7 @@ export default function ModuleManagerPage() {
         <Alert
           type="error"
           showIcon
-          message="Không tải được danh sách module"
+          title="Không tải được danh sách module"
           description={manager.loadError}
           className="mb-4"
         />
