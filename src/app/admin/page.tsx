@@ -65,6 +65,18 @@ function DashboardDesignerInner() {
 
   // ── Derived ────────────────────────────────────────────────────────────────
   const selectedModule = modules.find((m) => m.slug === selectedSlug);
+
+  // Group modules by groupSlug — mỗi group là một "module", mỗi item là một "page"
+  const groupedModules = useMemo(() => {
+    const map = new Map<string, { groupSlug: string; groupLabel: string; items: typeof modules }>();
+    for (const mod of modules) {
+      const key   = mod.groupSlug || "__ungrouped";
+      const label = mod.groupLabel || "Chưa phân nhóm";
+      if (!map.has(key)) map.set(key, { groupSlug: key, groupLabel: label, items: [] });
+      map.get(key)!.items.push(mod);
+    }
+    return [...map.values()];
+  }, [modules]);
   const jsonPreview = JSON.stringify(
     {
       module: selectedSlug,
@@ -95,24 +107,41 @@ function DashboardDesignerInner() {
     <div className="flex h-full overflow-hidden">
       {/* ── Col 1: Module list ─────────────────────────────────────────────── */}
       <aside className="w-56 shrink-0 border-r border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-[#30363d] flex items-center justify-between shrink-0">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-[#30363d] shrink-0">
           <span className="text-xs font-semibold text-gray-700 dark:text-[#e6edf3]">
-            Modules
+            Pages
           </span>
-          <button className="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 transition-colors">
-            + Tạo mới
-          </button>
+          <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0 mt-0.5">
+            {modules.length} page · {groupedModules.length} module
+          </p>
         </div>
-        <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
-          {modules.map((mod) => (
-            <ModuleRow
-              key={mod.slug}
-              module={mod}
-              active={mod.slug === selectedSlug}
-              onClick={() => {
-                if (mod.slug !== selectedSlug) setSelectedSlug(mod.slug);
-              }}
-            />
+        <div className="flex-1 overflow-y-auto py-2">
+          {groupedModules.map((group) => (
+            <div key={group.groupSlug} className="mb-1">
+              {/* Module header (nhóm) */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-[#484f58] truncate">
+                  {group.groupLabel}
+                </span>
+                <div className="flex-1 h-px bg-gray-100 dark:bg-[#21262d]" />
+                <span className="text-[9px] text-gray-300 dark:text-[#30363d] font-mono shrink-0">
+                  {group.items.length}
+                </span>
+              </div>
+              {/* Pages trong module */}
+              <div className="px-1.5 space-y-0.5">
+                {group.items.map((mod) => (
+                  <ModuleRow
+                    key={mod.slug}
+                    module={mod}
+                    active={mod.slug === selectedSlug}
+                    onClick={() => {
+                      if (mod.slug !== selectedSlug) setSelectedSlug(mod.slug);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </aside>
@@ -122,11 +151,21 @@ function DashboardDesignerInner() {
         {/* Canvas header */}
         <div className="px-5 py-2.5 border-b border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] flex items-center gap-3 shrink-0">
           <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-semibold text-gray-800 dark:text-[#e6edf3] m-0 truncate">
-              {selectedModule?.label ?? "—"}
-            </h2>
+            <div className="flex items-center gap-1.5 mb-0.5">
+              {selectedModule?.groupLabel && (
+                <>
+                  <span className="text-[11px] text-gray-400 dark:text-[#484f58] truncate">
+                    {selectedModule.groupLabel}
+                  </span>
+                  <span className="text-[11px] text-gray-300 dark:text-[#30363d]">/</span>
+                </>
+              )}
+              <h2 className="text-sm font-semibold text-gray-800 dark:text-[#e6edf3] m-0 truncate">
+                {selectedModule?.label ?? "—"}
+              </h2>
+            </div>
             <p className="text-[11px] text-gray-400 dark:text-[#484f58] m-0">
-              GET /api/v1/modules/
+              GET /forms/pages/
               <code className="text-violet-600 dark:text-violet-400">
                 {selectedSlug}
               </code>
@@ -149,7 +188,7 @@ function DashboardDesignerInner() {
           )}
 
           <a
-            href={`/client?module=${selectedSlug}`}
+            href={`/forms/pages/${selectedSlug}`}
             target="_blank"
             rel="noreferrer"
           >

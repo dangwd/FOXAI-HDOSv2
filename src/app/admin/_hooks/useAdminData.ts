@@ -34,14 +34,44 @@ export function useAdminData(): AdminDataState {
       setLoading(true);
       setLoadError(null);
       try {
-        const [mods, schemas, provs, ops] = await Promise.all([
-          api.listModules(),
+        // Modules = nhóm (FormsModule), Pages = page trong mỗi nhóm
+        const formsModules = await api.listFormsModules();
+
+        // Load pages song song cho tất cả modules
+        const pagesByModule = await Promise.all(
+          formsModules.map((m) => api.listPages(m.code).catch(() => [])),
+        );
+
+        // Map sang AdminModule[] để sidebar/designer dùng tiếp
+        const adminModules: AdminModule[] = [];
+        formsModules.forEach((m, idx) => {
+          pagesByModule[idx].forEach((page, order) => {
+            adminModules.push({
+              id:                     page.id,
+              groupSlug:              m.code,
+              groupLabel:             m.name,
+              slug:                   `${m.code}/${page.code}`,
+              label:                  page.title,
+              icon:                   "",
+              description:            m.description ?? "",
+              sortOrder:              order,
+              requiredRoles:          null,
+              isActive:               page.status === "published",
+              isVisible:              true,
+              refreshIntervalSeconds: null,
+            });
+          });
+        });
+
+        if (cancelled) return;
+        setModules(adminModules);
+
+        const [schemas, provs, ops] = await Promise.all([
           api.listSchemas().catch(() => [] as WidgetSchemaEntry[]),
           api.listProviders().catch(() => [] as ProviderInfo[]),
           api.listOperations().catch(() => [] as OperationEntry[]),
         ]);
         if (cancelled) return;
-        setModules(mods);
         setCatalog(schemas);
         setProviders(provs);
         setOperations(ops);

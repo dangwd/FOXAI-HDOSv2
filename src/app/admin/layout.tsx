@@ -234,7 +234,6 @@ const MENU_ITEMS = [
   { href: "/admin/modules", label: "Quản lý Module", Icon: IconBoxes },
   { href: "/admin", label: "Thiết kế Báo cáo", Icon: IconPencil },
   { href: "/admin/menus", label: "Quản lý Menu BC", Icon: IconMenu },
-  { href: "/admin/forms", label: "DynamicForm Builder", Icon: IconForms },
   { href: "/admin/provider", label: "Quản trị Provider", Icon: IconSettings },
   { href: "/admin/operations", label: "Quản lý Operations", Icon: IconList },
   { href: "/admin/console", label: "Test Console", Icon: IconTerminal },
@@ -286,7 +285,8 @@ function AdminSidebar() {
             const isActive =
               item.href === "/admin"
                 ? pathname === "/admin"
-                : pathname === item.href || pathname.startsWith(item.href + "/");
+                : pathname === item.href ||
+                  pathname.startsWith(item.href + "/");
             const { Icon } = item;
             return (
               <li key={item.href}>
@@ -415,14 +415,14 @@ export default function AdminLayout({
         components: {
           Table: {
             // header sáng hơn body để tạo hierarchy, không hoà vào page background
-            headerBg:         dk ? "#1c2128" : "#f0f2f5",
-            headerColor:      dk ? "#cdd3de" : "#374151",
+            headerBg: dk ? "#1c2128" : "#f0f2f5",
+            headerColor: dk ? "#cdd3de" : "#374151",
             headerSplitColor: dk ? "#30363d" : "#d1d5db",
             // row
             rowHoverBg: dk ? "#21262d" : "rgba(124,58,237,0.04)",
             // border rõ hơn
             borderColor: dk ? "#30363d" : "#e2e8f0",
-            cellPaddingBlock:  8,
+            cellPaddingBlock: 8,
             cellPaddingInline: 12,
           },
           Drawer: {
@@ -476,7 +476,9 @@ export default function AdminLayout({
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <AdminTopBar />
           <App className="flex-1 min-h-0 flex flex-col">
-            <main className="flex-1 overflow-y-auto admin-main">{children}</main>
+            <main className="flex-1 overflow-y-auto admin-main">
+              {children}
+            </main>
           </App>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import type { AdminModule } from "@/infrastructure/http/adminApi";
 import { ICON_REGISTRY } from "../modules/_lib/icons";
+import { LayoutDashboard } from "lucide-react";
 
 export function ModuleRow({
   module,
@@ -10,7 +11,7 @@ export function ModuleRow({
   active: boolean;
   onClick: () => void;
 }) {
-  const LucideComp = ICON_REGISTRY[module.icon];
+  const LucideComp = module.icon ? ICON_REGISTRY[module.icon] : null;
   return (
     <button
       onClick={onClick}
@@ -20,13 +21,16 @@ export function ModuleRow({
           : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-100 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3] text-xs"
         }`}
     >
-      <span className="shrink-0 w-5 h-5 flex items-center justify-center">
+      <span className="shrink-0 w-5 h-5 flex items-center justify-center opacity-60">
         {LucideComp
           ? <LucideComp size={14} />
-          : <span className="text-[11px] font-bold leading-none">{module.icon?.slice(0, 2) || "?"}</span>
+          : <LayoutDashboard size={13} />
         }
       </span>
       <span className="flex-1 truncate">{module.label}</span>
+      {!module.isActive && (
+        <span className="shrink-0 text-[9px] text-gray-300 dark:text-[#30363d]">draft</span>
+      )}
     </button>
   );
 }

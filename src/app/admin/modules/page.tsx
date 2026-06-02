@@ -1,23 +1,51 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
-import { App, Alert, Button, Drawer, Form, Input, Space, Spin, Tabs, Tag } from "antd";
-import {
-  Plus, Search, FileText, LayoutDashboard, RefreshCw, Inbox, Layers, PenLine,
-} from "lucide-react";
-import { adminApi } from "@/infrastructure/http/adminApi";
 import type {
-  FormsModule, FormTemplateListItem, FormPageListItem,
+  FormPageListItem,
+  FormsModule,
+  FormTemplateListItem,
 } from "@/infrastructure/http/adminApi";
-import { ModuleIcon } from "./_components/ModuleIcon";
+import { adminApi } from "@/infrastructure/http/adminApi";
+import {
+  Alert,
+  App,
+  Button,
+  Drawer,
+  Form,
+  Input,
+  Space,
+  Spin,
+  Tabs,
+  Tag,
+} from "antd";
+import {
+  FileText,
+  Inbox,
+  Layers,
+  LayoutDashboard,
+  PenLine,
+  Plus,
+  RefreshCw,
+  Search,
+} from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import { ModuleFormDrawer } from "./_components/ModuleFormDrawer";
+import { ModuleIcon } from "./_components/ModuleIcon";
 import { useModuleManager } from "./_hooks/useModuleManager";
 import type { ModuleForm } from "./_lib/types";
 
 // ─── Color utils ──────────────────────────────────────────────────────────────
 
-const PALETTE = ["#1677ff", "#0ca678", "#722ed1", "#f5a623", "#e8475f", "#13c2c2", "#eb2f96"];
+const PALETTE = [
+  "#1677ff",
+  "#0ca678",
+  "#722ed1",
+  "#f5a623",
+  "#e8475f",
+  "#13c2c2",
+  "#eb2f96",
+];
 
 function codeColor(code: string): string {
   let h = 0;
@@ -27,22 +55,51 @@ function codeColor(code: string): string {
 
 function codeAbbr(code: string): string {
   const parts = code.split("-").filter(Boolean);
-  return parts.slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "??";
+  return (
+    parts
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("") || "??"
+  );
 }
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
 function StatusTag({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string; bg: string }> = {
-    active:    { label: "● Hoạt động", color: "#0ca678", bg: "rgba(12,166,120,.12)" },
-    inactive:  { label: "○ Tạm dừng",  color: "#8b949e", bg: "rgba(139,148,158,.12)" },
-    draft:     { label: "◎ Nháp",       color: "#f5a623", bg: "rgba(245,166,35,.12)"  },
-    published: { label: "● Published", color: "#0ca678", bg: "rgba(12,166,120,.12)"  },
-    archived:  { label: "○ Archived",  color: "#8b949e", bg: "rgba(139,148,158,.12)" },
+    active: {
+      label: "● Hoạt động",
+      color: "#0ca678",
+      bg: "rgba(12,166,120,.12)",
+    },
+    inactive: {
+      label: "○ Tạm dừng",
+      color: "#8b949e",
+      bg: "rgba(139,148,158,.12)",
+    },
+    draft: { label: "◎ Nháp", color: "#f5a623", bg: "rgba(245,166,35,.12)" },
+    published: {
+      label: "● Published",
+      color: "#0ca678",
+      bg: "rgba(12,166,120,.12)",
+    },
+    archived: {
+      label: "○ Archived",
+      color: "#8b949e",
+      bg: "rgba(139,148,158,.12)",
+    },
   };
   const s = map[status.toLowerCase()] ?? map.inactive;
   return (
-    <Tag style={{ color: s.color, background: s.bg, border: "none", fontWeight: 600, fontSize: 11 }}>
+    <Tag
+      style={{
+        color: s.color,
+        background: s.bg,
+        border: "none",
+        fontWeight: 600,
+        fontSize: 11,
+      }}
+    >
       {s.label}
     </Tag>
   );
@@ -51,13 +108,15 @@ function StatusTag({ status }: { status: string }) {
 // ─── Left panel: module card ──────────────────────────────────────────────────
 
 function ModuleCard({
-  module, selected, onClick,
+  module,
+  selected,
+  onClick,
 }: {
-  module:   FormsModule;
+  module: FormsModule;
   selected: boolean;
-  onClick:  () => void;
+  onClick: () => void;
 }) {
-  const color    = codeColor(module.code);
+  const color = codeColor(module.code);
   const isActive = module.status.toLowerCase() === "active";
 
   return (
@@ -69,14 +128,21 @@ function ModuleCard({
           : "hover:bg-gray-50 dark:hover:bg-[#161b22]"
       }`}
     >
-      <ModuleIcon icon={codeAbbr(module.code)} groupColor={color} iconSize={13} boxSize={30} />
+      <ModuleIcon
+        icon={codeAbbr(module.code)}
+        groupColor={color}
+        iconSize={13}
+        boxSize={30}
+      />
 
       <div className="flex-1 min-w-0">
-        <p className={`text-[13px] font-semibold m-0 truncate leading-snug ${
-          isActive
-            ? "text-gray-800 dark:text-[#e6edf3]"
-            : "text-gray-400 dark:text-[#484f58]"
-        }`}>
+        <p
+          className={`text-[13px] font-semibold m-0 truncate leading-snug ${
+            isActive
+              ? "text-gray-800 dark:text-[#e6edf3]"
+              : "text-gray-400 dark:text-[#484f58]"
+          }`}
+        >
           {module.name}
         </p>
         <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0 mt-0.5 font-mono truncate">
@@ -85,11 +151,13 @@ function ModuleCard({
       </div>
 
       <div className="flex flex-col items-end gap-0.5 shrink-0">
-        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-tight ${
-          isActive
-            ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
-            : "bg-gray-100 dark:bg-[#21262d] text-gray-400 dark:text-[#484f58]"
-        }`}>
+        <span
+          className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-tight ${
+            isActive
+              ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
+              : "bg-gray-100 dark:bg-[#21262d] text-gray-400 dark:text-[#484f58]"
+          }`}
+        >
           {isActive ? "Active" : "Inactive"}
         </span>
         <span className="text-[10px] text-gray-400 dark:text-[#484f58]">
@@ -103,28 +171,41 @@ function ModuleCard({
 // ─── Drawer: tạo Form ────────────────────────────────────────────────────────
 
 function CreateFormDrawer({
-  open, moduleCode, onClose, onCreated,
+  open,
+  moduleCode,
+  onClose,
+  onCreated,
 }: {
-  open:      boolean;
+  open: boolean;
   moduleCode: string;
-  onClose:   () => void;
+  onClose: () => void;
   onCreated: () => void;
 }) {
-  const { message }              = App.useApp();
-  const [key,         setKey]         = useState("");
-  const [name,        setName]        = useState("");
-  const [submitting,  setSubmitting]  = useState(false);
+  const { message } = App.useApp();
+  const [key, setKey] = useState("");
+  const [name, setName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  function reset() { setKey(""); setName(""); setSubmitError(null); }
+  function reset() {
+    setKey("");
+    setName("");
+    setSubmitError(null);
+  }
 
-  function handleClose() { reset(); onClose(); }
+  function handleClose() {
+    reset();
+    onClose();
+  }
 
   async function handleSubmit() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await adminApi.createForm(moduleCode, { key: key.trim(), name: name.trim() });
+      await adminApi.createForm(moduleCode, {
+        key: key.trim(),
+        name: name.trim(),
+      });
       message.success("Tạo form thành công");
       reset();
       onCreated();
@@ -132,7 +213,9 @@ function CreateFormDrawer({
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("409") || msg.toLowerCase().includes("conflict")) {
-        setSubmitError("Key này đã tồn tại trong module. Vui lòng chọn key khác.");
+        setSubmitError(
+          "Key này đã tồn tại trong module. Vui lòng chọn key khác.",
+        );
       } else {
         setSubmitError(msg);
       }
@@ -153,7 +236,12 @@ function CreateFormDrawer({
         <div className="flex justify-end">
           <Space>
             <Button onClick={handleClose}>Hủy</Button>
-            <Button type="primary" disabled={!canSubmit || submitting} loading={submitting} onClick={handleSubmit}>
+            <Button
+              type="primary"
+              disabled={!canSubmit || submitting}
+              loading={submitting}
+              onClick={handleSubmit}
+            >
               Tạo Form
             </Button>
           </Space>
@@ -161,7 +249,9 @@ function CreateFormDrawer({
       }
     >
       <Form layout="vertical" component="div">
-        {submitError && <Alert type="error" message={submitError} className="mb-4" showIcon />}
+        {submitError && (
+          <Alert type="error" message={submitError} className="mb-4" showIcon />
+        )}
 
         <Form.Item
           label="Key"
@@ -170,7 +260,9 @@ function CreateFormDrawer({
         >
           <Input
             value={key}
-            onChange={(e) => setKey(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
+            onChange={(e) =>
+              setKey(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))
+            }
             placeholder="vd: phieu-tiep-nhan"
             maxLength={100}
           />
@@ -192,28 +284,41 @@ function CreateFormDrawer({
 // ─── Drawer: tạo Page ────────────────────────────────────────────────────────
 
 function CreatePageDrawer({
-  open, moduleCode, onClose, onCreated,
+  open,
+  moduleCode,
+  onClose,
+  onCreated,
 }: {
-  open:      boolean;
+  open: boolean;
   moduleCode: string;
-  onClose:   () => void;
+  onClose: () => void;
   onCreated: () => void;
 }) {
-  const { message }              = App.useApp();
-  const [code,        setCode]        = useState("");
-  const [title,       setTitle]       = useState("");
-  const [submitting,  setSubmitting]  = useState(false);
+  const { message } = App.useApp();
+  const [code, setCode] = useState("");
+  const [title, setTitle] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  function reset() { setCode(""); setTitle(""); setSubmitError(null); }
+  function reset() {
+    setCode("");
+    setTitle("");
+    setSubmitError(null);
+  }
 
-  function handleClose() { reset(); onClose(); }
+  function handleClose() {
+    reset();
+    onClose();
+  }
 
   async function handleSubmit() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await adminApi.createPage(moduleCode, { code: code.trim(), title: title.trim() });
+      await adminApi.createPage(moduleCode, {
+        code: code.trim(),
+        title: title.trim(),
+      });
       message.success("Tạo page thành công");
       reset();
       onCreated();
@@ -221,7 +326,9 @@ function CreatePageDrawer({
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("409") || msg.toLowerCase().includes("conflict")) {
-        setSubmitError("Code này đã tồn tại trong module. Vui lòng chọn code khác.");
+        setSubmitError(
+          "Code này đã tồn tại trong module. Vui lòng chọn code khác.",
+        );
       } else {
         setSubmitError(msg);
       }
@@ -242,7 +349,12 @@ function CreatePageDrawer({
         <div className="flex justify-end">
           <Space>
             <Button onClick={handleClose}>Hủy</Button>
-            <Button type="primary" disabled={!canSubmit || submitting} loading={submitting} onClick={handleSubmit}>
+            <Button
+              type="primary"
+              disabled={!canSubmit || submitting}
+              loading={submitting}
+              onClick={handleSubmit}
+            >
               Tạo Page
             </Button>
           </Space>
@@ -250,7 +362,9 @@ function CreatePageDrawer({
       }
     >
       <Form layout="vertical" component="div">
-        {submitError && <Alert type="error" message={submitError} className="mb-4" showIcon />}
+        {submitError && (
+          <Alert type="error" message={submitError} className="mb-4" showIcon />
+        )}
 
         <Form.Item
           label="Code"
@@ -259,7 +373,9 @@ function CreatePageDrawer({
         >
           <Input
             value={code}
-            onChange={(e) => setCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
+            onChange={(e) =>
+              setCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))
+            }
             placeholder="vd: man-hinh-tiep-nhan"
             maxLength={100}
           />
@@ -295,10 +411,10 @@ function RowSkeleton() {
 // ─── Right panel: forms tab ───────────────────────────────────────────────────
 
 function FormsTab({ moduleCode }: { moduleCode: string }) {
-  const [forms,       setForms]       = useState<FormTemplateListItem[]>([]);
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState<string | null>(null);
-  const [drawerOpen,  setDrawerOpen]  = useState(false);
+  const [forms, setForms] = useState<FormTemplateListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -312,17 +428,31 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
     }
   }, [moduleCode]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-6 py-2.5 border-b border-gray-100 dark:border-[#21262d] shrink-0">
-        <span className="text-xs text-gray-500 dark:text-[#8b949e]">{forms.length} form</span>
+        <span className="text-xs text-gray-500 dark:text-[#8b949e]">
+          {forms.length} form
+        </span>
         <div className="flex items-center gap-2">
-          <Button size="small" icon={<RefreshCw size={11} />} onClick={load} loading={loading}>
+          <Button
+            size="small"
+            icon={<RefreshCw size={11} />}
+            onClick={load}
+            loading={loading}
+          >
             Làm mới
           </Button>
-          <Button size="small" type="primary" icon={<Plus size={11} />} onClick={() => setDrawerOpen(true)}>
+          <Button
+            size="small"
+            type="primary"
+            icon={<Plus size={11} />}
+            onClick={() => setDrawerOpen(true)}
+          >
             Tạo Form
           </Button>
         </div>
@@ -336,13 +466,21 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
 
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <>{[1, 2, 3].map((i) => <RowSkeleton key={i} />)}</>
+          <>
+            {[1, 2, 3].map((i) => (
+              <RowSkeleton key={i} />
+            ))}
+          </>
         ) : error ? (
-          <div className="p-6"><Alert type="error" message={error} showIcon /></div>
+          <div className="p-6">
+            <Alert type="error" message={error} showIcon />
+          </div>
         ) : forms.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-400 dark:text-[#484f58]">
             <FileText size={36} className="text-gray-300 dark:text-[#30363d]" />
-            <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">Chưa có form nào</p>
+            <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">
+              Chưa có form nào
+            </p>
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -365,9 +503,15 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
                       {f.key}
                     </code>
                   </td>
-                  <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-[#e6edf3]">{f.name}</td>
-                  <td className="px-4 py-2.5"><StatusTag status={f.status} /></td>
-                  <td className="px-4 py-2.5 text-right text-gray-400 dark:text-[#484f58]">v{f.version}</td>
+                  <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-[#e6edf3]">
+                    {f.name}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <StatusTag status={f.status} />
+                  </td>
+                  <td className="px-4 py-2.5 text-right text-gray-400 dark:text-[#484f58]">
+                    v{f.version}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -381,9 +525,9 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
 // ─── Right panel: pages tab ───────────────────────────────────────────────────
 
 function PagesTab({ moduleCode }: { moduleCode: string }) {
-  const [pages,      setPages]      = useState<FormPageListItem[]>([]);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState<string | null>(null);
+  const [pages, setPages] = useState<FormPageListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const load = useCallback(async () => {
@@ -398,17 +542,31 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
     }
   }, [moduleCode]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-6 py-2.5 border-b border-gray-100 dark:border-[#21262d] shrink-0">
-        <span className="text-xs text-gray-500 dark:text-[#8b949e]">{pages.length} page</span>
+        <span className="text-xs text-gray-500 dark:text-[#8b949e]">
+          {pages.length} page
+        </span>
         <div className="flex items-center gap-2">
-          <Button size="small" icon={<RefreshCw size={11} />} onClick={load} loading={loading}>
+          <Button
+            size="small"
+            icon={<RefreshCw size={11} />}
+            onClick={load}
+            loading={loading}
+          >
             Làm mới
           </Button>
-          <Button size="small" type="primary" icon={<Plus size={11} />} onClick={() => setDrawerOpen(true)}>
+          <Button
+            size="small"
+            type="primary"
+            icon={<Plus size={11} />}
+            onClick={() => setDrawerOpen(true)}
+          >
             Tạo Page
           </Button>
         </div>
@@ -422,13 +580,24 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
 
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <>{[1, 2].map((i) => <RowSkeleton key={i} />)}</>
+          <>
+            {[1, 2].map((i) => (
+              <RowSkeleton key={i} />
+            ))}
+          </>
         ) : error ? (
-          <div className="p-6"><Alert type="error" message={error} showIcon /></div>
+          <div className="p-6">
+            <Alert type="error" message={error} showIcon />
+          </div>
         ) : pages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-400 dark:text-[#484f58]">
-            <LayoutDashboard size={36} className="text-gray-300 dark:text-[#30363d]" />
-            <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">Chưa có page nào</p>
+            <LayoutDashboard
+              size={36}
+              className="text-gray-300 dark:text-[#30363d]"
+            />
+            <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">
+              Chưa có page nào
+            </p>
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -451,8 +620,12 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                       {p.code}
                     </code>
                   </td>
-                  <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-[#e6edf3]">{p.title}</td>
-                  <td className="px-4 py-2.5"><StatusTag status={p.status} /></td>
+                  <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-[#e6edf3]">
+                    {p.title}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <StatusTag status={p.status} />
+                  </td>
                   <td className="px-4 py-2.5 text-right">
                     <Link href={`/admin?slug=${moduleCode}`}>
                       <Button size="small" icon={<PenLine size={11} />}>
@@ -480,7 +653,12 @@ function ModuleDetail({ module }: { module: FormsModule }) {
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-100 dark:border-[#21262d] shrink-0">
         <div className="flex items-center gap-4">
-          <ModuleIcon icon={codeAbbr(module.code)} groupColor={color} iconSize={20} boxSize={46} />
+          <ModuleIcon
+            icon={codeAbbr(module.code)}
+            groupColor={color}
+            iconSize={20}
+            boxSize={46}
+          />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-base font-bold text-gray-900 dark:text-[#e6edf3] m-0 leading-snug">
@@ -566,11 +744,11 @@ function EmptyDetail() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ModuleManagerPage() {
-  const { message }   = App.useApp();
-  const manager       = useModuleManager();
-  const [selected,    setSelected]    = useState<string | null>(null);
-  const [drawerOpen,  setDrawerOpen]  = useState(false);
-  const [submitting,  setSubmitting]  = useState(false);
+  const { message } = App.useApp();
+  const manager = useModuleManager();
+  const [selected, setSelected] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Auto-select first module once list loads
@@ -580,7 +758,8 @@ export default function ModuleManagerPage() {
     }
   }, [manager.filtered, selected]);
 
-  const selectedModule = manager.filtered.find((m) => m.code === selected) ?? null;
+  const selectedModule =
+    manager.filtered.find((m) => m.code === selected) ?? null;
 
   async function handleSubmit(form: ModuleForm) {
     setSubmitting(true);
@@ -603,13 +782,12 @@ export default function ModuleManagerPage() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-
       {/* ── Top header ─────────────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-[#0d1117] border-b border-gray-200 dark:border-[#30363d] px-6 py-4 shrink-0">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-[#e6edf3] m-0">
-              DynamicForm Builder
+              Quản lý Modules
             </h1>
             <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0 mt-0.5">
               {manager.modules.length} module · DynamicFormService
@@ -618,7 +796,10 @@ export default function ModuleManagerPage() {
           <Button
             type="primary"
             icon={<Plus size={14} />}
-            onClick={() => { setSubmitError(null); setDrawerOpen(true); }}
+            onClick={() => {
+              setSubmitError(null);
+              setDrawerOpen(true);
+            }}
           >
             Tạo Module mới
           </Button>
@@ -639,7 +820,6 @@ export default function ModuleManagerPage() {
 
       {/* ── Split panel ────────────────────────────────────────────────────── */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-
         {/* Left: module list */}
         <div className="w-64 shrink-0 border-r border-gray-200 dark:border-[#30363d] flex flex-col bg-gray-50 dark:bg-[#010409]">
           {/* Search */}
@@ -662,7 +842,10 @@ export default function ModuleManagerPage() {
               </div>
             ) : manager.filtered.length === 0 ? (
               <div className="flex flex-col items-center py-10 gap-2 text-gray-400">
-                <Inbox size={26} className="text-gray-300 dark:text-[#30363d]" />
+                <Inbox
+                  size={26}
+                  className="text-gray-300 dark:text-[#30363d]"
+                />
                 <p className="text-xs m-0 text-center">
                   {manager.search.trim()
                     ? "Không tìm thấy module"
