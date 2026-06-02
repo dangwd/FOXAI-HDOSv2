@@ -24,6 +24,7 @@ import {
 } from "antd";
 import { Archive, Eye, Plus, Send, Settings } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -35,7 +36,7 @@ interface ApiModule {
   code: string;
   name: string;
   description?: string;
-  status: "Active" | "Inactive";
+  status: "active" | "inactive";
   formCount: number;
   createdAtUtc: string;
 }
@@ -45,7 +46,7 @@ interface FormTemplate {
   moduleCode: string;
   key: string;
   name: string;
-  status: "Draft" | "Published" | "Archived";
+  status: "draft" | "published" | "archived";
   version: number;
   fieldCount: number;
   createdAtUtc: string;
@@ -69,7 +70,7 @@ interface PageDef {
   moduleCode: string;
   code: string;
   title: string;
-  status: "Draft" | "Published" | "Archived";
+  status: "draft" | "published" | "archived";
   createdAtUtc: string;
 }
 
@@ -80,7 +81,7 @@ interface Submission {
   formVersion: number;
   status: string;
   submittedAt: string;
-  answers: Record<string, string>;
+  answers: { fieldKey: string; value: string | null }[];
 }
 
 // ─── API helpers ───────────────────────────────────────────────────────────────
@@ -107,12 +108,12 @@ const apiPut = <T,>(path: string, b?: unknown) => apiFetch<T>("put", path, b);
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const STATUS_COLOR: Record<string, string> = {
-  Active: "green",
-  Inactive: "red",
-  Draft: "orange",
-  Published: "green",
-  Archived: "default",
-  Submitted: "blue",
+  active: "green",
+  inactive: "red",
+  draft: "orange",
+  published: "green",
+  archived: "default",
+  submitted: "blue",
 };
 
 const FIELD_TYPES = [
@@ -132,39 +133,6 @@ const FIELD_TYPES = [
 
 // Select=5, MultiSelect=6, Radio=7 cần options
 const OPTION_FIELD_TYPES = new Set([5, 6, 7]);
-
-const LAYOUT_TEMPLATE = JSON.stringify(
-  {
-    rows: [
-      {
-        components: [
-          {
-            type: "FormSection",
-            span: 8,
-            formKey: "your-form-key",
-            title: "Tiêu đề form",
-          },
-          { type: "FormSection", span: 4, formKey: "your-other-form-key" },
-        ],
-      },
-      {
-        components: [
-          {
-            type: "TextBlock",
-            span: 12,
-            content: "Ghi chú phía dưới...",
-            align: "center",
-          },
-        ],
-      },
-      {
-        components: [{ type: "Divider", span: 12, label: "Xác nhận" }],
-      },
-    ],
-  },
-  null,
-  2,
-);
 
 // ─── Modules Tab ───────────────────────────────────────────────────────────────
 
@@ -460,7 +428,7 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
             width: 220,
             render: (_: unknown, r: FormTemplate) => (
               <Space>
-                {r.status !== "Archived" && (
+                {r.status !== "archived" && (
                   <Popconfirm
                     title={`Publish form "${r.name}"?`}
                     description="Form phải có ít nhất 1 field."
@@ -477,7 +445,7 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
                     </Button>
                   </Popconfirm>
                 )}
-                {r.status !== "Archived" && (
+                {r.status !== "archived" && (
                   <Popconfirm
                     title="Archive form này?"
                     description="Không thể khôi phục."
@@ -605,7 +573,7 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
   const [form] = Form.useForm();
 
   const loadSchema = useCallback(async (f: FormTemplate) => {
-    if (f.status === "Draft") {
+    if (f.status === "draft") {
       setFields([]);
       return;
     }
@@ -726,14 +694,14 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
           </div>
         )}
 
-        {selectedForm?.status === "Draft" && (
+        {selectedForm?.status === "draft" && (
           <Button type="primary" icon={<Plus size={14} />} onClick={openModal}>
             Thêm Field
           </Button>
         )}
       </div>
 
-      {selectedForm?.status === "Draft" && (
+      {selectedForm?.status === "draft" && (
         <Alert
           type="info"
           showIcon
@@ -742,7 +710,7 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
         />
       )}
 
-      {selectedForm?.status === "Archived" && (
+      {selectedForm?.status === "archived" && (
         <Alert
           type="warning"
           showIcon
@@ -759,7 +727,7 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
         locale={{
           emptyText: !selectedForm
             ? "Chọn module và form"
-            : selectedForm.status === "Draft"
+            : selectedForm.status === "draft"
               ? "Form đang Draft — schema chưa có. Thêm field rồi Publish để xem."
               : "Không có field nào",
         }}
@@ -989,13 +957,11 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
 
 function PagesTab({ modules }: { modules: ApiModule[] }) {
   const { message } = App.useApp();
+  const router = useRouter();
   const [moduleCode, setModuleCode] = useState<string | null>(null);
   const [pages, setPages] = useState<PageDef[]>([]);
   const [loading, setLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-  const [layoutOpen, setLayoutOpen] = useState(false);
-  const [selectedPage, setSelectedPage] = useState<PageDef | null>(null);
-  const [layoutJson, setLayoutJson] = useState(LAYOUT_TEMPLATE);
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
 
@@ -1031,27 +997,6 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
       setTick((t) => t + 1);
     } catch (e) {
       message.error(`Tạo thất bại: ${(e as Error).message}`);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSetLayout = async () => {
-    if (!selectedPage) return;
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(layoutJson);
-    } catch {
-      message.error("JSON không hợp lệ — kiểm tra lại cú pháp");
-      return;
-    }
-    setSaving(true);
-    try {
-      await apiPut(`/forms/admin/pages/${selectedPage.id}/layout`, parsed);
-      message.success("Cập nhật layout thành công");
-      setLayoutOpen(false);
-    } catch (e) {
-      message.error(`Cập nhật thất bại: ${(e as Error).message}`);
     } finally {
       setSaving(false);
     }
@@ -1131,15 +1076,11 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
                 <Button
                   size="small"
                   icon={<Settings size={12} />}
-                  onClick={() => {
-                    setSelectedPage(r);
-                    setLayoutJson(LAYOUT_TEMPLATE);
-                    setLayoutOpen(true);
-                  }}
+                  onClick={() => router.push(`/admin?slug=${moduleCode ?? ""}`)}
                 >
-                  Layout
+                  Thiết kế
                 </Button>
-                {r.status !== "Archived" && (
+                {r.status !== "archived" && (
                   <Popconfirm
                     title={`Publish page "${r.title}"?`}
                     description="Các form trong layout phải đã Published."
@@ -1211,34 +1152,6 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
         </Form>
       </Drawer>
 
-      {/* Layout editor drawer */}
-      <Drawer
-        title={`Layout Editor — ${selectedPage?.title}`}
-        open={layoutOpen}
-        onClose={() => setLayoutOpen(false)}
-        styles={{ wrapper: { width: 720 } }}
-        footer={
-          <div className="flex justify-end gap-2">
-            <Button onClick={() => setLayoutOpen(false)}>Hủy</Button>
-            <Button type="primary" loading={saving} onClick={handleSetLayout}>
-              Lưu Layout
-            </Button>
-          </div>
-        }
-      >
-        <Alert
-          className="mb-3"
-          type="info"
-          showIcon
-          title='Types: "FormSection" | "TextBlock" | "Divider". Span tổng mỗi row ≤ 12. formKey phải trỏ form đã Published cùng module.'
-        />
-        <TextArea
-          value={layoutJson}
-          onChange={(e) => setLayoutJson(e.target.value)}
-          rows={22}
-          style={{ fontFamily: "monospace", fontSize: 12 }}
-        />
-      </Drawer>
     </>
   );
 }
@@ -1427,9 +1340,9 @@ function SubmissionsTab({ modules }: { modules: ApiModule[] }) {
             <Table
               size="small"
               pagination={false}
-              dataSource={Object.entries(detail.answers).map(([k, v]) => ({
-                k,
-                v,
+              dataSource={detail.answers.map((a) => ({
+                k: a.fieldKey,
+                v: a.value ?? "—",
               }))}
               rowKey="k"
               columns={[

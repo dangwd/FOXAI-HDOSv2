@@ -454,9 +454,7 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                   <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-[#e6edf3]">{p.title}</td>
                   <td className="px-4 py-2.5"><StatusTag status={p.status} /></td>
                   <td className="px-4 py-2.5 text-right">
-                    <Link
-                      href={`/admin/menus?designPage=${p.id}&moduleCode=${encodeURIComponent(moduleCode)}&pageCode=${encodeURIComponent(p.code)}&pageTitle=${encodeURIComponent(p.title)}&pageStatus=${p.status}`}
-                    >
+                    <Link href={`/admin?slug=${moduleCode}`}>
                       <Button size="small" icon={<PenLine size={11} />}>
                         Thiết kế
                       </Button>

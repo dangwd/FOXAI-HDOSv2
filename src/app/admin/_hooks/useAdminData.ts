@@ -36,7 +36,7 @@ export function useAdminData(): AdminDataState {
       try {
         const [mods, schemas, provs, ops] = await Promise.all([
           api.listModules(),
-          api.listSchemas(),
+          api.listSchemas().catch(() => [] as WidgetSchemaEntry[]),
           api.listProviders().catch(() => [] as ProviderInfo[]),
           api.listOperations().catch(() => [] as OperationEntry[]),
         ]);
