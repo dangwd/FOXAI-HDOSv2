@@ -267,7 +267,7 @@ function AdminSidebar() {
             {isDark ? <IconSun /> : <IconMoon />}
           </button>
           <Link
-            href="/hdos"
+            href="/client"
             className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors"
             title="Quay lại HDOS"
           >
