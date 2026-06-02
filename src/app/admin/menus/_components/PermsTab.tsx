@@ -47,7 +47,11 @@ export function PermsTab({
       title: "Đối tượng",
       key:   "principal",
       render: (_, p) => {
-        const meta = TYPE_META[p.principalType];
+        const meta = TYPE_META[p.principalType as keyof typeof TYPE_META] ?? {
+          label: p.principalType,
+          color: "#6b7280",
+          bg: "rgba(107,114,128,0.1)",
+        };
         return (
           <Space size={8}>
             <Tag style={{ color: meta.color, background: meta.bg, border: "none", fontWeight: 600, margin: 0 }}>

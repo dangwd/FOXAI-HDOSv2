@@ -1,19 +1,17 @@
-import type { ModuleGroup } from "@/infrastructure/http/adminApi";
-
 export interface ModuleForm {
-  group:           ModuleGroup | "";
-  slug:            string;
-  label:           string;
-  icon:            string;
-  description:     string;
-  sortOrder:       number;
-  refreshInterval: string;
-  isActive:        boolean;
-  isVisible:       boolean;
-  roles:           string[];
+  groupId:                string;   // UUID from module_groups
+  slug:                   string;
+  label:                  string;
+  icon:                   string;
+  description:            string;
+  sortOrder:              number;
+  refreshIntervalSeconds: string;   // stored as string for <input>
+  isActive:               boolean;
+  isVisible:              boolean;
+  requiredRoles:          string[];
 }
 
 export const BLANK_FORM: ModuleForm = {
-  group: "", slug: "", label: "", icon: "", description: "",
-  sortOrder: 0, refreshInterval: "", isActive: true, isVisible: true, roles: [],
+  groupId: "", slug: "", label: "", icon: "", description: "",
+  sortOrder: 0, refreshIntervalSeconds: "", isActive: true, isVisible: true, requiredRoles: [],
 };

@@ -42,7 +42,7 @@ function LoginContent() {
           </p>
         </div>
 
-        {error && <Alert type="error" message={error} showIcon />}
+        {error && <Alert type="error" title={error} showIcon />}
 
         <Form
           layout="vertical"
