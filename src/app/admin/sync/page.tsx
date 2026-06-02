@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "antd";
 import { Loader2, RefreshCw, Wifi } from "lucide-react";
-import httpProvider, { getAdminToken } from "@/infrastructure/http/httpForProvider";
+import httpClient from "@/infrastructure/http/httpClient";
+import useAuthStore from "@/core/auth/authStore";
 import { poolSubscribe } from "@/core/sse/ssePool";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -221,14 +222,12 @@ function RegionProgressBar({ pct }: { pct: number }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DataSyncMonitor() {
-  // ── Auth — dùng admin KC token (httpForProvider), không phải main auth store ──
   const [sseUrl, setSseUrl] = useState<string | null>(null);
   useLayoutEffect(() => {
-    getAdminToken().then((token) => {
-      if (!token) return;
-      const base = process.env.NEXT_PUBLIC_SSE_URL ?? "/notifications/sse";
-      setSseUrl(`${base}?access_token=${encodeURIComponent(token)}`);
-    });
+    const token = useAuthStore.getState().accessToken;
+    if (!token) return;
+    const base = process.env.NEXT_PUBLIC_SSE_URL ?? "/notifications/sse";
+    setSseUrl(`${base}?access_token=${encodeURIComponent(token)}`);
   }, []);
 
   // ── Data ──────────────────────────────────────────────────────────────────
@@ -320,7 +319,7 @@ export default function DataSyncMonitor() {
     summaryPushRef.current = null;
     regionsPushRef.current = null;
 
-    const rawToken = await getAdminToken();
+    const rawToken = useAuthStore.getState().accessToken ?? null;
     const userId   = parseJwtClaim(rawToken, "sub") ?? "anonymous";
     const tenantId = parseJwtClaim(rawToken, "tenant_id") ?? userId;
 
@@ -336,8 +335,8 @@ export default function DataSyncMonitor() {
 
     try {
       await Promise.all([
-        httpProvider.post("/requests", makeBody(summaryId, SUMMARY_OP, {})),
-        httpProvider.post("/requests", makeBody(regionsId, REGIONS_OP, { period: "today" })),
+        httpClient.post("/requests", makeBody(summaryId, SUMMARY_OP, {})),
+        httpClient.post("/requests", makeBody(regionsId, REGIONS_OP, { period: "today" })),
       ]);
       setSummaryReqId(summaryId);
       setRegionsReqId(regionsId);
@@ -458,7 +457,7 @@ export default function DataSyncMonitor() {
     const tick = async () => {
       if (summaryPushRef.current) { stopSummaryPolling(); return; }
       try {
-        const res = await httpProvider.get<{ status: string; data?: unknown; error?: string }>(
+        const res = await httpClient.get<{ status: string; data?: unknown; error?: string }>(
           `/requests/${summaryReqId}/result`,
         );
         const d = res.data;
@@ -501,7 +500,7 @@ export default function DataSyncMonitor() {
     const tick = async () => {
       if (regionsPushRef.current) { stopRegionsPolling(); return; }
       try {
-        const res = await httpProvider.get<{ status: string; data?: unknown; error?: string }>(
+        const res = await httpClient.get<{ status: string; data?: unknown; error?: string }>(
           `/requests/${regionsReqId}/result`,
         );
         const d = res.data;

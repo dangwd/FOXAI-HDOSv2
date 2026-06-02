@@ -1,4 +1,4 @@
-import httpProvider from "./httpForProvider";
+import httpClient from "./httpClient";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -81,6 +81,18 @@ export interface WidgetSchemaEntry {
   description: string | null;
   icon: string | null;
   sortOrder: number;
+}
+
+// ── DynamicFormService module types ───────────────────────────────────────────
+
+export interface FormsModule {
+  id:           string;
+  code:         string;
+  name:         string;
+  description?: string;
+  status:       "active" | "inactive";
+  formCount:    number;
+  createdAtUtc: string;
 }
 
 export interface ProviderInfo {
@@ -181,43 +193,39 @@ export interface OperationApiRecord {
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
-// baseURL is already set to <NEXT_PUBLIC_API_URL>/api/v1 in httpProvider.
+// baseURL is already set to <NEXT_PUBLIC_API_URL>/api/v1 in httpClient.
 // All paths below are relative to that base (leading "/" stripped by Axios combineURLs).
 
 export const adminApi = {
 
-  // ── Modules ──────────────────────────────────────────────────────────────
+  // ── DynamicFormService modules ────────────────────────────────────────────
 
-  listModuleGroups: (): Promise<ModuleGroupRecord[]> =>
-    httpProvider.get<ModuleGroupRecord[]>("/admin/module-groups").then((r) => r.data),
+  listFormsModules: (): Promise<FormsModule[]> =>
+    httpClient.get<FormsModule[]>("/forms/modules").then((r) => r.data),
+
+  createFormsModule: (body: { code: string; name: string; description?: string }): Promise<FormsModule> =>
+    httpClient.post<FormsModule>("/forms/admin/modules", body).then((r) => r.data),
+
+  // ── Widget layout modules (canvas designer) ───────────────────────────────
 
   listModules: (): Promise<AdminModule[]> =>
-    httpProvider.get<AdminModule[]>("/admin/modules").then((r) => r.data),
-
-  createModule: (body: object): Promise<AdminModule> =>
-    httpProvider.post<AdminModule>("/admin/modules", body).then((r) => r.data),
-
-  updateModule: (slug: string, body: object): Promise<AdminModule> =>
-    httpProvider.put<AdminModule>(`/admin/modules/${slug}`, body).then((r) => r.data),
-
-  deleteModule: (slug: string): Promise<void> =>
-    httpProvider.delete(`/admin/modules/${slug}`).then(() => undefined),
+    httpClient.get<AdminModule[]>("/admin/modules").then((r) => r.data),
 
   listSchemas: (): Promise<WidgetSchemaEntry[]> =>
-    httpProvider.get<WidgetSchemaEntry[]>("/admin/schemas").then((r) => r.data),
+    httpClient.get<WidgetSchemaEntry[]>("/admin/schemas").then((r) => r.data),
 
   listProviders: (): Promise<ProviderInfo[]> =>
-    httpProvider.get<ProviderApiRecord[]>("/admin/providers").then((r) =>
+    httpClient.get<ProviderApiRecord[]>("/admin/providers").then((r) =>
       r.data.map((p) => ({ id: p.providerId, name: p.displayName })),
     ),
 
   listOperations: (): Promise<OperationEntry[]> =>
-    httpProvider.get<OperationApiRecord[]>("/admin/operations").then((r) =>
+    httpClient.get<OperationApiRecord[]>("/admin/operations").then((r) =>
       r.data.map((op) => ({ pattern: op.operationPattern, providerId: op.providerId ?? "" })),
     ),
 
   getModuleLayout: (slug: string): Promise<ModuleLayout> =>
-    httpProvider.get<ModuleLayout>(`/modules/${slug}/layout`).then((r) => r.data),
+    httpClient.get<ModuleLayout>(`/modules/${slug}/layout`).then((r) => r.data),
 
   // ── Tabs ─────────────────────────────────────────────────────────────────
 
@@ -225,15 +233,15 @@ export const adminApi = {
     slug: string,
     body: { slug: string; label: string; sortOrder: number },
   ): Promise<{ id: string; slug: string }> =>
-    httpProvider
+    httpClient
       .post<{ id: string; slug: string }>(`/admin/modules/${slug}/tabs`, body)
       .then((r) => r.data),
 
   updateTab: (slug: string, tabId: string, body: { label?: string; sortOrder?: number }): Promise<void> =>
-    httpProvider.put(`/admin/modules/${slug}/tabs/${tabId}`, body).then(() => undefined),
+    httpClient.put(`/admin/modules/${slug}/tabs/${tabId}`, body).then(() => undefined),
 
   deleteTab: (slug: string, tabId: string): Promise<void> =>
-    httpProvider.delete(`/admin/modules/${slug}/tabs/${tabId}`).then(() => undefined),
+    httpClient.delete(`/admin/modules/${slug}/tabs/${tabId}`).then(() => undefined),
 
   // ── Widgets ───────────────────────────────────────────────────────────────
 
@@ -242,93 +250,93 @@ export const adminApi = {
     tabId: string,
     widgets: UpsertWidgetRequest[],
   ): Promise<{ saved: number }> =>
-    httpProvider
+    httpClient
       .put<{ saved: number }>(`/admin/modules/${slug}/tabs/${tabId}/widgets`, widgets)
       .then((r) => r.data),
 
   // ── Provider CRUD ─────────────────────────────────────────────────────────
 
   listFullProviders: (): Promise<ProviderApiRecord[]> =>
-    httpProvider.get<ProviderApiRecord[]>("/admin/providers").then((r) => r.data),
+    httpClient.get<ProviderApiRecord[]>("/admin/providers").then((r) => r.data),
 
   createProvider: (body: object): Promise<ProviderApiRecord> =>
-    httpProvider.post<ProviderApiRecord>("/admin/providers", body).then((r) => r.data),
+    httpClient.post<ProviderApiRecord>("/admin/providers", body).then((r) => r.data),
 
   updateProvider: (providerId: string, body: object): Promise<ProviderApiRecord> =>
-    httpProvider.put<ProviderApiRecord>(`/admin/providers/${providerId}`, body).then((r) => r.data),
+    httpClient.put<ProviderApiRecord>(`/admin/providers/${providerId}`, body).then((r) => r.data),
 
   deleteProvider: (providerId: string): Promise<void> =>
-    httpProvider.delete(`/admin/providers/${providerId}`).then(() => undefined),
+    httpClient.delete(`/admin/providers/${providerId}`).then(() => undefined),
 
   // ── Operation CRUD ────────────────────────────────────────────────────────
 
   listFullOperations: (): Promise<OperationApiRecord[]> =>
-    httpProvider.get<OperationApiRecord[]>("/admin/operations").then((r) => r.data),
+    httpClient.get<OperationApiRecord[]>("/admin/operations").then((r) => r.data),
 
   createOperation: (body: object): Promise<OperationApiRecord> =>
-    httpProvider.post<OperationApiRecord>("/admin/operations", body).then((r) => r.data),
+    httpClient.post<OperationApiRecord>("/admin/operations", body).then((r) => r.data),
 
   updateOperation: (pattern: string, body: object): Promise<OperationApiRecord> =>
-    httpProvider.put<OperationApiRecord>(`/admin/operations/${encodeURIComponent(pattern)}`, body).then((r) => r.data),
+    httpClient.put<OperationApiRecord>(`/admin/operations/${encodeURIComponent(pattern)}`, body).then((r) => r.data),
 
   deleteOperation: (pattern: string): Promise<void> =>
-    httpProvider.delete(`/admin/operations/${encodeURIComponent(pattern)}`).then(() => undefined),
+    httpClient.delete(`/admin/operations/${encodeURIComponent(pattern)}`).then(() => undefined),
 
   // ── Menu CRUD ─────────────────────────────────────────────────────────────
 
   listAdminMenus: (): Promise<AdminMenuNode[]> =>
-    httpProvider.get<AdminMenuNode[]>("/admin/menus").then((r) => r.data),
+    httpClient.get<AdminMenuNode[]>("/admin/menus").then((r) => r.data),
 
   createMenu: (body: object): Promise<AdminMenuNode> =>
-    httpProvider.post<AdminMenuNode>("/admin/menus", body).then((r) => r.data),
+    httpClient.post<AdminMenuNode>("/admin/menus", body).then((r) => r.data),
 
   updateMenu: (id: string, body: object): Promise<void> =>
-    httpProvider.put(`/admin/menus/${id}`, body).then(() => undefined),
+    httpClient.put(`/admin/menus/${id}`, body).then(() => undefined),
 
   deleteMenu: (id: string): Promise<void> =>
-    httpProvider.delete(`/admin/menus/${id}`).then(() => undefined),
+    httpClient.delete(`/admin/menus/${id}`).then(() => undefined),
 
   // ── Screen CRUD ───────────────────────────────────────────────────────────
 
   listScreens: (menuId: string): Promise<AdminScreen[]> =>
-    httpProvider.get<AdminScreen[]>(`/admin/menus/${menuId}/screens`).then((r) => r.data),
+    httpClient.get<AdminScreen[]>(`/admin/menus/${menuId}/screens`).then((r) => r.data),
 
   createScreen: (menuId: string, body: object): Promise<AdminScreen> =>
-    httpProvider.post<AdminScreen>(`/admin/menus/${menuId}/screens`, body).then((r) => r.data),
+    httpClient.post<AdminScreen>(`/admin/menus/${menuId}/screens`, body).then((r) => r.data),
 
   updateScreen: (menuId: string, screenId: string, body: object): Promise<void> =>
-    httpProvider.put(`/admin/menus/${menuId}/screens/${screenId}`, body).then(() => undefined),
+    httpClient.put(`/admin/menus/${menuId}/screens/${screenId}`, body).then(() => undefined),
 
   deleteScreen: (menuId: string, screenId: string): Promise<void> =>
-    httpProvider.delete(`/admin/menus/${menuId}/screens/${screenId}`).then(() => undefined),
+    httpClient.delete(`/admin/menus/${menuId}/screens/${screenId}`).then(() => undefined),
 
   saveScreen: (
     menuId: string,
     screenId: string,
     body: object,
   ): Promise<{ id: string; savedAt: string }> =>
-    httpProvider
+    httpClient
       .put<{ id: string; savedAt: string }>(`/admin/menus/${menuId}/screens/${screenId}/save`, body)
       .then((r) => r.data),
 
   // ── Widget individual CRUD ────────────────────────────────────────────────
 
   listWidgets: (menuId: string, screenId: string): Promise<AdminWidgetDef[]> =>
-    httpProvider
+    httpClient
       .get<AdminWidgetDef[]>(`/admin/menus/${menuId}/screens/${screenId}/widgets`)
       .then((r) => r.data),
 
   // ── Permission CRUD ───────────────────────────────────────────────────────
 
   listPerms: (menuId: string): Promise<AdminPermission[]> =>
-    httpProvider.get<AdminPermission[]>(`/admin/menus/${menuId}/permissions`).then((r) => r.data),
+    httpClient.get<AdminPermission[]>(`/admin/menus/${menuId}/permissions`).then((r) => r.data),
 
   upsertPerm: (menuId: string, body: object): Promise<AdminPermission> =>
-    httpProvider.post<AdminPermission>(`/admin/menus/${menuId}/permissions`, body).then((r) => r.data),
+    httpClient.post<AdminPermission>(`/admin/menus/${menuId}/permissions`, body).then((r) => r.data),
 
   updatePerm: (menuId: string, permId: string, body: object): Promise<void> =>
-    httpProvider.put(`/admin/menus/${menuId}/permissions/${permId}`, body).then(() => undefined),
+    httpClient.put(`/admin/menus/${menuId}/permissions/${permId}`, body).then(() => undefined),
 
   deletePerm: (menuId: string, permId: string): Promise<void> =>
-    httpProvider.delete(`/admin/menus/${menuId}/permissions/${permId}`).then(() => undefined),
+    httpClient.delete(`/admin/menus/${menuId}/permissions/${permId}`).then(() => undefined),
 };

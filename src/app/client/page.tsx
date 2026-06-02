@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ModuleRenderer }  from "@/components/ModuleRenderer";
-import { getAdminToken } from "@/infrastructure/http/httpForProvider";
+import useAuthStore from "@/core/auth/authStore";
 import type { ModuleLayout } from "@/infrastructure/http/adminApi";
 
 const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
@@ -37,7 +37,7 @@ function HdosContent({ moduleId }: { moduleId: string }) {
     let cancelled = false;
 
     async function load() {
-      const token = await getAdminToken();
+      const token = useAuthStore.getState().accessToken;
       const authHeaders: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
       const modRes = await fetch(`/api/v1/modules/${moduleId}/layout`, { headers: authHeaders });

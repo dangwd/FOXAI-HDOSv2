@@ -1,79 +1,55 @@
 "use client";
 
-import type { AdminModule } from "@/infrastructure/http/adminApi";
 import { Alert, App, Button, Input } from "antd";
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { ModuleFormDrawer } from "./_components/ModuleFormDrawer";
 import { ModuleTable } from "./_components/ModuleTable";
 import { useModuleManager } from "./_hooks/useModuleManager";
-import { BLANK_FORM, type ModuleForm } from "./_lib/types";
-
-// ─── Drawer state ─────────────────────────────────────────────────────────────
-
-type DrawerState = { mode: "create" } | { mode: "edit"; target: AdminModule };
-
-function toForm(m: AdminModule, groups: { id: string; slug: string }[]): ModuleForm {
-  const resolvedGroupId = m.groupId ?? groups.find((g) => g.slug === m.groupSlug)?.id ?? "";
-  return {
-    groupId:                resolvedGroupId,
-    slug:                   m.slug,
-    label:                  m.label,
-    icon:                   m.icon,
-    description:            m.description,
-    sortOrder:              m.sortOrder,
-    refreshIntervalSeconds: m.refreshIntervalSeconds?.toString() ?? "",
-    isActive:               m.isActive ?? true,
-    isVisible:              m.isVisible ?? true,
-    requiredRoles:          m.requiredRoles ?? [],
-  };
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
+import type { ModuleForm } from "./_lib/types";
 
 export default function ModuleManagerPage() {
   const { message } = App.useApp();
   const manager = useModuleManager();
-  const [drawer, setDrawer] = useState<DrawerState | null>(null);
+  const [drawerOpen,   setDrawerOpen]   = useState(false);
+  const [submitting,   setSubmitting]   = useState(false);
+  const [submitError,  setSubmitError]  = useState<string | null>(null);
 
   async function handleSubmit(form: ModuleForm) {
-    if (!drawer) return;
+    setSubmitting(true);
+    setSubmitError(null);
     try {
-      if (drawer.mode === "create") await manager.create(form);
-      else await manager.update(drawer.target.id, form);
-      setDrawer(null);
-    } catch {
-      message.error("Thao tác thất bại. Vui lòng thử lại.");
+      await manager.create(form);
+      setDrawerOpen(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("409") || msg.toLowerCase().includes("conflict")) {
+        setSubmitError("Code này đã tồn tại. Vui lòng chọn code khác.");
+      } else {
+        setSubmitError(msg);
+        message.error("Tạo module thất bại. Vui lòng thử lại.");
+      }
+    } finally {
+      setSubmitting(false);
     }
   }
-
-  async function handleDelete(module: AdminModule) {
-    try {
-      await manager.remove(module.id);
-    } catch {
-      message.error("Xóa thất bại. Vui lòng thử lại.");
-    }
-  }
-
-  const drawerTitle   = drawer?.mode === "edit" ? `Sửa: ${drawer.target.label}` : "Tạo Module mới";
-  const drawerInitial = drawer?.mode === "edit" ? toForm(drawer.target, manager.groups) : BLANK_FORM;
 
   return (
     <div className="p-6">
-      {/* Page header */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-[#e6edf3] m-0">
-            Module Manager
+            Quản lý Module
           </h1>
           <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0 mt-0.5">
-            {manager.modules.length} module · config-driven layout
+            {manager.modules.length} module · DynamicFormService
           </p>
         </div>
         <Button
           type="primary"
           icon={<Plus size={14} />}
-          onClick={() => setDrawer({ mode: "create" })}
+          onClick={() => { setSubmitError(null); setDrawerOpen(true); }}
         >
           Tạo Module mới
         </Button>
@@ -84,7 +60,7 @@ export default function ModuleManagerPage() {
         <Alert
           type="error"
           showIcon
-          title="Không tải được danh sách module"
+          message="Không tải được danh sách module"
           description={manager.loadError}
           className="mb-4"
         />
@@ -96,7 +72,7 @@ export default function ModuleManagerPage() {
           prefix={<Search size={14} className="text-gray-400" />}
           value={manager.search}
           onChange={(e) => manager.setSearch(e.target.value)}
-          placeholder="Tìm theo tên, slug, mô tả..."
+          placeholder="Tìm theo code, tên, mô tả..."
           allowClear
           style={{ maxWidth: 400 }}
         />
@@ -104,23 +80,18 @@ export default function ModuleManagerPage() {
 
       {/* Table */}
       <ModuleTable
-        groups={manager.groups}
-        grouped={manager.grouped}
-        groupColor={manager.groupColor}
+        modules={manager.filtered}
         search={manager.search}
-        onEdit={(m) => setDrawer({ mode: "edit", target: m })}
-        onDelete={handleDelete}
-        onToggle={manager.toggleActive}
+        loading={manager.loading}
       />
 
-      {/* Drawer */}
+      {/* Create drawer */}
       <ModuleFormDrawer
-        open={drawer !== null}
-        title={drawerTitle}
-        initial={drawerInitial}
-        groups={manager.groups}
+        open={drawerOpen}
         onSubmit={handleSubmit}
-        onClose={() => setDrawer(null)}
+        onClose={() => setDrawerOpen(false)}
+        submitting={submitting}
+        submitError={submitError}
       />
     </div>
   );
