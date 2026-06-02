@@ -1,11 +1,9 @@
 "use client";
 
 import httpClient from "@/infrastructure/http/httpClient";
-import { Archive, Eye, Plus, Send, Settings } from "lucide-react";
 import {
   Alert,
   App,
-  Badge,
   Button,
   Col,
   Divider,
@@ -23,6 +21,7 @@ import {
   Tag,
   Typography,
 } from "antd";
+import { Archive, Eye, Plus, Send, Settings } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 const { Text } = Typography;
@@ -95,35 +94,39 @@ async function apiFetch<T>(
     data: T;
     error?: { message: string };
   }>(path, body);
-  if (!res.data.success) throw new Error(res.data.error?.message ?? "API error");
+  if (!res.data.success)
+    throw new Error(res.data.error?.message ?? "API error");
   return res.data.data;
 }
 
-const apiGet  = <T,>(path: string)              => apiFetch<T>("get",  path);
+const apiGet = <T,>(path: string) => apiFetch<T>("get", path);
 const apiPost = <T,>(path: string, b?: unknown) => apiFetch<T>("post", path, b);
-const apiPut  = <T,>(path: string, b?: unknown) => apiFetch<T>("put",  path, b);
+const apiPut = <T,>(path: string, b?: unknown) => apiFetch<T>("put", path, b);
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const STATUS_COLOR: Record<string, string> = {
-  Active: "green", Inactive: "red",
-  Draft: "orange", Published: "green", Archived: "default",
+  Active: "green",
+  Inactive: "red",
+  Draft: "orange",
+  Published: "green",
+  Archived: "default",
   Submitted: "blue",
 };
 
 const FIELD_TYPES = [
-  { label: "Text",        value: 0  },
-  { label: "Textarea",    value: 1  },
-  { label: "Number",      value: 2  },
-  { label: "Date",        value: 3  },
-  { label: "DateTime",    value: 4  },
-  { label: "Select",      value: 5  },
-  { label: "MultiSelect", value: 6  },
-  { label: "Radio",       value: 7  },
-  { label: "Checkbox",    value: 8  },
-  { label: "File",        value: 9  },
-  { label: "Signature",   value: 10 },
-  { label: "Section",     value: 11 },
+  { label: "Text", value: 0 },
+  { label: "Textarea", value: 1 },
+  { label: "Number", value: 2 },
+  { label: "Date", value: 3 },
+  { label: "DateTime", value: 4 },
+  { label: "Select", value: 5 },
+  { label: "MultiSelect", value: 6 },
+  { label: "Radio", value: 7 },
+  { label: "Checkbox", value: 8 },
+  { label: "File", value: 9 },
+  { label: "Signature", value: 10 },
+  { label: "Section", value: 11 },
 ];
 
 // Select=5, MultiSelect=6, Radio=7 cần options
@@ -134,19 +137,27 @@ const LAYOUT_TEMPLATE = JSON.stringify(
     rows: [
       {
         components: [
-          { type: "FormSection", span: 8, formKey: "your-form-key", title: "Tiêu đề form" },
+          {
+            type: "FormSection",
+            span: 8,
+            formKey: "your-form-key",
+            title: "Tiêu đề form",
+          },
           { type: "FormSection", span: 4, formKey: "your-other-form-key" },
         ],
       },
       {
         components: [
-          { type: "TextBlock", span: 12, content: "Ghi chú phía dưới...", align: "center" },
+          {
+            type: "TextBlock",
+            span: 12,
+            content: "Ghi chú phía dưới...",
+            align: "center",
+          },
         ],
       },
       {
-        components: [
-          { type: "Divider", span: 12, label: "Xác nhận" },
-        ],
+        components: [{ type: "Divider", span: 12, label: "Xác nhận" }],
       },
     ],
   },
@@ -190,7 +201,7 @@ function ModulesTab({ onLoaded }: { onLoaded: (ms: ApiModule[]) => void }) {
       message.success("Tạo module thành công");
       form.resetFields();
       setOpen(false);
-      setTick(t => t + 1);
+      setTick((t) => t + 1);
     } catch (e) {
       message.error(`Tạo thất bại: ${(e as Error).message}`);
     } finally {
@@ -204,7 +215,11 @@ function ModulesTab({ onLoaded }: { onLoaded: (ms: ApiModule[]) => void }) {
         <Text className="text-sm text-gray-500 dark:text-[#8b949e]">
           {modules.length} module
         </Text>
-        <Button type="primary" icon={<Plus size={14} />} onClick={() => setOpen(true)}>
+        <Button
+          type="primary"
+          icon={<Plus size={14} />}
+          onClick={() => setOpen(true)}
+        >
           Tạo Module
         </Button>
       </div>
@@ -217,21 +232,33 @@ function ModulesTab({ onLoaded }: { onLoaded: (ms: ApiModule[]) => void }) {
         pagination={false}
         columns={[
           {
-            title: "Code", dataIndex: "code", width: 160,
+            title: "Code",
+            dataIndex: "code",
+            width: 160,
             render: (v: string) => <Text code>{v}</Text>,
           },
           { title: "Tên", dataIndex: "name" },
           {
-            title: "Mô tả", dataIndex: "description",
+            title: "Mô tả",
+            dataIndex: "description",
             render: (v?: string) => v ?? <Text type="secondary">—</Text>,
           },
           {
-            title: "Trạng thái", dataIndex: "status", width: 110,
+            title: "Trạng thái",
+            dataIndex: "status",
+            width: 110,
             render: (v: string) => <Tag color={STATUS_COLOR[v]}>{v}</Tag>,
           },
-          { title: "Số form", dataIndex: "formCount", width: 80, align: "center" as const },
           {
-            title: "Tạo lúc", dataIndex: "createdAtUtc", width: 160,
+            title: "Số form",
+            dataIndex: "formCount",
+            width: 80,
+            align: "center" as const,
+          },
+          {
+            title: "Tạo lúc",
+            dataIndex: "createdAtUtc",
+            width: 160,
             render: (v: string) => new Date(v).toLocaleString("vi-VN"),
           },
         ]}
@@ -240,13 +267,25 @@ function ModulesTab({ onLoaded }: { onLoaded: (ms: ApiModule[]) => void }) {
       <Drawer
         title="Tạo Module mới"
         open={open}
-        onClose={() => { setOpen(false); form.resetFields(); }}
+        onClose={() => {
+          setOpen(false);
+          form.resetFields();
+        }}
         styles={{ wrapper: { width: 480 } }}
         destroyOnClose
         footer={
           <div className="flex justify-end gap-2">
-            <Button onClick={() => { setOpen(false); form.resetFields(); }}>Hủy</Button>
-            <Button type="primary" loading={saving} onClick={handleCreate}>Tạo</Button>
+            <Button
+              onClick={() => {
+                setOpen(false);
+                form.resetFields();
+              }}
+            >
+              Hủy
+            </Button>
+            <Button type="primary" loading={saving} onClick={handleCreate}>
+              Tạo
+            </Button>
           </div>
         }
       >
@@ -256,7 +295,10 @@ function ModulesTab({ onLoaded }: { onLoaded: (ms: ApiModule[]) => void }) {
             label="Code"
             rules={[
               { required: true, message: "Nhập code" },
-              { pattern: /^[a-z0-9-]+$/, message: "Chỉ dùng chữ thường, số, gạch ngang (-)" },
+              {
+                pattern: /^[a-z0-9-]+$/,
+                message: "Chỉ dùng chữ thường, số, gạch ngang (-)",
+              },
               { max: 50 },
             ]}
           >
@@ -270,7 +312,12 @@ function ModulesTab({ onLoaded }: { onLoaded: (ms: ApiModule[]) => void }) {
             <Input placeholder="vd: Tiếp nhận bệnh nhân" />
           </Form.Item>
           <Form.Item name="description" label="Mô tả">
-            <TextArea rows={3} maxLength={500} showCount placeholder="Mô tả ngắn về module" />
+            <TextArea
+              rows={3}
+              maxLength={500}
+              showCount
+              placeholder="Mô tả ngắn về module"
+            />
           </Form.Item>
         </Form>
       </Drawer>
@@ -293,7 +340,10 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
 
   useEffect(() => {
     (async () => {
-      if (!moduleCode) { setForms([]); return; }
+      if (!moduleCode) {
+        setForms([]);
+        return;
+      }
       setLoading(true);
       try {
         const data = await apiGet<FormTemplate[]>(`/forms/${moduleCode}`);
@@ -315,7 +365,7 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
       message.success("Tạo form thành công");
       form.resetFields();
       setOpen(false);
-      setTick(t => t + 1);
+      setTick((t) => t + 1);
     } catch (e) {
       message.error(`Tạo thất bại: ${(e as Error).message}`);
     } finally {
@@ -327,7 +377,7 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
     try {
       await apiPost(`/forms/admin/forms/${r.id}/publish`);
       message.success(`Đã publish "${r.name}"`);
-      setTick(t => t + 1);
+      setTick((t) => t + 1);
     } catch (e) {
       message.error(`Publish thất bại: ${(e as Error).message}`);
     }
@@ -337,7 +387,7 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
     try {
       await apiPost(`/forms/admin/forms/${r.id}/archive`);
       message.success(`Đã archive "${r.name}"`);
-      setTick(t => t + 1);
+      setTick((t) => t + 1);
     } catch (e) {
       message.error(`Archive thất bại: ${(e as Error).message}`);
     }
@@ -347,16 +397,25 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
     <>
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <Text className="text-sm text-gray-500 dark:text-[#8b949e]">Module:</Text>
+          <Text className="text-sm text-gray-500 dark:text-[#8b949e]">
+            Module:
+          </Text>
           <Select
             style={{ width: 280 }}
             placeholder="Chọn module"
             onChange={setModuleCode}
-            options={modules.map((m) => ({ label: `${m.name} (${m.code})`, value: m.code }))}
+            options={modules.map((m) => ({
+              label: `${m.name} (${m.code})`,
+              value: m.code,
+            }))}
           />
         </div>
         {moduleCode && (
-          <Button type="primary" icon={<Plus size={14} />} onClick={() => setOpen(true)}>
+          <Button
+            type="primary"
+            icon={<Plus size={14} />}
+            onClick={() => setOpen(true)}
+          >
             Tạo Form
           </Button>
         )}
@@ -367,21 +426,38 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
         loading={loading}
         dataSource={forms}
         rowKey="id"
-        locale={{ emptyText: moduleCode ? "Chưa có form" : "Chọn module để xem" }}
+        locale={{
+          emptyText: moduleCode ? "Chưa có form" : "Chọn module để xem",
+        }}
         columns={[
           {
-            title: "Key", dataIndex: "key", width: 180,
+            title: "Key",
+            dataIndex: "key",
+            width: 180,
             render: (v: string) => <Text code>{v}</Text>,
           },
           { title: "Tên form", dataIndex: "name" },
           {
-            title: "Trạng thái", dataIndex: "status", width: 110,
+            title: "Trạng thái",
+            dataIndex: "status",
+            width: 110,
             render: (v: string) => <Tag color={STATUS_COLOR[v]}>{v}</Tag>,
           },
-          { title: "Ver", dataIndex: "version", width: 60, align: "center" as const },
-          { title: "Fields", dataIndex: "fieldCount", width: 70, align: "center" as const },
           {
-            title: "Hành động", width: 220,
+            title: "Ver",
+            dataIndex: "version",
+            width: 60,
+            align: "center" as const,
+          },
+          {
+            title: "Fields",
+            dataIndex: "fieldCount",
+            width: 70,
+            align: "center" as const,
+          },
+          {
+            title: "Hành động",
+            width: 220,
             render: (_: unknown, r: FormTemplate) => (
               <Space>
                 {r.status !== "Archived" && (
@@ -392,7 +468,11 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
                     okText="Publish"
                     cancelText="Hủy"
                   >
-                    <Button size="small" type="primary" icon={<Send size={12} />}>
+                    <Button
+                      size="small"
+                      type="primary"
+                      icon={<Send size={12} />}
+                    >
                       Publish
                     </Button>
                   </Popconfirm>
@@ -420,13 +500,25 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
       <Drawer
         title={`Tạo Form — module "${moduleCode}"`}
         open={open}
-        onClose={() => { setOpen(false); form.resetFields(); }}
+        onClose={() => {
+          setOpen(false);
+          form.resetFields();
+        }}
         styles={{ wrapper: { width: 520 } }}
         destroyOnClose
         footer={
           <div className="flex justify-end gap-2">
-            <Button onClick={() => { setOpen(false); form.resetFields(); }}>Hủy</Button>
-            <Button type="primary" loading={saving} onClick={handleCreate}>Tạo</Button>
+            <Button
+              onClick={() => {
+                setOpen(false);
+                form.resetFields();
+              }}
+            >
+              Hủy
+            </Button>
+            <Button type="primary" loading={saving} onClick={handleCreate}>
+              Tạo
+            </Button>
           </div>
         }
       >
@@ -438,14 +530,21 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
                 label="Key"
                 rules={[
                   { required: true },
-                  { pattern: /^[a-z0-9-]+$/, message: "Chữ thường, số, gạch ngang" },
+                  {
+                    pattern: /^[a-z0-9-]+$/,
+                    message: "Chữ thường, số, gạch ngang",
+                  },
                 ]}
               >
                 <Input placeholder="vd: phieu-tiep-nhan" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="name" label="Tên form" rules={[{ required: true }]}>
+              <Form.Item
+                name="name"
+                label="Tên form"
+                rules={[{ required: true }]}
+              >
                 <Input placeholder="vd: Phiếu Tiếp Nhận" />
               </Form.Item>
             </Col>
@@ -499,12 +598,17 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fieldType, setFieldType] = useState<number>(0);
-  const [options, setOptions] = useState<{ label: string; value: string }[]>([]);
+  const [options, setOptions] = useState<{ label: string; value: string }[]>(
+    [],
+  );
   const [optInput, setOptInput] = useState({ label: "", value: "" });
   const [form] = Form.useForm();
 
   const loadSchema = useCallback(async (f: FormTemplate) => {
-    if (f.status === "Draft") { setFields([]); return; }
+    if (f.status === "Draft") {
+      setFields([]);
+      return;
+    }
     setLoading(true);
     try {
       const data = await apiGet<{ fields: FieldDef[] }>(
@@ -522,7 +626,10 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
     (async () => {
       setSelectedForm(null);
       setFields([]);
-      if (!moduleCode) { setAllForms([]); return; }
+      if (!moduleCode) {
+        setAllForms([]);
+        return;
+      }
       try {
         const data = await apiGet<FormTemplate[]>(`/forms/${moduleCode}`);
         setAllForms(data);
@@ -584,18 +691,25 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
     <>
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <Text className="text-sm text-gray-500 dark:text-[#8b949e]">Module:</Text>
+          <Text className="text-sm text-gray-500 dark:text-[#8b949e]">
+            Module:
+          </Text>
           <Select
             style={{ width: 240 }}
             placeholder="Chọn module"
             onChange={(v) => setModuleCode(v)}
-            options={modules.map((m) => ({ label: `${m.name} (${m.code})`, value: m.code }))}
+            options={modules.map((m) => ({
+              label: `${m.name} (${m.code})`,
+              value: m.code,
+            }))}
           />
         </div>
 
         {allForms.length > 0 && (
           <div className="flex items-center gap-2">
-            <Text className="text-sm text-gray-500 dark:text-[#8b949e]">Form:</Text>
+            <Text className="text-sm text-gray-500 dark:text-[#8b949e]">
+              Form:
+            </Text>
             <Select
               style={{ width: 300 }}
               placeholder="Chọn form"
@@ -646,24 +760,36 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
           emptyText: !selectedForm
             ? "Chọn module và form"
             : selectedForm.status === "Draft"
-            ? "Form đang Draft — schema chưa có. Thêm field rồi Publish để xem."
-            : "Không có field nào",
+              ? "Form đang Draft — schema chưa có. Thêm field rồi Publish để xem."
+              : "Không có field nào",
         }}
         columns={[
-          { title: "Order", dataIndex: "order", width: 70, align: "center" as const },
           {
-            title: "Key", dataIndex: "key", width: 160,
+            title: "Order",
+            dataIndex: "order",
+            width: 70,
+            align: "center" as const,
+          },
+          {
+            title: "Key",
+            dataIndex: "key",
+            width: 160,
             render: (v: string) => <Text code>{v}</Text>,
           },
           { title: "Label", dataIndex: "label" },
           {
-            title: "Type", dataIndex: "type", width: 110,
+            title: "Type",
+            dataIndex: "type",
+            width: 110,
             render: (v: string) => <Tag>{v}</Tag>,
           },
           { title: "Width", dataIndex: "width", width: 80 },
           {
-            title: "Bắt buộc", dataIndex: "required", width: 90,
-            render: (v: boolean) => v ? <Tag color="red">Có</Tag> : <Tag>Không</Tag>,
+            title: "Bắt buộc",
+            dataIndex: "required",
+            width: 90,
+            render: (v: boolean) =>
+              v ? <Tag color="red">Có</Tag> : <Tag>Không</Tag>,
           },
         ]}
       />
@@ -677,7 +803,9 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
         footer={
           <div className="flex justify-end gap-2">
             <Button onClick={() => setOpen(false)}>Hủy</Button>
-            <Button type="primary" loading={saving} onClick={handleAdd}>Thêm Field</Button>
+            <Button type="primary" loading={saving} onClick={handleAdd}>
+              Thêm Field
+            </Button>
           </div>
         }
       >
@@ -689,14 +817,21 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
                 label="Key"
                 rules={[
                   { required: true, message: "Nhập key" },
-                  { pattern: /^[a-z0-9_]+$/, message: "Chữ thường, số, gạch dưới (_)" },
+                  {
+                    pattern: /^[a-z0-9_]+$/,
+                    message: "Chữ thường, số, gạch dưới (_)",
+                  },
                 ]}
               >
                 <Input placeholder="vd: ho_ten" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="label" label="Label" rules={[{ required: true }]}>
+              <Form.Item
+                name="label"
+                label="Label"
+                rules={[{ required: true }]}
+              >
                 <Input placeholder="vd: Họ và tên" />
               </Form.Item>
             </Col>
@@ -704,31 +839,44 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
 
           <Row gutter={16}>
             <Col span={8}>
-              <Form.Item name="fieldType" label="Loại field" rules={[{ required: true }]}>
-                <Select
-                  options={FIELD_TYPES}
-                  onChange={setFieldType}
-                />
+              <Form.Item
+                name="fieldType"
+                label="Loại field"
+                rules={[{ required: true }]}
+              >
+                <Select options={FIELD_TYPES} onChange={setFieldType} />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="width" label="Width" rules={[{ required: true }]}>
+              <Form.Item
+                name="width"
+                label="Width"
+                rules={[{ required: true }]}
+              >
                 <Select
                   options={[
                     { label: "Full — 100%", value: 0 },
-                    { label: "Half — 50%",  value: 1 },
+                    { label: "Half — 50%", value: 1 },
                     { label: "Third — 33%", value: 2 },
                   ]}
                 />
               </Form.Item>
             </Col>
             <Col span={4}>
-              <Form.Item name="order" label="Order" rules={[{ required: true }]}>
+              <Form.Item
+                name="order"
+                label="Order"
+                rules={[{ required: true }]}
+              >
                 <InputNumber min={0} style={{ width: "100%" }} />
               </Form.Item>
             </Col>
             <Col span={4}>
-              <Form.Item name="required" label="Bắt buộc" valuePropName="checked">
+              <Form.Item
+                name="required"
+                label="Bắt buộc"
+                valuePropName="checked"
+              >
                 <Switch />
               </Form.Item>
             </Col>
@@ -752,12 +900,16 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
               <div className="border border-gray-200 dark:border-[#30363d] rounded-lg p-3 space-y-2">
                 {options.map((opt, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <Text code className="text-xs min-w-[80px]">{opt.value}</Text>
+                    <Text code className="text-xs min-w-[80px]">
+                      {opt.value}
+                    </Text>
                     <Text className="text-sm flex-1">{opt.label}</Text>
                     <Button
                       size="small"
                       danger
-                      onClick={() => setOptions((p) => p.filter((_, j) => j !== i))}
+                      onClick={() =>
+                        setOptions((p) => p.filter((_, j) => j !== i))
+                      }
                     >
                       Xóa
                     </Button>
@@ -769,12 +921,18 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
                     placeholder="value (vd: male)"
                     style={{ width: 140 }}
                     value={optInput.value}
-                    onChange={(e) => setOptInput((p) => ({ ...p, value: e.target.value }))}
+                    onChange={(e) =>
+                      setOptInput((p) => ({ ...p, value: e.target.value }))
+                    }
                     onPressEnter={() => {
-                      if (!optInput.value.trim() || !optInput.label.trim()) return;
+                      if (!optInput.value.trim() || !optInput.label.trim())
+                        return;
                       setOptions((p) => [
                         ...p,
-                        { value: optInput.value.trim(), label: optInput.label.trim() },
+                        {
+                          value: optInput.value.trim(),
+                          label: optInput.label.trim(),
+                        },
                       ]);
                       setOptInput({ label: "", value: "" });
                     }}
@@ -784,12 +942,18 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
                     placeholder="label (vd: Nam)"
                     style={{ width: 140 }}
                     value={optInput.label}
-                    onChange={(e) => setOptInput((p) => ({ ...p, label: e.target.value }))}
+                    onChange={(e) =>
+                      setOptInput((p) => ({ ...p, label: e.target.value }))
+                    }
                     onPressEnter={() => {
-                      if (!optInput.value.trim() || !optInput.label.trim()) return;
+                      if (!optInput.value.trim() || !optInput.label.trim())
+                        return;
                       setOptions((p) => [
                         ...p,
-                        { value: optInput.value.trim(), label: optInput.label.trim() },
+                        {
+                          value: optInput.value.trim(),
+                          label: optInput.label.trim(),
+                        },
                       ]);
                       setOptInput({ label: "", value: "" });
                     }}
@@ -797,10 +961,14 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
                   <Button
                     size="small"
                     onClick={() => {
-                      if (!optInput.value.trim() || !optInput.label.trim()) return;
+                      if (!optInput.value.trim() || !optInput.label.trim())
+                        return;
                       setOptions((p) => [
                         ...p,
-                        { value: optInput.value.trim(), label: optInput.label.trim() },
+                        {
+                          value: optInput.value.trim(),
+                          label: optInput.label.trim(),
+                        },
                       ]);
                       setOptInput({ label: "", value: "" });
                     }}
@@ -835,7 +1003,10 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
 
   useEffect(() => {
     (async () => {
-      if (!moduleCode) { setPages([]); return; }
+      if (!moduleCode) {
+        setPages([]);
+        return;
+      }
       setLoading(true);
       try {
         const data = await apiGet<PageDef[]>(`/forms/pages/${moduleCode}`);
@@ -857,7 +1028,7 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
       message.success("Tạo page thành công");
       form.resetFields();
       setCreateOpen(false);
-      setTick(t => t + 1);
+      setTick((t) => t + 1);
     } catch (e) {
       message.error(`Tạo thất bại: ${(e as Error).message}`);
     } finally {
@@ -890,7 +1061,7 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
     try {
       await apiPost(`/forms/admin/pages/${p.id}/publish`);
       message.success(`Đã publish page "${p.title}"`);
-      setTick(t => t + 1);
+      setTick((t) => t + 1);
     } catch (e) {
       message.error(`Publish thất bại: ${(e as Error).message}`);
     }
@@ -900,16 +1071,25 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
     <>
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <Text className="text-sm text-gray-500 dark:text-[#8b949e]">Module:</Text>
+          <Text className="text-sm text-gray-500 dark:text-[#8b949e]">
+            Module:
+          </Text>
           <Select
             style={{ width: 280 }}
             placeholder="Chọn module"
             onChange={setModuleCode}
-            options={modules.map((m) => ({ label: `${m.name} (${m.code})`, value: m.code }))}
+            options={modules.map((m) => ({
+              label: `${m.name} (${m.code})`,
+              value: m.code,
+            }))}
           />
         </div>
         {moduleCode && (
-          <Button type="primary" icon={<Plus size={14} />} onClick={() => setCreateOpen(true)}>
+          <Button
+            type="primary"
+            icon={<Plus size={14} />}
+            onClick={() => setCreateOpen(true)}
+          >
             Tạo Page
           </Button>
         )}
@@ -920,23 +1100,32 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
         loading={loading}
         dataSource={pages}
         rowKey="id"
-        locale={{ emptyText: moduleCode ? "Chưa có page" : "Chọn module để xem" }}
+        locale={{
+          emptyText: moduleCode ? "Chưa có page" : "Chọn module để xem",
+        }}
         columns={[
           {
-            title: "Code", dataIndex: "code", width: 200,
+            title: "Code",
+            dataIndex: "code",
+            width: 200,
             render: (v: string) => <Text code>{v}</Text>,
           },
           { title: "Tiêu đề", dataIndex: "title" },
           {
-            title: "Trạng thái", dataIndex: "status", width: 110,
+            title: "Trạng thái",
+            dataIndex: "status",
+            width: 110,
             render: (v: string) => <Tag color={STATUS_COLOR[v]}>{v}</Tag>,
           },
           {
-            title: "Tạo lúc", dataIndex: "createdAtUtc", width: 160,
+            title: "Tạo lúc",
+            dataIndex: "createdAtUtc",
+            width: 160,
             render: (v: string) => new Date(v).toLocaleString("vi-VN"),
           },
           {
-            title: "Hành động", width: 220,
+            title: "Hành động",
+            width: 220,
             render: (_: unknown, r: PageDef) => (
               <Space>
                 <Button
@@ -958,7 +1147,11 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
                     okText="Publish"
                     cancelText="Hủy"
                   >
-                    <Button size="small" type="primary" icon={<Send size={12} />}>
+                    <Button
+                      size="small"
+                      type="primary"
+                      icon={<Send size={12} />}
+                    >
                       Publish
                     </Button>
                   </Popconfirm>
@@ -973,13 +1166,25 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
       <Drawer
         title="Tạo Page mới"
         open={createOpen}
-        onClose={() => { setCreateOpen(false); form.resetFields(); }}
+        onClose={() => {
+          setCreateOpen(false);
+          form.resetFields();
+        }}
         styles={{ wrapper: { width: 480 } }}
         destroyOnClose
         footer={
           <div className="flex justify-end gap-2">
-            <Button onClick={() => { setCreateOpen(false); form.resetFields(); }}>Hủy</Button>
-            <Button type="primary" loading={saving} onClick={handleCreate}>Tạo</Button>
+            <Button
+              onClick={() => {
+                setCreateOpen(false);
+                form.resetFields();
+              }}
+            >
+              Hủy
+            </Button>
+            <Button type="primary" loading={saving} onClick={handleCreate}>
+              Tạo
+            </Button>
           </div>
         }
       >
@@ -989,7 +1194,10 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
             label="Code"
             rules={[
               { required: true },
-              { pattern: /^[a-z0-9-]+$/, message: "Chữ thường, số, gạch ngang" },
+              {
+                pattern: /^[a-z0-9-]+$/,
+                message: "Chữ thường, số, gạch ngang",
+              },
             ]}
           >
             <Input placeholder="vd: man-hinh-tiep-nhan" />
@@ -1012,7 +1220,9 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
         footer={
           <div className="flex justify-end gap-2">
             <Button onClick={() => setLayoutOpen(false)}>Hủy</Button>
-            <Button type="primary" loading={saving} onClick={handleSetLayout}>Lưu Layout</Button>
+            <Button type="primary" loading={saving} onClick={handleSetLayout}>
+              Lưu Layout
+            </Button>
           </div>
         }
       >
@@ -1080,17 +1290,24 @@ function SubmissionsTab({ modules }: { modules: ApiModule[] }) {
     <>
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <Text className="text-sm text-gray-500 dark:text-[#8b949e]">Module:</Text>
+          <Text className="text-sm text-gray-500 dark:text-[#8b949e]">
+            Module:
+          </Text>
           <Select
             style={{ width: 240 }}
             placeholder="Chọn module"
             onChange={(v) => setModuleCode(v)}
-            options={modules.map((m) => ({ label: `${m.name} (${m.code})`, value: m.code }))}
+            options={modules.map((m) => ({
+              label: `${m.name} (${m.code})`,
+              value: m.code,
+            }))}
           />
         </div>
         {forms.length > 0 && (
           <div className="flex items-center gap-2">
-            <Text className="text-sm text-gray-500 dark:text-[#8b949e]">Form:</Text>
+            <Text className="text-sm text-gray-500 dark:text-[#8b949e]">
+              Form:
+            </Text>
             <Select
               style={{ width: 280 }}
               placeholder="Chọn form"
@@ -1107,7 +1324,9 @@ function SubmissionsTab({ modules }: { modules: ApiModule[] }) {
           </div>
         )}
         {selectedFormId && (
-          <Button onClick={() => loadSubs(selectedFormId, page)}>Tải lại</Button>
+          <Button onClick={() => loadSubs(selectedFormId, page)}>
+            Tải lại
+          </Button>
         )}
       </div>
 
@@ -1116,7 +1335,11 @@ function SubmissionsTab({ modules }: { modules: ApiModule[] }) {
         loading={loading}
         dataSource={submissions}
         rowKey="id"
-        locale={{ emptyText: selectedFormId ? "Chưa có submission" : "Chọn module và form" }}
+        locale={{
+          emptyText: selectedFormId
+            ? "Chưa có submission"
+            : "Chọn module và form",
+        }}
         pagination={{
           current: page,
           pageSize: 20,
@@ -1127,7 +1350,9 @@ function SubmissionsTab({ modules }: { modules: ApiModule[] }) {
         }}
         columns={[
           {
-            title: "ID", dataIndex: "id", width: 220,
+            title: "ID",
+            dataIndex: "id",
+            width: 220,
             render: (v: string) => (
               <Text code style={{ fontSize: 11 }}>
                 {v.substring(0, 18)}…
@@ -1135,19 +1360,35 @@ function SubmissionsTab({ modules }: { modules: ApiModule[] }) {
             ),
           },
           { title: "Form", dataIndex: "formKey", width: 160 },
-          { title: "Ver", dataIndex: "formVersion", width: 60, align: "center" as const },
           {
-            title: "Trạng thái", dataIndex: "status", width: 100,
-            render: (v: string) => <Tag color={STATUS_COLOR[v] ?? "blue"}>{v}</Tag>,
+            title: "Ver",
+            dataIndex: "formVersion",
+            width: 60,
+            align: "center" as const,
           },
           {
-            title: "Gửi lúc", dataIndex: "submittedAt", width: 160,
+            title: "Trạng thái",
+            dataIndex: "status",
+            width: 100,
+            render: (v: string) => (
+              <Tag color={STATUS_COLOR[v] ?? "blue"}>{v}</Tag>
+            ),
+          },
+          {
+            title: "Gửi lúc",
+            dataIndex: "submittedAt",
+            width: 160,
             render: (v: string) => new Date(v).toLocaleString("vi-VN"),
           },
           {
-            title: "", width: 70,
+            title: "",
+            width: 70,
             render: (_: unknown, r: Submission) => (
-              <Button size="small" icon={<Eye size={12} />} onClick={() => setDetail(r)}>
+              <Button
+                size="small"
+                icon={<Eye size={12} />}
+                onClick={() => setDetail(r)}
+              >
                 Xem
               </Button>
             ),
@@ -1170,7 +1411,9 @@ function SubmissionsTab({ modules }: { modules: ApiModule[] }) {
           <div className="space-y-2 text-sm">
             <div>
               <Text type="secondary">ID: </Text>
-              <Text code style={{ fontSize: 11 }}>{detail.id}</Text>
+              <Text code style={{ fontSize: 11 }}>
+                {detail.id}
+              </Text>
             </div>
             <div>
               <Text type="secondary">Form: </Text>
@@ -1184,11 +1427,16 @@ function SubmissionsTab({ modules }: { modules: ApiModule[] }) {
             <Table
               size="small"
               pagination={false}
-              dataSource={Object.entries(detail.answers).map(([k, v]) => ({ k, v }))}
+              dataSource={Object.entries(detail.answers).map(([k, v]) => ({
+                k,
+                v,
+              }))}
               rowKey="k"
               columns={[
                 {
-                  title: "Field", dataIndex: "k", width: 180,
+                  title: "Field",
+                  dataIndex: "k",
+                  width: 180,
                   render: (v: string) => <Text code>{v}</Text>,
                 },
                 { title: "Giá trị", dataIndex: "v" },
@@ -1214,10 +1462,11 @@ export default function DynamicFormsPage() {
             DynamicForm Builder
           </h1>
           <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0 mt-0.5">
-            Quản lý Module · Form · Field · Page · Submission — DynamicFormService API v3
+            Quản lý Module · Form · Field · Page · Submission —
+            DynamicFormService API v3
           </p>
         </div>
-        <Badge count="API v3" style={{ backgroundColor: "#7c3aed" }} />
+        {/* <Badge count="API v3" style={{ backgroundColor: "#7c3aed" }} /> */}
       </div>
 
       <Tabs
@@ -1225,11 +1474,7 @@ export default function DynamicFormsPage() {
           {
             key: "modules",
             label: "Modules",
-            children: (
-              <ModulesTab
-                onLoaded={setModules}
-              />
-            ),
+            children: <ModulesTab onLoaded={setModules} />,
           },
           {
             key: "forms",
