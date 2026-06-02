@@ -1,10 +1,44 @@
 "use client";
 
+import { Suspense, useEffect, useRef } from "react";
+import { Spin } from "antd";
+import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutDashboard, Plus } from "lucide-react";
-import { useMenuManager } from "./_hooks/useMenuManager";
-import { TreeSidebar }    from "./_components/TreeSidebar";
-import { EditorPanel }    from "./_components/EditorPanel";
-import { ScreenDesigner } from "./_components/ScreenDesigner";
+import { useMenuManager }   from "./_hooks/useMenuManager";
+import { TreeSidebar }      from "./_components/TreeSidebar";
+import { EditorPanel }      from "./_components/EditorPanel";
+import { ScreenDesigner }   from "./_components/ScreenDesigner";
+import { FormPageDesigner } from "./_components/FormPageDesigner";
+
+// ─── Detects ?designPage= URL params and opens FormPage designer ──────────────
+
+function FormPageOpener({
+  onOpen,
+}: {
+  onOpen: (pageId: string, pageCode: string, pageTitle: string, pageStatus: string, moduleCode: string) => void;
+}) {
+  const params  = useSearchParams();
+  const router  = useRouter();
+  const handled = useRef(false);
+
+  useEffect(() => {
+    if (handled.current) return;
+    const designPage = params.get("designPage");
+    if (!designPage) return;
+
+    handled.current = true;
+    const moduleCode = params.get("moduleCode") ?? "";
+    const pageCode   = decodeURIComponent(params.get("pageCode") ?? "");
+    const pageTitle  = decodeURIComponent(params.get("pageTitle") ?? pageCode);
+    const pageStatus = params.get("pageStatus") ?? "draft";
+
+    router.replace("/admin/menus");
+    onOpen(designPage, pageCode, pageTitle, pageStatus, moduleCode);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return null;
+}
 
 function LoadingSkeleton() {
   return (
@@ -46,9 +80,32 @@ function LoadingSkeleton() {
 export default function MenusPage() {
   const m = useMenuManager();
 
+  // FormPage designer mode (loading)
+  if (m.formPageLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  // FormPage designer mode (loaded)
+  if (m.formPageDesigner) {
+    return (
+      <FormPageDesigner
+        state={m.formPageDesigner}
+        saving={m.saving}
+        onSave={m.saveFormPageDesigner}
+        onPublish={m.publishFormPageDesigner}
+        onClose={m.closeFormPageDesigner}
+        onChange={m.setFormPageDesigner}
+      />
+    );
+  }
+
   if (m.loading) return <LoadingSkeleton />;
 
-  // Designer fills the full content area — NOT as a fixed overlay
+  // Widget screen designer mode
   if (m.designer) {
     return (
       <ScreenDesigner
@@ -63,6 +120,9 @@ export default function MenusPage() {
 
   return (
     <div className="flex h-full overflow-hidden">
+      <Suspense fallback={null}>
+        <FormPageOpener onOpen={m.openFormPageDesigner} />
+      </Suspense>
       <TreeSidebar
         menus={m.menus}
         selId={m.selId}

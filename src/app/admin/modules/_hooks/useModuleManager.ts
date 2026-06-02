@@ -20,7 +20,7 @@ export function useModuleManager() {
       setLoadError(null);
       try {
         const data = await adminApi.listFormsModules();
-        setModules(Array.isArray(data) ? data : []);
+        setModules(data);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         setLoadError(msg);

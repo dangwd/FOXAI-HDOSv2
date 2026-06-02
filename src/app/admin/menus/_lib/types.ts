@@ -28,6 +28,40 @@ export interface DesignerState {
   palDs:            string;
 }
 
+// ─── FormPage designer types ──────────────────────────────────────────────────
+
+export type FormPageCompType = "FormSection" | "TextBlock" | "Divider";
+
+export interface FormPageComponent {
+  id:       string;
+  type:     FormPageCompType;
+  span:     number;
+  // FormSection
+  formKey?: string;
+  title?:   string;
+  // TextBlock
+  content?: string;
+  align?:   "left" | "center" | "right";
+}
+
+export interface FormPageRow {
+  id:         string;
+  components: FormPageComponent[];
+}
+
+export interface FormPageDesignerState {
+  pageId:         string;
+  pageCode:       string;
+  pageTitle:      string;
+  pageStatus:     string;
+  moduleCode:     string;
+  rows:           FormPageRow[];
+  selCompId:      string | null;
+  availableForms: { id: string; key: string; name: string }[];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface MenuUpsertForm {
   name:        string;
   slug:        string;

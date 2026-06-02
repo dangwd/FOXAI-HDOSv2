@@ -83,7 +83,7 @@ export interface WidgetSchemaEntry {
   sortOrder: number;
 }
 
-// ── DynamicFormService module types ───────────────────────────────────────────
+// ── DynamicFormService types ──────────────────────────────────────────────────
 
 export interface FormsModule {
   id:           string;
@@ -93,6 +93,23 @@ export interface FormsModule {
   status:       "active" | "inactive";
   formCount:    number;
   createdAtUtc: string;
+}
+
+export interface FormTemplateListItem {
+  id:         string;
+  moduleCode: string;
+  key:        string;
+  name:       string;
+  status:     "draft" | "published" | "archived";
+  version:    number;
+}
+
+export interface FormPageListItem {
+  id:         string;
+  moduleCode: string;
+  code:       string;
+  title:      string;
+  status:     "draft" | "published" | "archived";
 }
 
 export interface ProviderInfo {
@@ -193,18 +210,90 @@ export interface OperationApiRecord {
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
-// baseURL is already set to <NEXT_PUBLIC_API_URL>/api/v1 in httpClient.
-// All paths below are relative to that base (leading "/" stripped by Axios combineURLs).
+// baseURL is NEXT_PUBLIC_API_URL (no /api/v1 suffix).
+// DynamicFormService paths start with /forms/...
+// Other admin paths start with /admin/...
+
+// Helper: DynamicFormService wraps responses in { success, data }.
+// Falls back to treating the body directly if it's already the expected shape.
+function unwrapForms<T>(body: { success?: boolean; data?: T } | T): T {
+  if (body !== null && typeof body === "object" && "success" in (body as object)) {
+    return (body as { success: boolean; data: T }).data;
+  }
+  return body as T;
+}
 
 export const adminApi = {
 
   // ── DynamicFormService modules ────────────────────────────────────────────
 
   listFormsModules: (): Promise<FormsModule[]> =>
-    httpClient.get<FormsModule[]>("/forms/modules").then((r) => r.data),
+    httpClient
+      .get<{ success: boolean; data: FormsModule[] } | FormsModule[]>("/forms/modules")
+      .then((r) => unwrapForms<FormsModule[]>(r.data)),
 
   createFormsModule: (body: { code: string; name: string; description?: string }): Promise<FormsModule> =>
-    httpClient.post<FormsModule>("/forms/admin/modules", body).then((r) => r.data),
+    httpClient
+      .post<{ success: boolean; data: FormsModule } | FormsModule>("/forms/admin/modules", body)
+      .then((r) => unwrapForms<FormsModule>(r.data)),
+
+  listForms: (moduleCode: string): Promise<FormTemplateListItem[]> =>
+    httpClient
+      .get<{ success: boolean; data: FormTemplateListItem[] } | FormTemplateListItem[]>(`/forms/${moduleCode}`)
+      .then((r) => unwrapForms<FormTemplateListItem[]>(r.data)),
+
+  listPages: (moduleCode: string): Promise<FormPageListItem[]> =>
+    httpClient
+      .get<{ success: boolean; data: FormPageListItem[] } | FormPageListItem[]>(`/forms/pages/${moduleCode}`)
+      .then((r) => unwrapForms<FormPageListItem[]>(r.data)),
+
+  createForm: (
+    moduleCode: string,
+    body: { key: string; name: string; submitButtonLabel?: string; allowMultipleSubmissions?: boolean },
+  ): Promise<FormTemplateListItem> =>
+    httpClient
+      .post<{ success: boolean; data: FormTemplateListItem } | FormTemplateListItem>(
+        `/forms/admin/modules/${moduleCode}/forms`,
+        body,
+      )
+      .then((r) => unwrapForms<FormTemplateListItem>(r.data)),
+
+  createPage: (
+    moduleCode: string,
+    body: { code: string; title: string },
+  ): Promise<FormPageListItem> =>
+    httpClient
+      .post<{ success: boolean; data: FormPageListItem } | FormPageListItem>(
+        `/forms/admin/modules/${moduleCode}/pages`,
+        body,
+      )
+      .then((r) => unwrapForms<FormPageListItem>(r.data)),
+
+  // layout is arbitrary JSON object per api-v3 spec (FormPageLayout)
+  updatePageLayout: (pageId: string, layout: object): Promise<void> =>
+    httpClient
+      .put(`/forms/admin/pages/${pageId}/layout`, { layout })
+      .then(() => undefined),
+
+  publishPage: (pageId: string): Promise<void> =>
+    httpClient
+      .post(`/forms/admin/pages/${pageId}/publish`)
+      .then(() => undefined),
+
+  // Returns the hydrated page schema (Published pages only; 404 for Draft)
+  getPageSchema: (
+    moduleCode: string,
+    pageCode: string,
+  ): Promise<{ rows: unknown[] }> =>
+    httpClient
+      .get<{ success?: boolean; data?: { rows: unknown[] }; rows?: unknown[] }>(
+        `/forms/pages/${moduleCode}/${pageCode}`,
+      )
+      .then((r) => {
+        const body = r.data;
+        if (body && "success" in body && body.data) return body.data as { rows: unknown[] };
+        return body as { rows: unknown[] };
+      }),
 
   // ── Widget layout modules (canvas designer) ───────────────────────────────
 
