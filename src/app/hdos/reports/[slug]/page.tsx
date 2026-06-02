@@ -195,8 +195,20 @@ export default function ReportViewerPage() {
 
   useEffect(() => {
     if (!activeId) return;
-    loadScreen(activeId);
-  }, [activeId, loadScreen]);
+    (async () => {
+      setScreenState({ kind: "loading" });
+      try {
+        const token = await getAdminToken();
+        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await fetch(`/api/v1/reports/menus/${slug}/screens/${activeId}`, { headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const detail = (await res.json()) as ScreenDetail;
+        setScreenState({ kind: "ok", detail });
+      } catch (err) {
+        setScreenState({ kind: "error", message: err instanceof Error ? err.message : String(err) });
+      }
+    })();
+  }, [activeId, slug]);
 
   // ── Auto-refresh (timer mode) ──────────────────────────────────────────────
   useEffect(() => {

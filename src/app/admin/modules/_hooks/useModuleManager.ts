@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { App } from "antd";
 import { adminApi } from "@/infrastructure/http/adminApi";
 import type { AdminModule, ModuleGroupRecord } from "@/infrastructure/http/adminApi";
@@ -15,28 +15,30 @@ export function useModuleManager() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [search,   setSearch]   = useState("");
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    setLoadError(null);
-    try {
-      const [data, grps] = await Promise.all([
-        adminApi.listModules(),
-        adminApi.listModuleGroups(),
-      ]);
-      const mods = Array.isArray(data) ? data : (data as { items?: AdminModule[] }).items ?? [];
-      const groupList = Array.isArray(grps) ? grps : (grps as { items?: ModuleGroupRecord[] }).items ?? [];
-      setModules(mods);
-      setGroups(groupList.slice().sort((a, b) => a.sortOrder - b.sortOrder));
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setLoadError(msg);
-      console.error("[ModuleManager] load failed:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [tick, setTick] = useState(0);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const [data, grps] = await Promise.all([
+          adminApi.listModules(),
+          adminApi.listModuleGroups(),
+        ]);
+        const mods = Array.isArray(data) ? data : (data as { items?: AdminModule[] }).items ?? [];
+        const groupList = Array.isArray(grps) ? grps : (grps as { items?: ModuleGroupRecord[] }).items ?? [];
+        setModules(mods);
+        setGroups(groupList.slice().sort((a, b) => a.sortOrder - b.sortOrder));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setLoadError(msg);
+        console.error("[ModuleManager] load failed:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [tick]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -82,7 +84,7 @@ export function useModuleManager() {
       refreshIntervalSeconds: form.refreshIntervalSeconds ? Number(form.refreshIntervalSeconds) : null,
     };
     await adminApi.createModule(body);
-    await reload();
+    setTick(t => t + 1);
     message.success("Tạo module thành công");
   }
 
@@ -102,7 +104,7 @@ export function useModuleManager() {
       refreshIntervalSeconds: form.refreshIntervalSeconds ? Number(form.refreshIntervalSeconds) : null,
     };
     await adminApi.updateModule(target.slug, body);
-    await reload();
+    setTick(t => t + 1);
     message.success("Cập nhật module thành công");
   }
 
@@ -110,7 +112,7 @@ export function useModuleManager() {
     const target = modules.find((m) => m.id === id);
     if (!target) return;
     await adminApi.deleteModule(target.slug);
-    await reload();
+    setTick(t => t + 1);
     message.success("Đã xóa module");
   }
 
@@ -118,7 +120,7 @@ export function useModuleManager() {
     const target = modules.find((m) => m.id === id);
     if (!target) return;
     await adminApi.updateModule(target.slug, { isActive: !(target.isActive ?? true) });
-    await reload();
+    setTick(t => t + 1);
     message.success("Đã cập nhật trạng thái");
   }
 
