@@ -19,7 +19,7 @@ function ReportNavItem({
   router: ReturnType<typeof useRouter>;
   depth?: number;
 }) {
-  const href = `/hdos/reports/${node.slug}`;
+  const href = `/client/reports/${node.slug}`;
   const isActive = pathname === href;
   const indent = depth > 0 ? "pl-7" : "pl-3";
 
@@ -141,7 +141,7 @@ export default function Sidebar() {
                       <li key={item.id}>
                         <button
                           onClick={() =>
-                            router.push(item.href ?? `/hdos?module=${item.id}`)
+                            router.push(item.href ?? `/client?module=${item.id}`)
                           }
                           className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer
                             ${

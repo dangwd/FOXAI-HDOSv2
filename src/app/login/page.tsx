@@ -13,7 +13,7 @@ function LoginContent() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      const redirect = searchParams.get('redirect') ?? '/hdos';
+      const redirect = searchParams.get('redirect') ?? '/client';
       router.replace(redirect);
     }
   }, [isAuthenticated, router, searchParams]);

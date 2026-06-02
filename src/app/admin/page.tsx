@@ -129,7 +129,7 @@ function DashboardDesignerInner() {
           )}
 
           <a
-            href={`/hdos?module=${selectedSlug}`}
+            href={`/client?module=${selectedSlug}`}
             target="_blank"
             rel="noreferrer"
           >
