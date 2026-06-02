@@ -1,7 +1,7 @@
 "use client";
 
 import httpClient from "@/infrastructure/http/httpClient";
-import { Archive, Eye, FileText, Plus, Send, Settings } from "lucide-react";
+import { Archive, Eye, Plus, Send, Settings } from "lucide-react";
 import {
   Alert,
   App,
@@ -164,20 +164,22 @@ function ModulesTab({ onLoaded }: { onLoaded: (ms: ApiModule[]) => void }) {
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await apiGet<ApiModule[]>("/forms/modules");
-      setModules(data);
-      onLoaded(data);
-    } catch (e) {
-      message.error(`Không tải được module: ${(e as Error).message}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [message, onLoaded]);
+  const [tick, setTick] = useState(0);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await apiGet<ApiModule[]>("/forms/modules");
+        setModules(data);
+        onLoaded(data);
+      } catch (e) {
+        message.error(`Không tải được module: ${(e as Error).message}`);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [message, onLoaded, tick]);
 
   const handleCreate = async () => {
     const values = await form.validateFields().catch(() => null);
@@ -188,7 +190,7 @@ function ModulesTab({ onLoaded }: { onLoaded: (ms: ApiModule[]) => void }) {
       message.success("Tạo module thành công");
       form.resetFields();
       setOpen(false);
-      load();
+      setTick(t => t + 1);
     } catch (e) {
       message.error(`Tạo thất bại: ${(e as Error).message}`);
     } finally {
@@ -287,25 +289,22 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
 
-  const loadForms = useCallback(
-    async (code: string) => {
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    (async () => {
+      if (!moduleCode) { setForms([]); return; }
       setLoading(true);
       try {
-        const data = await apiGet<FormTemplate[]>(`/forms/${code}`);
+        const data = await apiGet<FormTemplate[]>(`/forms/${moduleCode}`);
         setForms(data);
       } catch (e) {
         message.error(`Không tải được form: ${(e as Error).message}`);
       } finally {
         setLoading(false);
       }
-    },
-    [message],
-  );
-
-  useEffect(() => {
-    if (moduleCode) loadForms(moduleCode);
-    else setForms([]);
-  }, [moduleCode, loadForms]);
+    })();
+  }, [moduleCode, message, tick]);
 
   const handleCreate = async () => {
     const values = await form.validateFields().catch(() => null);
@@ -316,7 +315,7 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
       message.success("Tạo form thành công");
       form.resetFields();
       setOpen(false);
-      loadForms(moduleCode);
+      setTick(t => t + 1);
     } catch (e) {
       message.error(`Tạo thất bại: ${(e as Error).message}`);
     } finally {
@@ -328,7 +327,7 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
     try {
       await apiPost(`/forms/admin/forms/${r.id}/publish`);
       message.success(`Đã publish "${r.name}"`);
-      if (moduleCode) loadForms(moduleCode);
+      setTick(t => t + 1);
     } catch (e) {
       message.error(`Publish thất bại: ${(e as Error).message}`);
     }
@@ -338,7 +337,7 @@ function FormsTab({ modules }: { modules: ApiModule[] }) {
     try {
       await apiPost(`/forms/admin/forms/${r.id}/archive`);
       message.success(`Đã archive "${r.name}"`);
-      if (moduleCode) loadForms(moduleCode);
+      setTick(t => t + 1);
     } catch (e) {
       message.error(`Archive thất bại: ${(e as Error).message}`);
     }
@@ -504,15 +503,6 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
   const [optInput, setOptInput] = useState({ label: "", value: "" });
   const [form] = Form.useForm();
 
-  const loadForms = useCallback(async (code: string) => {
-    try {
-      const data = await apiGet<FormTemplate[]>(`/forms/${code}`);
-      setAllForms(data);
-    } catch {
-      setAllForms([]);
-    }
-  }, []);
-
   const loadSchema = useCallback(async (f: FormTemplate) => {
     if (f.status === "Draft") { setFields([]); return; }
     setLoading(true);
@@ -529,16 +519,18 @@ function FieldsTab({ modules }: { modules: ApiModule[] }) {
   }, []);
 
   useEffect(() => {
-    if (moduleCode) {
-      loadForms(moduleCode);
+    (async () => {
       setSelectedForm(null);
       setFields([]);
-    } else {
-      setAllForms([]);
-      setSelectedForm(null);
-      setFields([]);
-    }
-  }, [moduleCode, loadForms]);
+      if (!moduleCode) { setAllForms([]); return; }
+      try {
+        const data = await apiGet<FormTemplate[]>(`/forms/${moduleCode}`);
+        setAllForms(data);
+      } catch {
+        setAllForms([]);
+      }
+    })();
+  }, [moduleCode]);
 
   const openModal = () => {
     form.resetFields();
@@ -839,25 +831,22 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
 
-  const loadPages = useCallback(
-    async (code: string) => {
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    (async () => {
+      if (!moduleCode) { setPages([]); return; }
       setLoading(true);
       try {
-        const data = await apiGet<PageDef[]>(`/forms/pages/${code}`);
+        const data = await apiGet<PageDef[]>(`/forms/pages/${moduleCode}`);
         setPages(data);
       } catch (e) {
         message.error(`Không tải được page: ${(e as Error).message}`);
       } finally {
         setLoading(false);
       }
-    },
-    [message],
-  );
-
-  useEffect(() => {
-    if (moduleCode) loadPages(moduleCode);
-    else setPages([]);
-  }, [moduleCode, loadPages]);
+    })();
+  }, [moduleCode, message, tick]);
 
   const handleCreate = async () => {
     const values = await form.validateFields().catch(() => null);
@@ -868,7 +857,7 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
       message.success("Tạo page thành công");
       form.resetFields();
       setCreateOpen(false);
-      loadPages(moduleCode);
+      setTick(t => t + 1);
     } catch (e) {
       message.error(`Tạo thất bại: ${(e as Error).message}`);
     } finally {
@@ -901,7 +890,7 @@ function PagesTab({ modules }: { modules: ApiModule[] }) {
     try {
       await apiPost(`/forms/admin/pages/${p.id}/publish`);
       message.success(`Đã publish page "${p.title}"`);
-      if (moduleCode) loadPages(moduleCode);
+      setTick(t => t + 1);
     } catch (e) {
       message.error(`Publish thất bại: ${(e as Error).message}`);
     }
@@ -1056,15 +1045,6 @@ function SubmissionsTab({ modules }: { modules: ApiModule[] }) {
   const [page, setPage] = useState(1);
   const [detail, setDetail] = useState<Submission | null>(null);
 
-  const loadForms = useCallback(async (code: string) => {
-    try {
-      const data = await apiGet<FormTemplate[]>(`/forms/${code}`);
-      setForms(data);
-    } catch {
-      setForms([]);
-    }
-  }, []);
-
   const loadSubs = useCallback(
     async (formId: string, p = 1) => {
       setLoading(true);
@@ -1083,12 +1063,18 @@ function SubmissionsTab({ modules }: { modules: ApiModule[] }) {
   );
 
   useEffect(() => {
-    if (moduleCode) {
-      loadForms(moduleCode);
+    (async () => {
       setSelectedFormId(null);
       setSubmissions([]);
-    }
-  }, [moduleCode, loadForms]);
+      if (!moduleCode) return;
+      try {
+        const data = await apiGet<FormTemplate[]>(`/forms/${moduleCode}`);
+        setForms(data);
+      } catch {
+        setForms([]);
+      }
+    })();
+  }, [moduleCode]);
 
   return (
     <>
