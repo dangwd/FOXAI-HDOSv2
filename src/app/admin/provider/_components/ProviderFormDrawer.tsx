@@ -177,7 +177,7 @@ export function ProviderFormDrawer({
               <Alert
                 type="warning"
                 showIcon
-                message="Sao chép và lưu ngay — sẽ không hiển thị lại sau khi tạo."
+                title="Sao chép và lưu ngay — sẽ không hiển thị lại sau khi tạo."
                 className="mt-2"
                 banner
               />

@@ -33,7 +33,7 @@ function ScreenCard({
   onDesign: () => void;
   onDelete: () => void;
 }) {
-  const status = STATUS_META[screen.status];
+  const status = STATUS_META[screen.status as keyof typeof STATUS_META] ?? STATUS_META.draft;
 
   return (
     <div className="group relative flex flex-col rounded-xl border border-gray-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] overflow-hidden hover:border-violet-300 dark:hover:border-violet-700/60 hover:shadow-md transition-all">

@@ -1,22 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import type { ModuleGroup } from "@/infrastructure/http/adminApi";
 import { ICON_REGISTRY, formatIconName } from "../_lib/icons";
-import { ICON_BG } from "../_lib/constants";
 import { IconPickerModal } from "./IconPickerModal";
 
 export function IconPickerField({
   value,
-  group,
+  groupColor = "#8b949e",
   onChange,
 }: {
-  value: string;
-  group: ModuleGroup | "";
-  onChange: (name: string) => void;
+  value:       string;
+  groupColor?: string;
+  onChange:    (name: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const bg = ICON_BG[group || "dieu-hanh"] ?? "#8b949e";
   const LucideComp = ICON_REGISTRY[value];
 
   return (
@@ -28,7 +25,7 @@ export function IconPickerField({
       >
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-[11px] font-bold shrink-0"
-          style={{ background: bg }}
+          style={{ background: groupColor }}
         >
           {LucideComp
             ? <LucideComp size={16} />

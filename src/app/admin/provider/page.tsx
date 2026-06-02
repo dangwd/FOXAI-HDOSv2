@@ -1,7 +1,7 @@
 "use client";
 
 import { App, Button, Input, Table, Tabs, Tag } from "antd";
-import { Key, Plus, Search } from "lucide-react";
+import { Key, Plus, Search, ShieldOff } from "lucide-react";
 import { useState } from "react";
 import { CredentialsModal } from "./_components/CredentialsModal";
 import { OperationsTab } from "./_components/OperationsTab";
@@ -87,6 +87,16 @@ function CredentialsTab({
       rowKey="id"
       size="small"
       pagination={false}
+      locale={{
+        emptyText: (
+          <div className="flex flex-col items-center gap-2 py-10">
+            <ShieldOff size={32} className="text-gray-200 dark:text-[#21262d]" />
+            <span className="text-sm text-gray-400 dark:text-[#484f58]">
+              Chưa có provider nào để quản lý credentials
+            </span>
+          </div>
+        ),
+      }}
       columns={[
         {
           title: "Provider",

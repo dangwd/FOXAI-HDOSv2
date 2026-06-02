@@ -1,9 +1,8 @@
 "use client";
 
-import { App, Button, Input, Tabs, Tag } from "antd";
-import { Plus, RefreshCw, X } from "lucide-react";
+import { App, Button, Input, Tag } from "antd";
+import { Database, Plus, RefreshCw, X } from "lucide-react";
 import { useState } from "react";
-import { OperationsTab } from "../provider/_components/OperationsTab";
 import { useProviderManager } from "../provider/_hooks/useProviderManager";
 import { STATUS_META } from "../provider/_lib/constants";
 import type { Provider, ProviderForm } from "../provider/_lib/types";
@@ -39,14 +38,13 @@ function ProviderCard({
   saving: boolean;
   onSave: (id: string, ops: string[]) => Promise<void>;
 }) {
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing]   = useState(false);
   const [draftOps, setDraftOps] = useState<string[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput]       = useState("");
 
-  // When not editing, ops are always from props; draft only lives during an edit session
-  const ops = editing ? draftOps : provider.operations;
-
+  const ops        = editing ? draftOps : provider.operations;
   const statusMeta = STATUS_META[provider.status];
+  const isDirty    = editing && JSON.stringify(draftOps) !== JSON.stringify(provider.operations);
 
   function startEdit() {
     setDraftOps(provider.operations);
@@ -55,8 +53,8 @@ function ProviderCard({
 
   function handleAdd() {
     const pattern = input.trim();
-    if (!pattern) return;
-    if (!draftOps.includes(pattern)) setDraftOps((prev) => [...prev, pattern]);
+    if (!pattern || draftOps.includes(pattern)) return;
+    setDraftOps((prev) => [...prev, pattern]);
     setInput("");
   }
 
@@ -69,7 +67,7 @@ function ProviderCard({
       await onSave(provider.id, draftOps);
       setEditing(false);
     } catch {
-      // error already reported by caller
+      // error reported by caller
     }
   }
 
@@ -79,84 +77,107 @@ function ProviderCard({
   }
 
   return (
-    <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-[#30363d] rounded-xl p-4 space-y-3">
+    <div
+      className={`bg-white dark:bg-[#161b22] rounded-xl border transition-all ${
+        editing
+          ? "border-violet-300 dark:border-violet-700 shadow-sm shadow-violet-100 dark:shadow-none"
+          : "border-gray-200 dark:border-[#30363d]"
+      }`}
+    >
       {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-[14px] text-gray-900 dark:text-[#e6edf3] leading-snug">
-              {provider.displayName}
-            </span>
-            <Tag
-              style={{
-                color: statusMeta.color,
-                background: statusMeta.bg,
-                border: "none",
-                fontWeight: 600,
-                fontSize: 11,
-                margin: 0,
-                lineHeight: "18px",
-              }}
-            >
-              {provider.status}
-            </Tag>
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span
+            className="w-2 h-2 rounded-full shrink-0 mt-px"
+            style={{ background: statusMeta.color }}
+          />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-sm text-gray-900 dark:text-[#e6edf3]">
+                {provider.displayName}
+              </span>
+              <Tag
+                style={{
+                  color: statusMeta.color,
+                  background: statusMeta.bg,
+                  border: "none",
+                  fontWeight: 600,
+                  fontSize: 10,
+                  margin: 0,
+                  lineHeight: "17px",
+                  padding: "0 6px",
+                }}
+              >
+                {statusMeta.label}
+              </Tag>
+            </div>
+            <code className="text-[11px] text-gray-400 dark:text-[#8b949e]">
+              {provider.providerId}
+            </code>
           </div>
-          <code className="text-[11px] text-gray-400 dark:text-[#8b949e]">
-            {provider.providerId}
-          </code>
         </div>
 
-        {!editing && (
-          <Button size="small" onClick={startEdit}>
-            Chỉnh sửa
-          </Button>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <span className="text-[11px] font-medium text-gray-400 dark:text-[#484f58] tabular-nums">
+            {ops.length} op{ops.length !== 1 ? "s" : ""}
+          </span>
+          {!editing && (
+            <Button size="small" onClick={startEdit}>
+              Chỉnh sửa
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Divider ── */}
+      <div className="h-px bg-gray-100 dark:bg-[#21262d] mx-4" />
+
+      {/* ── Operations list ── */}
+      <div className="px-4 py-3 min-h-10">
+        {ops.length === 0 ? (
+          <div className="flex items-center gap-2">
+            <Database size={12} className="text-gray-300 dark:text-[#30363d] shrink-0" />
+            <span className="text-[12px] text-gray-400 dark:text-[#484f58] italic">
+              {editing ? "Chưa có operation — nhập và nhấn Thêm" : "Chưa có operations"}
+            </span>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {ops.map((pattern) => (
+              <span
+                key={pattern}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono transition-colors ${
+                  editing
+                    ? "bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-200 border border-violet-200 dark:border-violet-800/60"
+                    : "bg-gray-100 dark:bg-[#21262d] text-gray-700 dark:text-[#c9d1d9]"
+                }`}
+              >
+                {pattern}
+                {editing && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(pattern)}
+                    className="text-violet-300 hover:text-red-500 dark:hover:text-red-400 ml-0.5 leading-none transition-colors"
+                    aria-label={`Xóa ${pattern}`}
+                  >
+                    <X size={9} />
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* ── Operations list ── */}
-      {ops.length === 0 ? (
-        <p className="text-[12px] text-gray-400 dark:text-[#484f58] italic m-0">
-          Chưa có operations
-        </p>
-      ) : (
-        <div className="flex flex-wrap gap-1.5">
-          {ops.map((pattern) => (
-            <span
-              key={pattern}
-              className="
-                inline-flex items-center gap-1
-                px-2 py-0.5
-                bg-gray-100 dark:bg-[#21262d]
-                rounded text-[11px] font-mono
-                text-gray-700 dark:text-[#c9d1d9]
-              "
-            >
-              {pattern}
-              {editing && (
-                <button
-                  type="button"
-                  onClick={() => handleRemove(pattern)}
-                  className="text-gray-400 hover:text-red-500 ml-0.5 leading-none"
-                  aria-label={`Xóa ${pattern}`}
-                >
-                  <X size={10} />
-                </button>
-              )}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* ── Edit mode controls ── */}
+      {/* ── Edit controls ── */}
       {editing && (
-        <div className="space-y-2.5 pt-0.5">
-          {/* Add input */}
+        <div className="px-4 pb-4 space-y-2.5 border-t border-gray-100 dark:border-[#21262d] pt-3">
           <div className="flex gap-2">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onPressEnter={handleAdd}
-              placeholder="report.new.operation"
+              placeholder="report.module.action"
               className="font-mono"
               size="small"
             />
@@ -165,73 +186,27 @@ function ProviderCard({
               size="small"
               icon={<Plus size={12} />}
               onClick={handleAdd}
+              disabled={!input.trim()}
             >
               Thêm
             </Button>
           </div>
 
-          {/* Save / Cancel */}
-          <div className="flex gap-2">
-            <Button
-              type="primary"
-              size="small"
-              loading={saving}
-              onClick={handleSave}
-            >
+          <div className="flex items-center gap-2">
+            <Button type="primary" size="small" loading={saving} onClick={handleSave}>
               Lưu thay đổi
             </Button>
             <Button size="small" onClick={handleCancel}>
               Huỷ
             </Button>
+            {isDirty && (
+              <span className="text-[11px] text-amber-500 dark:text-amber-400">
+                • Chưa lưu
+              </span>
+            )}
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ─── "Operations theo Provider" tab ──────────────────────────────────────────
-
-function ByProviderTab({
-  providers,
-  loading,
-  saving,
-  onRefresh,
-  onSave,
-}: {
-  providers: Provider[];
-  loading: boolean;
-  saving: boolean;
-  onRefresh: () => void;
-  onSave: (id: string, ops: string[]) => Promise<void>;
-}) {
-  return (
-    <div className="space-y-4">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">
-          Chỉnh sửa danh sách operations của từng provider.
-        </p>
-        <Button
-          icon={<RefreshCw size={14} />}
-          loading={loading}
-          onClick={onRefresh}
-        >
-          Làm mới
-        </Button>
-      </div>
-
-      {/* Cards */}
-      <div className="space-y-3">
-        {providers.map((p) => (
-          <ProviderCard
-            key={p.id}
-            provider={p}
-            saving={saving}
-            onSave={onSave}
-          />
-        ))}
-      </div>
     </div>
   );
 }
@@ -257,41 +232,58 @@ export default function OperationsPage() {
     }
   }
 
-  const tabItems = [
-    {
-      key: "by-provider",
-      label: "Operations theo Provider",
-      children: (
-        <ByProviderTab
-          providers={manager.providers}
-          loading={manager.loading}
-          saving={manager.saving}
-          onRefresh={manager.reload}
-          onSave={handleSaveOps}
-        />
-      ),
-    },
-    {
-      key: "registry",
-      label: "Operation Registry",
-      children: <OperationsTab />,
-    },
-  ];
+  const isEmpty = !manager.loading && manager.providers.length === 0;
 
   return (
     <div className="p-6">
       {/* Page header */}
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-[#e6edf3] m-0">
-          Quản lý Operations
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-[#8b949e] mt-1 m-0">
-          Chỉnh sửa operations của từng provider và quản lý operation registry.
-        </p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-[#e6edf3] m-0">
+            Quản lý Operations
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0 mt-0.5">
+            Gán operation pattern cho từng provider.
+            {manager.providers.length > 0 && (
+              <span className="ml-1.5 text-gray-400 dark:text-[#484f58]">
+                {manager.providers.length} provider
+              </span>
+            )}
+          </p>
+        </div>
+        <Button
+          icon={<RefreshCw size={14} />}
+          loading={manager.loading}
+          onClick={manager.reload}
+        >
+          Làm mới
+        </Button>
       </div>
 
-      {/* Tabs */}
-      <Tabs items={tabItems} />
+      {isEmpty ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <Database size={40} className="text-gray-200 dark:text-[#21262d]" />
+          <div className="text-center">
+            <p className="text-sm font-semibold m-0 text-gray-500 dark:text-[#8b949e]">
+              Chưa có provider nào
+            </p>
+            <p className="text-xs m-0 mt-1 text-gray-400 dark:text-[#484f58]">
+              Đăng ký provider tại trang Quản trị Provider trước
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {manager.providers.map((p) => (
+            <ProviderCard
+              key={p.id}
+              provider={p}
+              saving={manager.saving}
+              onSave={handleSaveOps}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

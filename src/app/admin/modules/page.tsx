@@ -1,7 +1,7 @@
 "use client";
 
 import type { AdminModule } from "@/infrastructure/http/adminApi";
-import { App, Button, Input } from "antd";
+import { Alert, App, Button, Input } from "antd";
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { ModuleFormDrawer } from "./_components/ModuleFormDrawer";
@@ -13,18 +13,19 @@ import { BLANK_FORM, type ModuleForm } from "./_lib/types";
 
 type DrawerState = { mode: "create" } | { mode: "edit"; target: AdminModule };
 
-function toForm(m: AdminModule): ModuleForm {
+function toForm(m: AdminModule, groups: { id: string; slug: string }[]): ModuleForm {
+  const resolvedGroupId = m.groupId ?? groups.find((g) => g.slug === m.groupSlug)?.id ?? "";
   return {
-    group: m.group ?? "",
-    slug: m.slug,
-    label: m.label,
-    icon: m.icon,
-    description: m.description,
-    sortOrder: m.sortOrder,
-    refreshInterval: m.refreshInterval?.toString() ?? "",
-    isActive: m.isActive ?? true,
-    isVisible: m.isVisible ?? true,
-    roles: m.roles ?? [],
+    groupId:                resolvedGroupId,
+    slug:                   m.slug,
+    label:                  m.label,
+    icon:                   m.icon,
+    description:            m.description,
+    sortOrder:              m.sortOrder,
+    refreshIntervalSeconds: m.refreshIntervalSeconds?.toString() ?? "",
+    isActive:               m.isActive ?? true,
+    isVisible:              m.isVisible ?? true,
+    requiredRoles:          m.requiredRoles ?? [],
   };
 }
 
@@ -47,12 +48,6 @@ export default function ModuleManagerPage() {
   }
 
   async function handleDelete(module: AdminModule) {
-    if (
-      !confirm(
-        `Xóa module "${module.label}"? Hành động này không thể hoàn tác.`,
-      )
-    )
-      return;
     try {
       await manager.remove(module.id);
     } catch {
@@ -60,11 +55,8 @@ export default function ModuleManagerPage() {
     }
   }
 
-  const drawerTitle =
-    drawer?.mode === "edit" ? `Sửa: ${drawer.target.label}` : "Tạo Module mới";
-
-  const drawerInitial =
-    drawer?.mode === "edit" ? toForm(drawer.target) : BLANK_FORM;
+  const drawerTitle   = drawer?.mode === "edit" ? `Sửa: ${drawer.target.label}` : "Tạo Module mới";
+  const drawerInitial = drawer?.mode === "edit" ? toForm(drawer.target, manager.groups) : BLANK_FORM;
 
   return (
     <div className="p-6">
@@ -87,6 +79,17 @@ export default function ModuleManagerPage() {
         </Button>
       </div>
 
+      {/* Load error */}
+      {manager.loadError && (
+        <Alert
+          type="error"
+          showIcon
+          title="Không tải được danh sách module"
+          description={manager.loadError}
+          className="mb-4"
+        />
+      )}
+
       {/* Search */}
       <div className="mb-4">
         <Input
@@ -101,7 +104,9 @@ export default function ModuleManagerPage() {
 
       {/* Table */}
       <ModuleTable
+        groups={manager.groups}
         grouped={manager.grouped}
+        groupColor={manager.groupColor}
         search={manager.search}
         onEdit={(m) => setDrawer({ mode: "edit", target: m })}
         onDelete={handleDelete}
@@ -113,6 +118,7 @@ export default function ModuleManagerPage() {
         open={drawer !== null}
         title={drawerTitle}
         initial={drawerInitial}
+        groups={manager.groups}
         onSubmit={handleSubmit}
         onClose={() => setDrawer(null)}
       />

@@ -49,20 +49,29 @@ export interface AdminWidgetDef {
 }
 
 export type WidgetCategory = "visualization" | "healthcare" | "filter" | "layout" | "ai";
-export type ModuleGroup    = "dieu-hanh" | "lam-sang" | "quan-tri";
+
+export interface ModuleGroupRecord {
+  id:        string;
+  slug:      string;
+  label:     string;
+  icon:      string | null;
+  sortOrder: number;
+}
 
 export interface AdminModule {
-  id: string;
-  slug: string;
-  label: string;
-  icon: string;
-  description: string;
-  sortOrder: number;
-  group?: ModuleGroup;
-  roles?: string[];
-  isActive?: boolean;
-  isVisible?: boolean;
-  refreshInterval?: number;
+  id:                     string;
+  groupId?:               string;   // UUID — present in create/update responses, absent in list
+  groupSlug:              string;   // present in list response
+  groupLabel:             string;   // present in list response
+  slug:                   string;
+  label:                  string;
+  icon:                   string;
+  description:            string;
+  sortOrder:              number;
+  requiredRoles:          string[] | null;
+  isActive:               boolean;
+  isVisible:              boolean;
+  refreshIntervalSeconds: number | null;
 }
 
 export interface WidgetSchemaEntry {
@@ -178,6 +187,9 @@ export interface OperationApiRecord {
 export const adminApi = {
 
   // ── Modules ──────────────────────────────────────────────────────────────
+
+  listModuleGroups: (): Promise<ModuleGroupRecord[]> =>
+    httpProvider.get<ModuleGroupRecord[]>("/admin/module-groups").then((r) => r.data),
 
   listModules: (): Promise<AdminModule[]> =>
     httpProvider.get<AdminModule[]>("/admin/modules").then((r) => r.data),
