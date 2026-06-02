@@ -4,6 +4,10 @@ import axios from "axios";
 // ─── Separate Keycloak instance for admin/provider API ────────────────────────
 // Hoàn toàn tách biệt với keycloakClient.ts (client HDOS frontend).
 // Đọc env NEXT_PUBLIC_ADMIN_* — không dùng chung NEXT_PUBLIC_KEYCLOAK_* của client.
+//
+// NEXT_PUBLIC_BYPASS_KEYCLOAK=true → dùng token từ authStore thay vì Keycloak.
+
+const BYPASS_KEYCLOAK = process.env.NEXT_PUBLIC_BYPASS_KEYCLOAK === "true";
 
 let _kc: Keycloak | null = null;
 let _initPromise: Promise<boolean> | null = null;
@@ -22,6 +26,11 @@ function getAdminKc(): Keycloak {
 
 async function ensureAdminToken(): Promise<string | null> {
   if (typeof window === "undefined") return null;
+
+  if (BYPASS_KEYCLOAK) {
+    const { default: useAuthStore } = await import("@/core/auth/authStore");
+    return useAuthStore.getState().accessToken;
+  }
 
   const kc = getAdminKc();
 
