@@ -1,9 +1,11 @@
 "use client";
 
 import { useThemeStore } from "@/store/themeStore";
+import { ocrApi, type OcrSchemaListItem } from "@/infrastructure/http/ocrApi";
 import { App, ConfigProvider } from "antd";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -186,6 +188,45 @@ function IconBack() {
   );
 }
 
+function IconChevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+function IconScan() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+      <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+      <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+      <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+      <line x1="7" y1="12" x2="17" y2="12" />
+    </svg>
+  );
+}
+
 function IconSun() {
   return (
     <svg
@@ -244,8 +285,15 @@ const MENU_ITEMS = [
 
 function AdminSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { theme, toggle } = useThemeStore();
   const isDark = theme === "dark";
+  const [ocrSchemas, setOcrSchemas] = useState<OcrSchemaListItem[]>([]);
+  const [ocrExpanded, setOcrExpanded] = useState(true);
+
+  useEffect(() => {
+    ocrApi.listSchemas({ isActive: true }).then(setOcrSchemas).catch(() => {});
+  }, []);
 
   return (
     <aside className="w-64 h-screen bg-white dark:bg-[#0d1117] border-r border-gray-200 dark:border-[#30363d] flex flex-col shrink-0">
@@ -313,6 +361,73 @@ function AdminSidebar() {
               </li>
             );
           })}
+        </ul>
+
+        <p className="text-[10px] font-semibold text-gray-400 dark:text-[#8b949e] uppercase tracking-wider px-2 mt-4 mb-2">
+          XỬ LÝ TÀI LIỆU
+        </p>
+        <ul className="space-y-0.5">
+          {/* Static: config page */}
+          <li>
+            <Link
+              href="/ocr/config"
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
+                ${
+                  pathname === "/ocr/config"
+                    ? "bg-violet-50 dark:bg-[#2d2542] text-violet-600 dark:text-violet-400 font-medium"
+                    : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3]"
+                }`}
+            >
+              <span className={pathname === "/ocr/config" ? "text-violet-600 dark:text-violet-400" : "text-gray-400 dark:text-[#8b949e]"}>
+                <IconBoxes />
+              </span>
+              Thiết lập Chứng từ OCR
+            </Link>
+          </li>
+
+          {/* Collapsible: Nhận dạng OCR with dynamic schema children */}
+          {ocrSchemas.length > 0 && (
+            <li>
+              <button
+                onClick={() => setOcrExpanded((v) => !v)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3] cursor-pointer"
+              >
+                <span className="text-gray-400 dark:text-[#8b949e]">
+                  <IconScan />
+                </span>
+                <span className="flex-1 text-left">Nhận dạng OCR</span>
+                <span className="text-gray-400 dark:text-[#8b949e]">
+                  <IconChevron open={ocrExpanded} />
+                </span>
+              </button>
+              {ocrExpanded && (
+                <ul className="mt-0.5 space-y-0.5">
+                  {ocrSchemas.map((schema) => {
+                    const href = `/ocr/process?schema=${schema.id}`;
+                    const isActive = pathname === "/ocr/process" && searchParams.get("schema") === schema.id;
+                    return (
+                      <li key={schema.id}>
+                        <Link
+                          href={href}
+                          className={`w-full flex items-center gap-2.5 pl-9 pr-3 py-2 rounded-lg text-sm transition-colors
+                            ${
+                              isActive
+                                ? "bg-violet-50 dark:bg-[#2d2542] text-violet-600 dark:text-violet-400 font-medium"
+                                : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3]"
+                            }`}
+                        >
+                          <span className="text-gray-400 dark:text-[#8b949e]">
+                            <IconScan />
+                          </span>
+                          <span className="flex-1 truncate">{schema.name}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </li>
+          )}
         </ul>
       </nav>
     </aside>

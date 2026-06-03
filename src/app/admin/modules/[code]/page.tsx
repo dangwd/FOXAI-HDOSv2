@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Alert, Button, Spin, Tag, Tabs } from "antd";
+import { Alert, Button, Spin, Table, Tag, Tabs } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import { ArrowLeft, FileText, LayoutDashboard, Plus, RefreshCw } from "lucide-react";
 import { adminApi } from "@/infrastructure/http/adminApi";
 import type { FormsModule, FormTemplateListItem, FormPageListItem } from "@/infrastructure/http/adminApi";
@@ -38,20 +39,6 @@ function StatusTag({ status }: { status: string }) {
     <Tag style={{ color: s.color, background: s.bg, border: "none", fontWeight: 600 }}>
       {s.label}
     </Tag>
-  );
-}
-
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
-
-const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
-
-function RowSkeleton() {
-  return (
-    <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-[#21262d]">
-      <div className={`${SK} h-4 w-1/4`} />
-      <div className={`${SK} h-4 w-1/3`} />
-      <div className={`${SK} h-4 w-16 ml-auto`} />
-    </div>
   );
 }
 
@@ -95,52 +82,55 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        {loading ? (
-          <>{[1, 2, 3].map((i) => <RowSkeleton key={i} />)}</>
-        ) : error ? (
-          <div className="p-6">
-            <Alert type="error" message={error} showIcon />
-          </div>
-        ) : forms.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-400 dark:text-[#484f58]">
-            <FileText size={40} className="text-gray-300 dark:text-[#30363d]" />
-            <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e] m-0">
-              Chưa có form nào trong module này
-            </p>
-          </div>
+      <div className="flex-1 overflow-y-auto px-6 py-3">
+        {error ? (
+          <Alert type="error" message={error} showIcon />
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-[11px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider border-b border-gray-100 dark:border-[#21262d]">
-                <th className="px-6 py-2.5 text-left font-semibold">Key</th>
-                <th className="px-4 py-2.5 text-left font-semibold">Tên form</th>
-                <th className="px-4 py-2.5 text-left font-semibold">Trạng thái</th>
-                <th className="px-4 py-2.5 text-right font-semibold">Version</th>
-              </tr>
-            </thead>
-            <tbody>
-              {forms.map((f) => (
-                <tr
-                  key={f.id}
-                  className="border-b border-gray-50 dark:border-[#21262d] hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors"
-                >
-                  <td className="px-6 py-3">
-                    <code className="text-[11px] bg-gray-100 dark:bg-[#21262d] px-1.5 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
-                      {f.key}
-                    </code>
-                  </td>
-                  <td className="px-4 py-3 font-medium text-gray-800 dark:text-[#e6edf3]">{f.name}</td>
-                  <td className="px-4 py-3">
-                    <StatusTag status={f.status} />
-                  </td>
-                  <td className="px-4 py-3 text-right text-gray-400 dark:text-[#484f58]">
-                    v{f.version}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table<FormTemplateListItem>
+            dataSource={forms}
+            rowKey="id"
+            size="middle"
+            loading={loading}
+            pagination={false}
+            locale={{
+              emptyText: (
+                <div className="flex flex-col items-center gap-2 py-12 text-gray-400 dark:text-[#484f58]">
+                  <FileText size={32} className="text-gray-200 dark:text-[#30363d]" />
+                  <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">Chưa có form nào trong module này</p>
+                </div>
+              ),
+            }}
+            columns={[
+              {
+                title:     "Key",
+                dataIndex: "key",
+                width:     180,
+                render:    (v: string) => (
+                  <code className="text-[12px] bg-gray-100 dark:bg-[#21262d] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
+                    {v}
+                  </code>
+                ),
+              },
+              {
+                title:     "Tên form",
+                dataIndex: "name",
+                render:    (v: string) => <span className="font-medium text-gray-800 dark:text-[#e6edf3]">{v}</span>,
+              },
+              {
+                title:     "Trạng thái",
+                dataIndex: "status",
+                width:     130,
+                render:    (v: string) => <StatusTag status={v} />,
+              },
+              {
+                title:     "Version",
+                dataIndex: "version",
+                width:     80,
+                align:     "center" as const,
+                render:    (v: number) => <span className="text-xs text-gray-400 dark:text-[#484f58] font-mono">v{v}</span>,
+              },
+            ] as ColumnsType<FormTemplateListItem>}
+          />
         )}
       </div>
     </div>
@@ -187,48 +177,63 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        {loading ? (
-          <>{[1, 2].map((i) => <RowSkeleton key={i} />)}</>
-        ) : error ? (
-          <div className="p-6">
-            <Alert type="error" message={error} showIcon />
-          </div>
-        ) : pages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-400 dark:text-[#484f58]">
-            <LayoutDashboard size={40} className="text-gray-300 dark:text-[#30363d]" />
-            <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e] m-0">
-              Chưa có page nào trong module này
-            </p>
-          </div>
+      <div className="flex-1 overflow-y-auto px-6 py-3">
+        {error ? (
+          <Alert type="error" message={error} showIcon />
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-[11px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider border-b border-gray-100 dark:border-[#21262d]">
-                <th className="px-6 py-2.5 text-left font-semibold">Code</th>
-                <th className="px-4 py-2.5 text-left font-semibold">Tiêu đề</th>
-                <th className="px-4 py-2.5 text-left font-semibold">Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pages.map((p) => (
-                <tr
-                  key={p.id}
-                  className="border-b border-gray-50 dark:border-[#21262d] hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors"
-                >
-                  <td className="px-6 py-3">
-                    <code className="text-[11px] bg-gray-100 dark:bg-[#21262d] px-1.5 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
-                      {p.code}
-                    </code>
-                  </td>
-                  <td className="px-4 py-3 font-medium text-gray-800 dark:text-[#e6edf3]">{p.title}</td>
-                  <td className="px-4 py-3">
-                    <StatusTag status={p.status} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table<FormPageListItem>
+            dataSource={pages}
+            rowKey="id"
+            size="middle"
+            loading={loading}
+            pagination={false}
+            locale={{
+              emptyText: (
+                <div className="flex flex-col items-center gap-2 py-12 text-gray-400 dark:text-[#484f58]">
+                  <LayoutDashboard size={32} className="text-gray-200 dark:text-[#30363d]" />
+                  <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">Chưa có page nào trong module này</p>
+                </div>
+              ),
+            }}
+            columns={[
+              {
+                title:     "Code",
+                dataIndex: "code",
+                width:     180,
+                render:    (v: string) => (
+                  <code className="text-[12px] bg-gray-100 dark:bg-[#21262d] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
+                    {v}
+                  </code>
+                ),
+              },
+              {
+                title:     "Tiêu đề",
+                dataIndex: "title",
+                render:    (v: string) => <span className="font-medium text-gray-800 dark:text-[#e6edf3]">{v}</span>,
+              },
+              {
+                title:     "Tabs",
+                dataIndex: "tabCount",
+                width:     70,
+                align:     "center" as const,
+                render:    (v: number) => (
+                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold ${
+                    v > 0
+                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                      : "bg-gray-100 dark:bg-[#21262d] text-gray-400 dark:text-[#484f58]"
+                  }`}>
+                    {v}
+                  </span>
+                ),
+              },
+              {
+                title:     "Trạng thái",
+                dataIndex: "status",
+                width:     130,
+                render:    (v: string) => <StatusTag status={v} />,
+              },
+            ] as ColumnsType<FormPageListItem>}
+          />
         )}
       </div>
     </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { Layout, LayoutItem } from "react-grid-layout";
-import type { WidgetSchemaEntry, ModuleTabApi } from "@/infrastructure/http/adminApi";
+import type { WidgetCatalogEntry, ScreenTabApi } from "@/infrastructure/http/adminApi";
 import { adminApi } from "@/infrastructure/http/adminApi";
 import { fromApiWidget, makeBlankWidget, findNextY } from "../_lib/widgetUtils";
 import { DEFAULT_SIZES } from "../_lib/constants";
@@ -10,7 +10,7 @@ import type { DesignerWidget } from "../_lib/types";
 
 const api = adminApi;
 
-export type TabMeta = Pick<ModuleTabApi, "id" | "label">;
+export type TabMeta = Pick<ScreenTabApi, "id" | "label">;
 
 export interface DesignerStateReturn {
   // Data
@@ -21,7 +21,7 @@ export interface DesignerStateReturn {
   selectedKey:    string | null;
   selectedWidget: DesignerWidget | null;
   gridLayout:     Layout;
-  droppingEntry:  WidgetSchemaEntry | null;
+  droppingEntry:  WidgetCatalogEntry | null;
 
   // Save state
   isDirty:     boolean;
@@ -40,7 +40,7 @@ export interface DesignerStateReturn {
 
   // Actions — tab
   setActiveTabId:    (id: string) => void;
-  setDroppingEntry:  (entry: WidgetSchemaEntry | null) => void;
+  setDroppingEntry:  (entry: WidgetCatalogEntry | null) => void;
   setSelectedKey:    (key: string | null) => void;
   startEditTab:      (tab: TabMeta) => void;
   setEditTabLabel:   (v: string) => void;
@@ -53,7 +53,7 @@ export interface DesignerStateReturn {
 
   // Actions — widget
   handleLayoutChange:    (newLayout: Layout) => void;
-  handleAddWidget:       (entry: WidgetSchemaEntry) => void;
+  handleAddWidget:       (entry: WidgetCatalogEntry) => void;
   handleCanvasDrop:      (layout: Layout, item: LayoutItem | undefined) => void;
   handleDeleteWidget:    (key: string) => void;
   handleApplyProperties: (updated: DesignerWidget) => void;
@@ -62,13 +62,19 @@ export interface DesignerStateReturn {
   handleSave: () => Promise<void>;
 }
 
+function splitSlug(selectedSlug: string): [string, string] {
+  const idx = selectedSlug.indexOf("/");
+  if (idx === -1) return [selectedSlug, ""];
+  return [selectedSlug.slice(0, idx), selectedSlug.slice(idx + 1)];
+}
+
 export function useDesignerState(selectedSlug: string): DesignerStateReturn {
   // ── Tab state ───────────────────────────────────────────────────────────────
   const [tabs,         setTabs]         = useState<TabMeta[]>([]);
   const [activeTabId,  setActiveTabId]  = useState<string>("");
   const [widgetsByTab, setWidgetsByTab] = useState<Map<string, DesignerWidget[]>>(new Map());
   const [selectedKey,  setSelectedKey]  = useState<string | null>(null);
-  const [droppingEntry, setDroppingEntry] = useState<WidgetSchemaEntry | null>(null);
+  const [droppingEntry, setDroppingEntry] = useState<WidgetCatalogEntry | null>(null);
 
   // ── Tab editing ─────────────────────────────────────────────────────────────
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
@@ -76,7 +82,7 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
   const [isAddingTab,  setIsAddingTab]  = useState(false);
   const [newTabLabel,  setNewTabLabel]  = useState("");
 
-  // ── Layout loading — derived from slug mismatch to avoid sync setState ──────
+  // ── Layout loading ───────────────────────────────────────────────────────────
   const [loadedSlug, setLoadedSlug] = useState<string | null>(null);
   const layoutLoading = Boolean(selectedSlug) && loadedSlug !== selectedSlug;
 
@@ -97,32 +103,31 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
   }));
 
   // ── Load layout when slug changes ─────────────────────────────────────────
-  // All setState calls happen after the first await — none synchronous in effect body.
   useEffect(() => {
     if (!selectedSlug) return;
     let cancelled = false;
 
     async function run() {
+      const [moduleCode, screenCode] = splitSlug(selectedSlug);
       try {
-        const layout = await api.getModuleLayout(selectedSlug);
+        const layout = await api.getScreenLayout(moduleCode, screenCode);
         if (cancelled) return;
 
         const validTabs = layout.tabs.filter((t) => t.id);
         if (validTabs.length === 0) {
-          // Module has no tabs yet — create a real one via API so saves work immediately
           let tabId: string;
           const tabLabel = "Tab chính";
           try {
-            const created = await api.createTab(selectedSlug, {
+            const created = await api.createScreenTab(moduleCode, screenCode, {
               slug:      "main",
               label:     tabLabel,
               sortOrder: 0,
+              isDefault: true,
             });
             if (cancelled) return;
             tabId = created.id;
           } catch {
             if (cancelled) return;
-            // API unavailable — local placeholder; save will create the tab later
             tabId = `__local_${Date.now().toString(36)}`;
           }
           setSelectedKey(null);
@@ -196,7 +201,7 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
   }
 
   // ── Add widget from catalog (click) ─────────────────────────────────────────
-  function handleAddWidget(entry: WidgetSchemaEntry) {
+  function handleAddWidget(entry: WidgetCatalogEntry) {
     const w = makeBlankWidget(entry, findNextY(widgets));
     setWidgets((prev) => [...prev, w]);
     setSelectedKey(w.widgetKey);
@@ -205,10 +210,12 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
   // ── Drop widget from catalog → canvas ────────────────────────────────────────
   function handleCanvasDrop(_layout: Layout, item: LayoutItem | undefined) {
     if (!droppingEntry || !item) return;
-    const sizes = DEFAULT_SIZES[droppingEntry.chartType] ?? { w: 6, h: 4 };
+    const sizes = DEFAULT_SIZES[droppingEntry.widgetType] ?? { w: 6, h: 4 };
     const w: DesignerWidget = {
       ...makeBlankWidget(droppingEntry, 0),
-      gridX: item.x, gridY: item.y, gridW: sizes.w, gridH: sizes.h,
+      gridX: item.x, gridY: item.y,
+      gridW: droppingEntry.defaultW ?? sizes.w,
+      gridH: droppingEntry.defaultH ?? sizes.h,
     };
     setWidgets((prev) => [...prev, w]);
     setSelectedKey(w.widgetKey);
@@ -237,7 +244,8 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
     setTabs((prev) => prev.map((t) => t.id === tabId ? { ...t, label } : t));
     setIsDirty(true);
     if (selectedSlug) {
-      api.updateTab(selectedSlug, tabId, { label }).catch(() => {});
+      const [mc, sc] = splitSlug(selectedSlug);
+      api.updateScreenTab(mc, sc, tabId, { label }).catch(() => {});
     }
   }
 
@@ -250,9 +258,10 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
     setIsAddingTab(false);
     setNewTabLabel("");
     if (!label || !selectedSlug) return;
+    const [mc, sc] = splitSlug(selectedSlug);
     try {
       const slug = label.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") || "tab";
-      const result = await api.createTab(selectedSlug, { slug, label, sortOrder: tabs.length });
+      const result = await api.createScreenTab(mc, sc, { slug, label, sortOrder: tabs.length });
       setTabs((prev) => [...prev, { id: result.id, label }]);
       setWidgetsByTab((prev) => { const m = new Map(prev); m.set(result.id, []); return m; });
       setActiveTabId(result.id);
@@ -274,28 +283,30 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
     if (activeTabId === tabId) setActiveTabId(remaining[0].id);
     setIsDirty(true);
     if (selectedSlug) {
-      api.deleteTab(selectedSlug, tabId).catch(() => {});
+      const [mc, sc] = splitSlug(selectedSlug);
+      api.deleteScreenTab(mc, sc, tabId).catch(() => {});
     }
   }
 
   // ── Save ─────────────────────────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
     if (!isDirty || isSaving || !selectedSlug) return;
+    const [mc, sc] = splitSlug(selectedSlug);
     setIsSaving(true);
     setSaveError(null);
     try {
-      // If the tab is a local placeholder (or missing), create a real one first.
       let saveTabId = activeTabId;
       const isLocalTab = !saveTabId || saveTabId.startsWith("__local_");
       if (isLocalTab) {
         const localLabel = tabs.find((t) => t.id === saveTabId)?.label ?? "Tab chính";
-        const created = await api.createTab(selectedSlug, {
+        const created = await api.createScreenTab(mc, sc, {
           slug:      "main",
           label:     localLabel,
           sortOrder: 0,
+          isDefault: true,
         });
-        const oldId   = saveTabId;
-        saveTabId     = created.id;
+        const oldId = saveTabId;
+        saveTabId   = created.id;
         setTabs((prev) => prev.map((t) => t.id === oldId ? { id: saveTabId, label: t.label } : t));
         setWidgetsByTab((prev) => {
           const current = prev.get(oldId) ?? [];
@@ -307,26 +318,18 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
         setActiveTabId(saveTabId);
       }
 
-      // activeTabId is still the old value in this closure; use saveTabId for the key
       const currentWidgets = widgetsByTab.get(activeTabId) ?? widgetsByTab.get(saveTabId) ?? [];
       const payload = currentWidgets.map((w) => ({
-        widgetKey:        w.widgetKey,
-        title:            w.title            || undefined,
-        subtitle:         w.subtitle         || undefined,
-        chartType:        w.chartType,
-        gridX:            w.gridX,
-        gridY:            w.gridY,
-        gridW:            w.gridW,
-        gridH:            w.gridH,
-        operationPattern: w.operationPattern || undefined,
-        providerId:       w.providerId       || undefined,
-        paramsTemplate:   w.paramsTemplate,
-        visualConfig:     w.visualConfig,
-        filterBindings:   w.filterBindings,
-        interactions:     w.interactions,
-        filterKey:        w.filterKey        || undefined,
+        widgetKey:   w.widgetKey,
+        widgetType:  w.widgetType,
+        gridX:       w.gridX,
+        gridY:       w.gridY,
+        gridW:       w.gridW,
+        gridH:       w.gridH,
+        configJson:  w.configJson,
+        referenceId: w.referenceId ?? null,
       }));
-      await api.saveWidgets(selectedSlug, saveTabId, payload);
+      await api.saveScreenWidgets(mc, sc, saveTabId, payload);
       setIsDirty(false);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2500);

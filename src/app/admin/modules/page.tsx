@@ -10,14 +10,18 @@ import {
   Alert,
   App,
   Button,
+  Divider,
   Drawer,
   Form,
   Input,
+  InputNumber,
   Space,
   Spin,
+  Table,
   Tabs,
   Tag,
 } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import {
   FileText,
   Inbox,
@@ -28,6 +32,15 @@ import {
   RefreshCw,
   Search,
 } from "lucide-react";
+
+function FieldLabel({ text, required }: { text: string; required?: boolean }) {
+  return (
+    <span className="text-[13px] font-semibold text-gray-700 dark:text-[#c9d1d9]">
+      {text}
+      {required && <span className="text-red-500 ml-0.5">*</span>}
+    </span>
+  );
+}
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ModuleFormDrawer } from "./_components/ModuleFormDrawer";
@@ -182,43 +195,30 @@ function CreateFormDrawer({
   onCreated: () => void;
 }) {
   const { message } = App.useApp();
-  const [key, setKey] = useState("");
-  const [name, setName] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [key,         setKey]         = useState("");
+  const [name,        setName]        = useState("");
+  const [submitting,  setSubmitting]  = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  function reset() {
-    setKey("");
-    setName("");
-    setSubmitError(null);
-  }
-
-  function handleClose() {
-    reset();
-    onClose();
-  }
+  function reset() { setKey(""); setName(""); setSubmitError(null); }
+  function handleClose() { reset(); onClose(); }
 
   async function handleSubmit() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await adminApi.createForm(moduleCode, {
-        key: key.trim(),
-        name: name.trim(),
-      });
+      await adminApi.createForm(moduleCode, { key: key.trim(), name: name.trim() });
       message.success("Tạo form thành công");
       reset();
       onCreated();
       onClose();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("409") || msg.toLowerCase().includes("conflict")) {
-        setSubmitError(
-          "Key này đã tồn tại trong module. Vui lòng chọn key khác.",
-        );
-      } else {
-        setSubmitError(msg);
-      }
+      setSubmitError(
+        msg.includes("409") || msg.toLowerCase().includes("conflict")
+          ? "Key này đã tồn tại trong module. Vui lòng chọn key khác."
+          : msg,
+      );
     } finally {
       setSubmitting(false);
     }
@@ -230,49 +230,64 @@ function CreateFormDrawer({
     <Drawer
       open={open}
       onClose={handleClose}
-      title="Tạo Form mới"
-      styles={{ wrapper: { width: 440 } }}
+      title={
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+            <FileText size={14} className="text-emerald-500" />
+          </div>
+          <span>Tạo Form mới</span>
+        </div>
+      }
+      styles={{
+        wrapper: { width: 460 },
+        body: { padding: "24px 24px 0" },
+      }}
       footer={
-        <div className="flex justify-end">
-          <Space>
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs text-gray-400 dark:text-[#484f58]">
+            Module: <code className="bg-gray-100 dark:bg-[#21262d] px-1.5 rounded text-gray-600 dark:text-[#8b949e]">{moduleCode}</code>
+          </span>
+          <div className="flex gap-2">
             <Button onClick={handleClose}>Hủy</Button>
-            <Button
-              type="primary"
-              disabled={!canSubmit || submitting}
-              loading={submitting}
-              onClick={handleSubmit}
-            >
+            <Button type="primary" disabled={!canSubmit || submitting} loading={submitting} onClick={handleSubmit}>
               Tạo Form
             </Button>
-          </Space>
+          </div>
         </div>
       }
     >
-      <Form layout="vertical" component="div">
-        {submitError && (
-          <Alert type="error" message={submitError} className="mb-4" showIcon />
-        )}
+      {submitError && (
+        <Alert type="error" message={submitError} className="mb-5" showIcon />
+      )}
 
-        <Form.Item
-          label="Key"
-          required
-          help={`Chỉ gồm chữ thường, số và dấu gạch ngang. Dùng trong URL: /forms/${moduleCode}/{key}/schema`}
-        >
+      <Form layout="vertical" component="div" requiredMark={false} size="large">
+        <Form.Item label={<FieldLabel text="Key" required />} className="mb-5">
           <Input
             value={key}
-            onChange={(e) =>
-              setKey(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))
-            }
+            onChange={(e) => setKey(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
             placeholder="vd: phieu-tiep-nhan"
             maxLength={100}
+            className="font-mono"
           />
+          <div className="mt-2 text-[11px] text-gray-400 dark:text-[#484f58] leading-relaxed">
+            {key ? (
+              <span>
+                Schema URL:{" "}
+                <code className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-1.5 rounded">
+                  /forms/{moduleCode}/{key}/schema
+                </code>
+              </span>
+            ) : (
+              <span>Chỉ dùng chữ thường, số và dấu <code className="bg-gray-100 dark:bg-[#21262d] px-1 rounded">-</code>. Không thể đổi sau khi tạo.</span>
+            )}
+          </div>
         </Form.Item>
 
-        <Form.Item label="Tên form" required>
+        <Form.Item label={<FieldLabel text="Tên form" required />} className="mb-5">
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="vd: Phiếu tiếp nhận"
+            placeholder="vd: Phiếu tiếp nhận bệnh nhân"
             maxLength={200}
           />
         </Form.Item>
@@ -295,29 +310,25 @@ function CreatePageDrawer({
   onCreated: () => void;
 }) {
   const { message } = App.useApp();
-  const [code, setCode] = useState("");
-  const [title, setTitle] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [code,        setCode]        = useState("");
+  const [title,       setTitle]       = useState("");
+  const [description, setDescription] = useState("");
+  const [sortOrder,   setSortOrder]   = useState<number | null>(null);
+  const [submitting,  setSubmitting]  = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  function reset() {
-    setCode("");
-    setTitle("");
-    setSubmitError(null);
-  }
-
-  function handleClose() {
-    reset();
-    onClose();
-  }
+  function reset() { setCode(""); setTitle(""); setDescription(""); setSortOrder(null); setSubmitError(null); }
+  function handleClose() { reset(); onClose(); }
 
   async function handleSubmit() {
     setSubmitting(true);
     setSubmitError(null);
     try {
       await adminApi.createPage(moduleCode, {
-        code: code.trim(),
-        title: title.trim(),
+        code:        code.trim(),
+        title:       title.trim(),
+        description: description.trim() || undefined,
+        sortOrder:   sortOrder ?? undefined,
       });
       message.success("Tạo page thành công");
       reset();
@@ -325,13 +336,11 @@ function CreatePageDrawer({
       onClose();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("409") || msg.toLowerCase().includes("conflict")) {
-        setSubmitError(
-          "Code này đã tồn tại trong module. Vui lòng chọn code khác.",
-        );
-      } else {
-        setSubmitError(msg);
-      }
+      setSubmitError(
+        msg.includes("409") || msg.toLowerCase().includes("conflict")
+          ? "Code này đã tồn tại trong module. Vui lòng chọn code khác."
+          : msg,
+      );
     } finally {
       setSubmitting(false);
     }
@@ -343,68 +352,97 @@ function CreatePageDrawer({
     <Drawer
       open={open}
       onClose={handleClose}
-      title="Tạo Page mới"
-      styles={{ wrapper: { width: 440 } }}
+      title={
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
+            <LayoutDashboard size={14} className="text-violet-500" />
+          </div>
+          <span>Tạo Page mới</span>
+        </div>
+      }
+      styles={{
+        wrapper: { width: 480 },
+        body: { padding: "24px 24px 0" },
+      }}
       footer={
-        <div className="flex justify-end">
-          <Space>
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs text-gray-400 dark:text-[#484f58]">
+            Module: <code className="bg-gray-100 dark:bg-[#21262d] px-1.5 rounded text-gray-600 dark:text-[#8b949e]">{moduleCode}</code>
+          </span>
+          <div className="flex gap-2">
             <Button onClick={handleClose}>Hủy</Button>
-            <Button
-              type="primary"
-              disabled={!canSubmit || submitting}
-              loading={submitting}
-              onClick={handleSubmit}
-            >
+            <Button type="primary" disabled={!canSubmit || submitting} loading={submitting} onClick={handleSubmit}>
               Tạo Page
             </Button>
-          </Space>
+          </div>
         </div>
       }
     >
-      <Form layout="vertical" component="div">
-        {submitError && (
-          <Alert type="error" message={submitError} className="mb-4" showIcon />
-        )}
+      {submitError && (
+        <Alert type="error" message={submitError} className="mb-5" showIcon />
+      )}
 
-        <Form.Item
-          label="Code"
-          required
-          help="Chỉ gồm chữ thường, số và dấu gạch ngang. Dùng trong URL."
-        >
+      <Form layout="vertical" component="div" requiredMark={false} size="large">
+        <Form.Item label={<FieldLabel text="Code" required />} className="mb-5">
           <Input
             value={code}
-            onChange={(e) =>
-              setCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))
-            }
+            onChange={(e) => setCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
             placeholder="vd: man-hinh-tiep-nhan"
             maxLength={100}
+            className="font-mono"
           />
+          <div className="mt-2 text-[11px] text-gray-400 dark:text-[#484f58] leading-relaxed">
+            {code ? (
+              <span>
+                Layout URL:{" "}
+                <code className="bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 px-1.5 rounded">
+                  /forms/screens/{moduleCode}/{code}/layout
+                </code>
+              </span>
+            ) : (
+              <span>Chỉ dùng chữ thường, số và dấu <code className="bg-gray-100 dark:bg-[#21262d] px-1 rounded">-</code>. Không thể đổi sau khi tạo.</span>
+            )}
+          </div>
         </Form.Item>
 
-        <Form.Item label="Tiêu đề" required>
+        <Form.Item label={<FieldLabel text="Tiêu đề" required />} className="mb-5">
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="vd: Màn hình tiếp nhận"
+            placeholder="vd: Màn hình tiếp nhận bệnh nhân"
             maxLength={200}
           />
         </Form.Item>
+
+        <Divider className="my-5" plain>
+          <span className="text-[11px] text-gray-400 dark:text-[#484f58] font-normal">Tuỳ chọn</span>
+        </Divider>
+
+        <Form.Item label={<FieldLabel text="Mô tả" />} className="mb-5">
+          <Input.TextArea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Mô tả ngắn về mục đích của page này…"
+            rows={3}
+            maxLength={500}
+            showCount
+          />
+        </Form.Item>
+
+        <Form.Item label={<FieldLabel text="Thứ tự hiển thị" />} className="mb-5">
+          <InputNumber
+            value={sortOrder}
+            onChange={(v) => setSortOrder(v)}
+            placeholder="0"
+            min={0}
+            className="w-full"
+          />
+          <p className="text-[11px] text-gray-400 dark:text-[#484f58] mt-1.5 m-0">
+            Số nhỏ hơn hiển thị trước. Để trống nếu không quan trọng.
+          </p>
+        </Form.Item>
       </Form>
     </Drawer>
-  );
-}
-
-// ─── Right panel: skeleton row ────────────────────────────────────────────────
-
-const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
-
-function RowSkeleton() {
-  return (
-    <div className="flex items-center gap-3 px-6 py-3 border-b border-gray-100 dark:border-[#21262d]">
-      <div className={`${SK} h-4 w-1/4`} />
-      <div className={`${SK} h-4 w-1/3`} />
-      <div className={`${SK} h-4 w-16 ml-auto`} />
-    </div>
   );
 }
 
@@ -464,58 +502,55 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
         onCreated={load}
       />
 
-      <div className="flex-1 overflow-y-auto">
-        {loading ? (
-          <>
-            {[1, 2, 3].map((i) => (
-              <RowSkeleton key={i} />
-            ))}
-          </>
-        ) : error ? (
-          <div className="p-6">
-            <Alert type="error" message={error} showIcon />
-          </div>
-        ) : forms.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-400 dark:text-[#484f58]">
-            <FileText size={36} className="text-gray-300 dark:text-[#30363d]" />
-            <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">
-              Chưa có form nào
-            </p>
-          </div>
+      <div className="flex-1 overflow-y-auto px-6 py-3">
+        {error ? (
+          <Alert type="error" message={error} showIcon />
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-[10px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider border-b border-gray-100 dark:border-[#21262d]">
-                <th className="px-6 py-2 text-left">Key</th>
-                <th className="px-4 py-2 text-left">Tên form</th>
-                <th className="px-4 py-2 text-left">Trạng thái</th>
-                <th className="px-4 py-2 text-right">Version</th>
-              </tr>
-            </thead>
-            <tbody>
-              {forms.map((f) => (
-                <tr
-                  key={f.id}
-                  className="border-b border-gray-50 dark:border-[#21262d] hover:bg-gray-50 dark:hover:bg-[#161b22] transition-colors"
-                >
-                  <td className="px-6 py-2.5">
-                    <code className="text-[11px] bg-gray-100 dark:bg-[#21262d] px-1.5 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
-                      {f.key}
-                    </code>
-                  </td>
-                  <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-[#e6edf3]">
-                    {f.name}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <StatusTag status={f.status} />
-                  </td>
-                  <td className="px-4 py-2.5 text-right text-gray-400 dark:text-[#484f58]">
-                    v{f.version}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table<FormTemplateListItem>
+            dataSource={forms}
+            rowKey="id"
+            size="middle"
+            loading={loading}
+            pagination={false}
+            locale={{
+              emptyText: (
+                <div className="flex flex-col items-center gap-2 py-12 text-gray-400 dark:text-[#484f58]">
+                  <FileText size={32} className="text-gray-200 dark:text-[#30363d]" />
+                  <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">Chưa có form nào</p>
+                </div>
+              ),
+            }}
+            columns={[
+              {
+                title:     "Key",
+                dataIndex: "key",
+                width:     180,
+                render:    (v: string) => (
+                  <code className="text-[12px] bg-gray-100 dark:bg-[#21262d] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
+                    {v}
+                  </code>
+                ),
+              },
+              {
+                title:     "Tên form",
+                dataIndex: "name",
+                render:    (v: string) => <span className="font-medium text-gray-800 dark:text-[#e6edf3]">{v}</span>,
+              },
+              {
+                title:     "Trạng thái",
+                dataIndex: "status",
+                width:     130,
+                render:    (v: string) => <StatusTag status={v} />,
+              },
+              {
+                title:     "Version",
+                dataIndex: "version",
+                width:     80,
+                align:     "center" as const,
+                render:    (v: number) => <span className="text-xs text-gray-400 dark:text-[#484f58] font-mono">v{v}</span>,
+              },
+            ] as ColumnsType<FormTemplateListItem>}
+          />
         )}
       </div>
     </div>
@@ -525,10 +560,13 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
 // ─── Right panel: pages tab ───────────────────────────────────────────────────
 
 function PagesTab({ moduleCode }: { moduleCode: string }) {
-  const [pages, setPages] = useState<FormPageListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { message, modal } = App.useApp();
+  const [pages,      setPages]      = useState<FormPageListItem[]>([]);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [publishing, setPublishing] = useState<string | null>(null);
+  const [deleting,   setDeleting]   = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -542,9 +580,42 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
     }
   }, [moduleCode]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
+
+  async function handlePublish(p: FormPageListItem) {
+    setPublishing(p.code);
+    try {
+      await adminApi.publishFormPage(moduleCode, p.code);
+      message.success(`Đã publish "${p.title}"`);
+      load();
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : String(err));
+    } finally {
+      setPublishing(null);
+    }
+  }
+
+  function handleDelete(p: FormPageListItem) {
+    modal.confirm({
+      title:   `Xóa page "${p.title}"?`,
+      content: "Thao tác này không thể hoàn tác. Tất cả tab và widget sẽ bị xóa.",
+      okText:  "Xóa",
+      okType:  "danger",
+      cancelText: "Hủy",
+      onOk: async () => {
+        setDeleting(p.code);
+        try {
+          await adminApi.deletePage(moduleCode, p.code);
+          message.success("Đã xóa page");
+          load();
+        } catch (err) {
+          message.error(err instanceof Error ? err.message : String(err));
+        } finally {
+          setDeleting(null);
+        }
+      },
+    });
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -553,20 +624,10 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
           {pages.length} page
         </span>
         <div className="flex items-center gap-2">
-          <Button
-            size="small"
-            icon={<RefreshCw size={11} />}
-            onClick={load}
-            loading={loading}
-          >
+          <Button size="small" icon={<RefreshCw size={11} />} onClick={load} loading={loading}>
             Làm mới
           </Button>
-          <Button
-            size="small"
-            type="primary"
-            icon={<Plus size={11} />}
-            onClick={() => setDrawerOpen(true)}
-          >
+          <Button size="small" type="primary" icon={<Plus size={11} />} onClick={() => setDrawerOpen(true)}>
             Tạo Page
           </Button>
         </div>
@@ -578,65 +639,112 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
         onCreated={load}
       />
 
-      <div className="flex-1 overflow-y-auto">
-        {loading ? (
-          <>
-            {[1, 2].map((i) => (
-              <RowSkeleton key={i} />
-            ))}
-          </>
-        ) : error ? (
-          <div className="p-6">
-            <Alert type="error" message={error} showIcon />
-          </div>
-        ) : pages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-400 dark:text-[#484f58]">
-            <LayoutDashboard
-              size={36}
-              className="text-gray-300 dark:text-[#30363d]"
-            />
-            <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">
-              Chưa có page nào
-            </p>
-          </div>
+      <div className="flex-1 overflow-y-auto px-6 py-3">
+        {error ? (
+          <Alert type="error" message={error} showIcon />
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-[10px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider border-b border-gray-100 dark:border-[#21262d]">
-                <th className="px-6 py-2 text-left">Code</th>
-                <th className="px-4 py-2 text-left">Tiêu đề</th>
-                <th className="px-4 py-2 text-left">Trạng thái</th>
-                <th className="px-4 py-2 text-right"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {pages.map((p) => (
-                <tr
-                  key={p.id}
-                  className="border-b border-gray-50 dark:border-[#21262d] hover:bg-gray-50 dark:hover:bg-[#161b22] transition-colors"
-                >
-                  <td className="px-6 py-2.5">
-                    <code className="text-[11px] bg-gray-100 dark:bg-[#21262d] px-1.5 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
-                      {p.code}
-                    </code>
-                  </td>
-                  <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-[#e6edf3]">
-                    {p.title}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <StatusTag status={p.status} />
-                  </td>
-                  <td className="px-4 py-2.5 text-right">
-                    <Link href={`/admin?slug=${moduleCode}`}>
-                      <Button size="small" icon={<PenLine size={11} />}>
+          <Table<FormPageListItem>
+            dataSource={pages}
+            rowKey="id"
+            size="middle"
+            loading={loading}
+            pagination={false}
+            locale={{
+              emptyText: (
+                <div className="flex flex-col items-center gap-2 py-12 text-gray-400 dark:text-[#484f58]">
+                  <LayoutDashboard size={32} className="text-gray-200 dark:text-[#30363d]" />
+                  <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">Chưa có page nào</p>
+                </div>
+              ),
+            }}
+            columns={[
+              {
+                title:     "Code",
+                dataIndex: "code",
+                width:     180,
+                render:    (v: string) => (
+                  <code className="text-[12px] bg-gray-100 dark:bg-[#21262d] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
+                    {v}
+                  </code>
+                ),
+              },
+              {
+                title:     "Tiêu đề",
+                dataIndex: "title",
+                render:    (v: string, p: FormPageListItem) => (
+                  <div>
+                    <span className="font-medium text-gray-800 dark:text-[#e6edf3]">{v}</span>
+                    {p.description && (
+                      <p className="text-[11px] text-gray-400 dark:text-[#484f58] m-0 mt-0.5 truncate max-w-[260px]">
+                        {p.description}
+                      </p>
+                    )}
+                  </div>
+                ),
+              },
+              {
+                title:     "Tabs",
+                dataIndex: "tabCount",
+                width:     70,
+                align:     "center" as const,
+                render:    (v: number) => (
+                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold ${
+                    v > 0
+                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                      : "bg-gray-100 dark:bg-[#21262d] text-gray-400 dark:text-[#484f58]"
+                  }`}>
+                    {v}
+                  </span>
+                ),
+              },
+              {
+                title:     "Trạng thái",
+                dataIndex: "status",
+                width:     130,
+                render:    (v: string) => <StatusTag status={v} />,
+              },
+              {
+                title:  "",
+                key:    "actions",
+                width:  200,
+                align:  "right" as const,
+                render: (_: unknown, p: FormPageListItem) => (
+                  <Space size={2}>
+                    <Link href={`/admin?slug=${moduleCode}&screen=${p.code}`}>
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<PenLine size={12} />}
+                        className="text-blue-500 dark:text-blue-400 hover:text-blue-600! hover:bg-blue-50! dark:hover:bg-blue-900/20!"
+                      >
                         Thiết kế
                       </Button>
                     </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    {p.status.toLowerCase() === "draft" && (
+                      <Button
+                        type="primary"
+                        ghost
+                        size="small"
+                        loading={publishing === p.code}
+                        onClick={() => handlePublish(p)}
+                      >
+                        Publish
+                      </Button>
+                    )}
+                    <Button
+                      type="text"
+                      size="small"
+                      danger
+                      loading={deleting === p.code}
+                      onClick={() => handleDelete(p)}
+                    >
+                      Xóa
+                    </Button>
+                  </Space>
+                ),
+              },
+            ] as ColumnsType<FormPageListItem>}
+          />
         )}
       </div>
     </div>
@@ -675,13 +783,23 @@ function ModuleDetail({ module }: { module: FormsModule }) {
               </p>
             )}
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-2xl font-bold text-gray-800 dark:text-[#e6edf3] m-0 leading-none">
-              {module.formCount}
-            </p>
-            <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0 mt-0.5 uppercase tracking-wider">
-              forms
-            </p>
+          <div className="flex items-center gap-4 shrink-0">
+            <div className="text-right">
+              <p className="text-2xl font-bold text-gray-800 dark:text-[#e6edf3] m-0 leading-none">
+                {module.formCount}
+              </p>
+              <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0 mt-0.5 uppercase tracking-wider">
+                forms
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-gray-800 dark:text-[#e6edf3] m-0 leading-none">
+                {module.screenCount}
+              </p>
+              <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0 mt-0.5 uppercase tracking-wider">
+                pages
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -812,7 +930,7 @@ export default function ModuleManagerPage() {
           <Alert
             type="error"
             showIcon
-            message="Không tải được danh sách module"
+            title="Không tải được danh sách module"
             description={manager.loadError}
           />
         </div>

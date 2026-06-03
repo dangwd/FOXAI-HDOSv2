@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button } from "antd";
+import { Button, Table } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import { Loader2, RefreshCw, Wifi } from "lucide-react";
 import httpClient from "@/infrastructure/http/httpClient";
 import useAuthStore from "@/core/auth/authStore";
@@ -761,63 +762,72 @@ export default function DataSyncMonitor() {
               </div>
             ) : (
               <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-[#30363d]">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="sticky top-0 bg-gray-50 dark:bg-[#0d1117]">
-                      <th className="text-left text-xs font-semibold text-gray-500 dark:text-[#8b949e] px-4 py-2.5">
-                        Khu vực
-                      </th>
-                      <th className="text-right text-xs font-semibold text-gray-500 dark:text-[#8b949e] px-4 py-2.5">
-                        Doanh thu
-                      </th>
-                      <th className="text-right text-xs font-semibold text-gray-500 dark:text-[#8b949e] px-4 py-2.5">
-                        SL
-                      </th>
-                      <th className="text-right text-xs font-semibold text-gray-500 dark:text-[#8b949e] px-4 py-2.5">
-                        Đạt mục tiêu
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-[#21262d] bg-white dark:bg-[#161b22]">
-                    {regions.map((row) => {
-                      const prev   = prevRegions.find((p) => p.name === row.name) ?? null;
-                      const pct    = Math.min(100, Math.max(0, row.achievementPct));
-                      const pctCls = pct >= 80
-                        ? "text-green-600 dark:text-green-400"
-                        : pct >= 60
-                          ? "text-amber-600 dark:text-amber-400"
-                          : "text-red-600 dark:text-red-400";
-                      return (
-                        <tr key={row.name} className="hover:bg-gray-50 dark:hover:bg-[#1c2128] transition-colors">
-                          <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-[#e6edf3]">
-                            {row.name}
-                          </td>
-                          <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 dark:text-[#c9d1d9]">
-                            <span className="inline-flex items-center justify-end gap-1">
-                              {fmt(row.revenue)}
-                              {prev && <DeltaArrow delta={numDelta(row.revenue, prev.revenue)} />}
+                <Table<RegionPerformanceRow>
+                  dataSource={regions}
+                  rowKey="name"
+                  size="small"
+                  pagination={false}
+                  columns={[
+                    {
+                      title:     "Khu vực",
+                      dataIndex: "name",
+                      render:    (v: string) => (
+                        <span className="font-medium text-gray-800 dark:text-[#e6edf3]">{v}</span>
+                      ),
+                    },
+                    {
+                      title:  "Doanh thu",
+                      key:    "revenue",
+                      align:  "right" as const,
+                      render: (_: unknown, row: RegionPerformanceRow) => {
+                        const prev = prevRegions.find((p) => p.name === row.name) ?? null;
+                        return (
+                          <span className="inline-flex items-center justify-end gap-1 tabular-nums text-gray-700 dark:text-[#c9d1d9]">
+                            {fmt(row.revenue)}
+                            {prev && <DeltaArrow delta={numDelta(row.revenue, prev.revenue)} />}
+                          </span>
+                        );
+                      },
+                    },
+                    {
+                      title:  "SL",
+                      key:    "units",
+                      align:  "right" as const,
+                      render: (_: unknown, row: RegionPerformanceRow) => {
+                        const prev = prevRegions.find((p) => p.name === row.name) ?? null;
+                        return (
+                          <span className="inline-flex items-center justify-end gap-1 tabular-nums text-gray-700 dark:text-[#c9d1d9]">
+                            {fmt(row.units)}
+                            {prev && <DeltaArrow delta={numDelta(row.units, prev.units)} />}
+                          </span>
+                        );
+                      },
+                    },
+                    {
+                      title:  "Đạt mục tiêu",
+                      key:    "achievement",
+                      align:  "right" as const,
+                      render: (_: unknown, row: RegionPerformanceRow) => {
+                        const prev   = prevRegions.find((p) => p.name === row.name) ?? null;
+                        const pct    = Math.min(100, Math.max(0, row.achievementPct));
+                        const pctCls = pct >= 80
+                          ? "text-green-600 dark:text-green-400"
+                          : pct >= 60
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-red-600 dark:text-red-400";
+                        return (
+                          <div className="flex items-center justify-end gap-2">
+                            <RegionProgressBar pct={pct} />
+                            <span className={`w-10 text-right text-xs font-semibold tabular-nums ${pctCls}`}>
+                              {pct.toFixed(0)}%
                             </span>
-                          </td>
-                          <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 dark:text-[#c9d1d9]">
-                            <span className="inline-flex items-center justify-end gap-1">
-                              {fmt(row.units)}
-                              {prev && <DeltaArrow delta={numDelta(row.units, prev.units)} />}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <div className="flex items-center justify-end gap-2">
-                              <RegionProgressBar pct={pct} />
-                              <span className={`w-10 text-right text-xs font-semibold tabular-nums ${pctCls}`}>
-                                {pct.toFixed(0)}%
-                              </span>
-                              {prev && <DeltaArrow delta={numDelta(row.achievementPct, prev.achievementPct)} />}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                            {prev && <DeltaArrow delta={numDelta(row.achievementPct, prev.achievementPct)} />}
+                          </div>
+                        );
+                      },
+                    },
+                  ] as ColumnsType<RegionPerformanceRow>}
+                />
               </div>
             )}
           </section>

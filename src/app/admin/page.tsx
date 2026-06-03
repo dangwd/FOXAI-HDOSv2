@@ -26,16 +26,16 @@ function DashboardDesignerInner() {
   const {
     modules,
     catalog,
-    providers,
-    operations,
     loading,
     loadError,
     reload,
   } = useAdminData();
   const searchParams = useSearchParams();
 
+  const slugParam   = searchParams.get("slug") ?? "";
+  const screenParam = searchParams.get("screen") ?? "";
   const [_selectedSlug, setSelectedSlug] = useState<string>(
-    searchParams.get("slug") ?? "",
+    screenParam ? `${slugParam}/${screenParam}` : slugParam,
   );
   const [search, setSearch] = useState<string>("");
   const [rightTab, setRightTab] = useState<"palette" | "json">("palette");
@@ -284,10 +284,8 @@ function DashboardDesignerInner() {
                       i: "__dropping",
                       x: 0,
                       y: 0,
-                      w:
-                        DEFAULT_SIZES[designer.droppingEntry.chartType]?.w ?? 6,
-                      h:
-                        DEFAULT_SIZES[designer.droppingEntry.chartType]?.h ?? 4,
+                      w: designer.droppingEntry.defaultW ?? DEFAULT_SIZES[designer.droppingEntry.widgetType]?.w ?? 6,
+                      h: designer.droppingEntry.defaultH ?? DEFAULT_SIZES[designer.droppingEntry.widgetType]?.h ?? 4,
                     }
                   : undefined
               }
@@ -298,7 +296,7 @@ function DashboardDesignerInner() {
                   <DesignerCard
                     widget={w}
                     selected={designer.selectedKey === w.widgetKey}
-                    entry={catalog.find((e) => e.chartType === w.chartType)}
+                    entry={catalog.find((e) => e.widgetType === w.widgetType)}
                     onSelect={() =>
                       designer.setSelectedKey(
                         designer.selectedKey === w.widgetKey
@@ -322,8 +320,6 @@ function DashboardDesignerInner() {
             key={designer.selectedWidget.widgetKey}
             widget={designer.selectedWidget}
             catalog={catalog}
-            providers={providers}
-            operations={operations}
             onClose={() => designer.setSelectedKey(null)}
             onChange={designer.handleApplyProperties}
           />

@@ -24,35 +24,27 @@ export const CATEGORY_COLOR: Record<WidgetCategory, string> = {
   ai:            "cyan",
 };
 
+// Default grid sizes for Screen Designer widget types
 export const DEFAULT_SIZES: Record<string, { w: number; h: number }> = {
-  kpi:                  { w: 3,  h: 2 },
-  kpi_grid:             { w: 6,  h: 3 },
-  line_chart:           { w: 6,  h: 4 },
-  bar_chart:            { w: 6,  h: 4 },
-  area_chart:           { w: 6,  h: 4 },
-  pie_chart:            { w: 4,  h: 4 },
-  donut_chart:          { w: 4,  h: 4 },
-  gauge:                { w: 4,  h: 4 },
-  heatmap:              { w: 8,  h: 5 },
-  funnel:               { w: 6,  h: 5 },
-  scatter:              { w: 6,  h: 4 },
-  simple_table:         { w: 8,  h: 5 },
-  advanced_table:       { w: 12, h: 6 },
-  pivot_table:          { w: 12, h: 6 },
-  progress_rows:        { w: 6,  h: 4 },
-  alert_list:           { w: 6,  h: 5 },
-  flow_steps:           { w: 12, h: 3 },
-  patient_flow_stages:  { w: 12, h: 4 },
-  risk_tiers:           { w: 6,  h: 4 },
-  bed_grid:             { w: 8,  h: 5 },
-  room_status_grid:     { w: 6,  h: 4 },
-  map_pins:             { w: 8,  h: 5 },
-  timeline_vertical:    { w: 4,  h: 6 },
-  news2_bars:           { w: 6,  h: 4 },
-  filter_dropdown:      { w: 3,  h: 2 },
-  filter_date_range:    { w: 4,  h: 2 },
-  filter_slider:        { w: 3,  h: 2 },
-  filter_search:        { w: 3,  h: 2 },
-  text_widget:          { w: 6,  h: 2 },
-  chat_panel:           { w: 6,  h: 8 },
+  FormSection:        { w: 6,  h: 8 },
+  TextBlock:          { w: 6,  h: 2 },
+  Divider:            { w: 12, h: 1 },
+  ImageBlock:         { w: 4,  h: 4 },
+  ConditionalSection: { w: 6,  h: 6 },
+};
+
+export const WIDGET_TYPE_LABELS: Record<string, string> = {
+  FormSection:        "Form Section",
+  TextBlock:          "Text Block",
+  Divider:            "Divider",
+  ImageBlock:         "Image Block",
+  ConditionalSection: "Conditional Section",
+};
+
+export const WIDGET_TYPE_DESCRIPTIONS: Record<string, string> = {
+  FormSection:        "Nhúng một FormTemplate vào vị trí này",
+  TextBlock:          "Tiêu đề hoặc đoạn văn bản (markdown)",
+  Divider:            "Đường ngang phân cách các section",
+  ImageBlock:         "Hình ảnh tĩnh từ URL",
+  ConditionalSection: "Container ẩn/hiện theo giá trị field",
 };
