@@ -2,11 +2,11 @@
 
 import {
   getDocumentSseUrl,
+  normalizeDocument,
   ocrApi,
   type DocLineItem,
   type OcrDocument,
   type OcrSchema,
-  type OcrSseEvent,
 } from "@/infrastructure/http/ocrApi";
 import type { UploadFile } from "antd";
 import {
@@ -68,21 +68,83 @@ type OcrPhase =
 
 function FilePreviewPane({ file }: { file: UploadFile | null }) {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [htmlDoc, setHtmlDoc] = useState<string | null>(null);
+  const [converting, setConverting] = useState(false);
 
   useEffect(() => {
-    const raw = (file as (UploadFile & { originFileObj?: File }) | null)
-      ?.originFileObj;
-    if (!raw) {
-      setBlobUrl(null);
-      return;
+    setBlobUrl(null);
+    setHtmlDoc(null);
+    setConverting(false);
+    if (!file) return;
+
+    const raw =
+      (file as UploadFile & { originFileObj?: File }).originFileObj ??
+      (file as unknown as File);
+    const mime = ((file as unknown as { type?: string }).type ?? "").toLowerCase();
+    const name = (file.name ?? "").toLowerCase();
+
+    const isImage = mime.startsWith("image/");
+    const isPdf   = mime === "application/pdf" || name.endsWith(".pdf");
+    const isWord  = mime.includes("wordprocessingml") || mime === "application/msword"
+                    || name.endsWith(".docx") || name.endsWith(".doc");
+    const isSheet = mime.includes("spreadsheetml") || mime === "application/vnd.ms-excel"
+                    || mime === "text/csv"
+                    || name.endsWith(".xlsx") || name.endsWith(".xls") || name.endsWith(".csv");
+
+    if (isImage || isPdf) {
+      const url = URL.createObjectURL(raw);
+      setBlobUrl(url);
+      return () => URL.revokeObjectURL(url);
     }
-    const url = URL.createObjectURL(raw);
-    setBlobUrl(url);
-    return () => URL.revokeObjectURL(url);
+
+    if (isWord || isSheet) {
+      setConverting(true);
+      let cancelled = false;
+
+      (async () => {
+        try {
+          const buf = await raw.arrayBuffer();
+          if (cancelled) return;
+
+          let html = "";
+          if (isWord) {
+            // mammoth: DOCX → HTML
+            const mod = await import("mammoth");
+            const mammoth = (mod as unknown as { default?: typeof mod }).default ?? mod;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const result = await (mammoth as any).convertToHtml({ arrayBuffer: buf });
+            html = `<style>
+              body{font-family:sans-serif;font-size:13px;line-height:1.6;padding:16px;color:#1a1a1a}
+              img{max-width:100%}
+              table{border-collapse:collapse;width:100%}
+              td,th{border:1px solid #ccc;padding:4px 8px}
+            </style>${result.value as string}`;
+          } else {
+            // SheetJS: XLSX / XLS / CSV → HTML table
+            const XLSX = await import("xlsx");
+            const wb = XLSX.read(new Uint8Array(buf), { type: "array" });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const table = XLSX.utils.sheet_to_html(ws);
+            html = `<style>
+              body{font-family:sans-serif;font-size:12px;padding:8px;margin:0;overflow:auto}
+              table{border-collapse:collapse;width:max-content;min-width:100%}
+              td,th{border:1px solid #d0d7de;padding:3px 10px;white-space:nowrap}
+              tr:first-child td,tr:first-child th{background:#f6f8fa;font-weight:600}
+              tr:nth-child(even) td{background:#f9f9f9}
+            </style>${table}`;
+          }
+
+          if (!cancelled) { setHtmlDoc(html); setConverting(false); }
+        } catch {
+          if (!cancelled) setConverting(false);
+        }
+      })();
+
+      return () => { cancelled = true; };
+    }
   }, [file]);
 
-  const mimeType =
-    (file as (UploadFile & { type?: string }) | null)?.type ?? "";
+  const mime = ((file as unknown as { type?: string })?.type ?? "").toLowerCase();
 
   if (!file) {
     return (
@@ -90,31 +152,39 @@ function FilePreviewPane({ file }: { file: UploadFile | null }) {
         <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-[#21262d] flex items-center justify-center">
           <FileText size={28} className="text-gray-300 dark:text-[#30363d]" />
         </div>
-        <p className="text-xs text-gray-400 dark:text-[#484f58]">
-          Chưa chọn tài liệu
-        </p>
+        <p className="text-xs text-gray-400 dark:text-[#484f58]">Chưa chọn tài liệu</p>
       </div>
     );
   }
 
-  if (blobUrl && mimeType.startsWith("image/")) {
+  if (converting) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-3">
+        <Spin size="default" />
+        <p className="text-xs text-gray-400 dark:text-[#484f58]">Đang tải xem trước...</p>
+      </div>
+    );
+  }
+
+  if (blobUrl && mime.startsWith("image/")) {
     return (
       <div className="w-full h-full flex items-start justify-center overflow-auto p-3">
-        <img
-          src={blobUrl}
-          alt="preview"
-          className="max-w-full object-contain rounded shadow-sm"
-        />
+        <img src={blobUrl} alt="preview" className="max-w-full object-contain rounded shadow-sm" />
       </div>
     );
   }
 
-  if (blobUrl && mimeType === "application/pdf") {
+  if (blobUrl && (mime === "application/pdf" || (file.name ?? "").toLowerCase().endsWith(".pdf"))) {
+    return <iframe src={blobUrl} title="PDF preview" className="w-full h-full border-0" />;
+  }
+
+  if (htmlDoc) {
     return (
       <iframe
-        src={blobUrl}
-        title="PDF preview"
-        className="w-full h-full border-0"
+        srcDoc={htmlDoc}
+        title="Document preview"
+        className="w-full h-full border-0 bg-white"
+        sandbox="allow-same-origin"
       />
     );
   }
@@ -199,7 +269,7 @@ export default function OcrProcessPage() {
   useEffect(() => {
     if (!document) return;
     const map: Record<string, string> = {};
-    for (const v of document.values) map[v.fieldKey] = v.value;
+    for (const v of (document.values ?? [])) map[v.fieldKey] = v.value;
     setFieldValues(map);
   }, [document]);
 
@@ -215,7 +285,7 @@ export default function OcrProcessPage() {
   const lineItemsByTable = useMemo(() => {
     const map = new Map<string, DocLineItem[]>();
     if (!document) return map;
-    for (const item of document.lineItems) {
+    for (const item of (document.lineItems ?? [])) {
       const arr = map.get(item.tableKey) ?? [];
       arr.push(item);
       map.set(item.tableKey, arr);
@@ -224,45 +294,60 @@ export default function OcrProcessPage() {
   }, [document]);
 
   // ── SSE ──────────────────────────────────────────────────────────────────
+  // Backend sends unnamed SSE events; payload: { type, document?, progress?, reason? }
+  // The "done" event includes the full document inline — use it directly to
+  // avoid an extra round-trip and any stale-read race.
   const startSse = useCallback((documentId: string) => {
     esRef.current?.close();
     const es = new EventSource(getDocumentSseUrl(documentId));
     esRef.current = es;
+    let completed = false;
 
     es.onmessage = (e: MessageEvent<string>) => {
       try {
-        const event = JSON.parse(e.data) as OcrSseEvent;
-        if (event.type === "progress") {
+        const raw = JSON.parse(e.data) as Record<string, unknown>;
+        const type = raw.type as string | undefined;
+
+        if (type === "progress") {
           setPhase("processing");
-          setOcrProgress(event.progress ?? 0);
-        } else if (event.type === "done") {
+          setOcrProgress((raw.progress as number) ?? 0);
+        } else if (type === "done") {
+          completed = true;
           setOcrProgress(100);
-          const docId = (event as { documentId?: string }).documentId ?? documentId;
-          ocrApi
-            .getDocument(docId)
-            .then((doc) => {
-              setDocument(doc);
-              setPhase("done");
-            })
-            .catch(() => {
-              setOcrError("OCR xong nhưng không tải được kết quả.");
-              setPhase("failed");
-            });
+          const inlineDoc = raw.document ? normalizeDocument(raw.document) : undefined;
+          if (inlineDoc) {
+            setDocument(inlineDoc);
+            setPhase("done");
+          } else {
+            const docId = (raw.documentId as string | undefined) ?? documentId;
+            ocrApi
+              .getDocument(docId)
+              .then((doc) => {
+                setDocument(doc);
+                setPhase("done");
+              })
+              .catch(() => {
+                setOcrError("OCR xong nhưng không tải được kết quả.");
+                setPhase("failed");
+              });
+          }
           es.close();
-        } else if (event.type === "failed") {
-          setOcrError(event.reason ?? "OCR thất bại");
+        } else if (type === "failed") {
+          completed = true;
+          // API sends { error: "..." } — fallback to reason for compatibility
+          setOcrError((raw.error as string | undefined) ?? (raw.reason as string | undefined) ?? "OCR thất bại");
           setPhase("failed");
           es.close();
         }
-      } catch {
-        /* ignore parse errors */
-      }
+      } catch { /* ignore parse errors */ }
     };
 
     es.onerror = () => {
-      setPhase("failed");
+      // CONNECTING = auto-reconnect in progress — wait it out.
+      // If done/failed already handled, don't override.
+      if (completed || es.readyState === EventSource.CONNECTING) return;
       setOcrError("Mất kết nối theo dõi OCR.");
-      es.close();
+      setPhase("failed");
     };
   }, []);
 
@@ -301,11 +386,12 @@ export default function OcrProcessPage() {
     if (!document) return;
     setSaving(true);
     try {
+      // API expects { fieldId, stringValue } — look up fieldId from the loaded document values
       const updated = await ocrApi.updateDocument(document.id, {
-        values: Object.entries(fieldValues).map(([fieldKey, value]) => ({
-          fieldKey,
-          value,
-        })),
+        values: Object.entries(fieldValues).map(([fieldKey, stringValue]) => {
+          const docVal = document.values.find((v) => v.fieldKey === fieldKey);
+          return { fieldId: docVal?.fieldId ?? "", stringValue };
+        }),
       });
       setDocument(updated);
       message.success("Đã lưu thay đổi");

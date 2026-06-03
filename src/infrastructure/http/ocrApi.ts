@@ -75,18 +75,19 @@ export interface OcrSchema extends OcrSchemaListItem {
 
 // ─── Document types ───────────────────────────────────────────────────────────
 
-/** Giá trị một field OCR đã trích xuất */
+/** Giá trị một field OCR đã trích xuất (normalized) */
 export interface DocValue {
+  fieldId: string;   // needed for PATCH /documents/:id
   fieldKey: string;
   value: string;
   confidence: number; // 0–1
 }
 
-/** Một dòng trong bảng chi tiết (lineItems) */
+/** Một dòng trong bảng chi tiết (normalized) */
 export interface DocLineItem {
   tableKey: string;
   rowIndex: number;
-  values: Record<string, string>; // { name, quantity, unitPrice, amount, ... }
+  values: Record<string, string>; // column key → value
 }
 
 export interface OcrDocument {
@@ -103,6 +104,44 @@ export interface OcrDocument {
   updatedAt: string;
 }
 
+// ─── Normalizers ──────────────────────────────────────────────────────────────
+// Backend serializes documents differently from the normalized interfaces above.
+// fieldKey lives in a nested `field` object; the value field is `stringValue`;
+// line-item column values are in `extraData` (not `values`); row index is `stt`.
+
+function normalizeDocValue(raw: Record<string, unknown>): DocValue {
+  const nested = raw.field as { fieldKey?: string } | undefined;
+  return {
+    fieldId: (raw.id as string) ?? (raw.fieldId as string) ?? "",
+    fieldKey: (nested?.fieldKey ?? (raw.fieldKey as string) ?? ""),
+    value: ((raw.stringValue ?? raw.value ?? "") as string),
+    confidence: (raw.confidence as number) ?? 0,
+  };
+}
+
+function normalizeDocLineItem(raw: Record<string, unknown>): DocLineItem {
+  const extraData = (raw.extraData ?? {}) as Record<string, string | null>;
+  const existing = (raw.values ?? {}) as Record<string, string>;
+  const values: Record<string, string> = { ...existing };
+  for (const [k, v] of Object.entries(extraData)) {
+    if (v != null) values[k] = v;
+  }
+  return {
+    tableKey: (raw.tableKey as string) ?? "",
+    rowIndex: ((raw.stt ?? raw.rowIndex ?? 0) as number),
+    values,
+  };
+}
+
+export function normalizeDocument(raw: unknown): OcrDocument {
+  const doc = raw as Record<string, unknown>;
+  return {
+    ...doc,
+    values: ((doc.values ?? []) as Record<string, unknown>[]).map(normalizeDocValue),
+    lineItems: ((doc.lineItems ?? []) as Record<string, unknown>[]).map(normalizeDocLineItem),
+  } as OcrDocument;
+}
+
 export interface OcrDocumentListItem {
   id: string;
   status: OcrDocumentStatus;
@@ -115,18 +154,20 @@ export interface OcrDocumentListItem {
 }
 
 export interface OcrDocumentListResponse {
-  data: OcrDocumentListItem[];
+  items: OcrDocumentListItem[];
   total: number;
   page: number;
-  limit: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export interface OcrDocumentStats {
-  DRAFT: number;
-  PROCESSED: number;
-  CONFIRMED: number;
-  TRANSFERRED: number;
-  ERROR: number;
+  total: number;
+  draft: number;
+  confirmed: number;
+  processed: number;
+  transferred: number;
+  error: number;
 }
 
 export interface OcrUploadResponse {
@@ -215,10 +256,12 @@ export const ocrApi = {
 
   // ── Documents ─────────────────────────────────────────────────────────────
 
-  /** POST /documents/upload — multipart: files, schemaCode, provider, language */
+  /** POST /documents/upload — multipart: files, schemaId, ocrProvider, language */
   uploadDocuments: (formData: FormData): Promise<OcrUploadResponse> =>
     httpClient.post<OcrUploadResponse>("/ocr/documents/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+      // Do NOT set Content-Type manually — browser must inject the multipart boundary.
+      // An explicit "multipart/form-data" without boundary causes the server to
+      // buffer the entire body as raw data and return 413.
       timeout: 60_000,
     }).then((r) => r.data),
 
@@ -229,12 +272,16 @@ export const ocrApi = {
     status?: OcrDocumentStatus;
     schemaCode?: string;
     page?: number;
-    limit?: number;
+    pageSize?: number;
+    search?: string;
+    type?: DocumentType;
+    dateFrom?: string;
+    dateTo?: string;
   }): Promise<OcrDocumentListResponse> =>
     httpClient.get<OcrDocumentListResponse>("/ocr/documents", { params }).then((r) => r.data),
 
   getDocument: (id: string): Promise<OcrDocument> =>
-    httpClient.get<OcrDocument>(`/ocr/documents/${id}`).then((r) => r.data),
+    httpClient.get<unknown>(`/ocr/documents/${id}`).then((r) => normalizeDocument(r.data)),
 
   /** Returns the URL for streaming the original file (use in <img> or <iframe>) */
   getFileUrl: (id: string): string => {
@@ -249,19 +296,20 @@ export const ocrApi = {
   updateDocument: (
     id: string,
     body: {
-      values?: { fieldKey: string; value: string }[];
+      values?: { fieldId: string; stringValue: string }[];
       lineItems?: DocLineItem[];
+      status?: "DRAFT" | "PROCESSED";
     },
   ): Promise<OcrDocument> =>
-    httpClient.patch<OcrDocument>(`/ocr/documents/${id}`, body).then((r) => r.data),
+    httpClient.patch<unknown>(`/ocr/documents/${id}`, body).then((r) => normalizeDocument(r.data)),
 
   /** POST /documents/:id/confirm → status: CONFIRMED */
   confirmDocument: (id: string): Promise<OcrDocument> =>
-    httpClient.post<OcrDocument>(`/ocr/documents/${id}/confirm`).then((r) => r.data),
+    httpClient.post<unknown>(`/ocr/documents/${id}/confirm`).then((r) => normalizeDocument(r.data)),
 
   /** POST /documents/:id/transfer → status: TRANSFERRED (requires CONFIRMED) */
   transferDocument: (id: string): Promise<OcrDocument> =>
-    httpClient.post<OcrDocument>(`/ocr/documents/${id}/transfer`).then((r) => r.data),
+    httpClient.post<unknown>(`/ocr/documents/${id}/transfer`).then((r) => normalizeDocument(r.data)),
 
   /** DELETE /documents/:id — only DRAFT, PROCESSED, ERROR */
   deleteDocument: (id: string): Promise<void> =>
@@ -271,13 +319,13 @@ export const ocrApi = {
     httpClient.get<OcrJobStatus>(`/ocr/documents/${id}/job-status`).then((r) => r.data),
 
   bulkConfirm: (ids: string[]): Promise<void> =>
-    httpClient.post("/ocr/documents/bulk-confirm", { ids }).then(() => undefined),
+    httpClient.post("/ocr/documents/bulk-confirm", { documentIds: ids }).then(() => undefined),
 
   bulkTransfer: (ids: string[]): Promise<void> =>
-    httpClient.post("/ocr/documents/bulk-transfer", { ids }).then(() => undefined),
+    httpClient.post("/ocr/documents/bulk-transfer", { documentIds: ids }).then(() => undefined),
 
   bulkDelete: (ids: string[]): Promise<void> =>
-    httpClient.post("/ocr/documents/bulk-delete", { ids }).then(() => undefined),
+    httpClient.post("/ocr/documents/bulk-delete", { documentIds: ids }).then(() => undefined),
 };
 
 /** SSE URL for real-time OCR progress — token passed as query param (EventSource has no custom headers) */
