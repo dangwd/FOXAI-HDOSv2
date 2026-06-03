@@ -27,8 +27,6 @@ function DashboardDesignerInner() {
     modules,
     catalog,
     loading,
-    loadError,
-    reload,
   } = useAdminData();
   const searchParams = useSearchParams();
 

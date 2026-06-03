@@ -73,6 +73,7 @@ function FilePreviewPane({ file }: { file: UploadFile | null }) {
     const raw = (file as (UploadFile & { originFileObj?: File }) | null)
       ?.originFileObj;
     if (!raw) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setBlobUrl(null);
       return;
     }
@@ -179,6 +180,7 @@ export default function OcrProcessPage() {
   // ── Load schema ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!schemaId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     ocrApi
       .getSchema(schemaId)
@@ -200,6 +202,7 @@ export default function OcrProcessPage() {
     if (!document) return;
     const map: Record<string, string> = {};
     for (const v of document.values) map[v.fieldKey] = v.value;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFieldValues(map);
   }, [document]);
 

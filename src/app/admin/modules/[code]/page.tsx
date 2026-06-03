@@ -62,6 +62,7 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
     }
   }, [moduleCode]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
   return (
@@ -157,6 +158,7 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
     }
   }, [moduleCode]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
   return (

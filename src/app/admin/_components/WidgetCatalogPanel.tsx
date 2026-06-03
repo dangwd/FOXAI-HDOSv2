@@ -1,5 +1,6 @@
 "use client";
 
+import { createElement } from "react";
 import type { WidgetCatalogEntry } from "@/infrastructure/http/adminApi";
 import { Input } from "antd";
 import * as LucideIcons from "lucide-react";
@@ -51,7 +52,6 @@ function CatalogItem({
   onDragStart: () => void;
   onDragEnd: () => void;
 }) {
-  const Icon = getEntryIcon(entry);
   const color = getEntryColor(entry);
 
   return (
@@ -77,7 +77,7 @@ function CatalogItem({
         className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center"
         style={{ background: color + "18" }}
       >
-        <Icon size={15} style={{ color }} />
+        {createElement(getEntryIcon(entry), { size: 15, style: { color } })}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold text-gray-700 dark:text-[#e6edf3] m-0 truncate leading-tight">

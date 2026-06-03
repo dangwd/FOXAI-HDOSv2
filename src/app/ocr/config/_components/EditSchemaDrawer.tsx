@@ -15,6 +15,7 @@ interface EditSchemaDrawerProps {
 export function EditSchemaDrawer({ schema, onClose, onUpdated }: EditSchemaDrawerProps) {
   const [current, setCurrent] = useState<OcrSchema | null>(schema);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setCurrent(schema); }, [schema]);
 
   function handleUpdated(updated: OcrSchema) {

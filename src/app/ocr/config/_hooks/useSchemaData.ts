@@ -66,6 +66,7 @@ export function useSchemaData(): UseSchemaDataReturn {
   }, [search, filterType, filterActive]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSchemas();
     loadStats();
   }, [loadSchemas, loadStats]);

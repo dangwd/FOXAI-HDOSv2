@@ -93,7 +93,7 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
   const [saveError,   setSaveError]   = useState<string | null>(null);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
-  const widgets        = widgetsByTab.get(activeTabId) ?? [];
+  const widgets        = useMemo(() => widgetsByTab.get(activeTabId) ?? [], [widgetsByTab, activeTabId]);
   const selectedWidget = selectedKey ? (widgets.find((w) => w.widgetKey === selectedKey) ?? null) : null;
 
   const gridLayout = useMemo<Layout>(
