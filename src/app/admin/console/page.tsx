@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Input, InputNumber, Select } from "antd";
 import { Loader2, Wifi } from "lucide-react";
 import httpClient from "@/infrastructure/http/httpClient";
@@ -218,12 +218,11 @@ export default function ConsolePage() {
   const pollingRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   const logEndRef      = useRef<HTMLDivElement>(null);
 
-  const [sseUrl, setSseUrl] = useState<string | null>(null);
-  useLayoutEffect(() => {
+  const sseUrl = useMemo(() => {
     const token = useAuthStore.getState().accessToken;
-    if (!token) return;
+    if (!token) return null;
     const base = process.env.NEXT_PUBLIC_SSE_URL ?? "/notifications/sse";
-    setSseUrl(`${base}?access_token=${encodeURIComponent(token)}`);
+    return `${base}?access_token=${encodeURIComponent(token)}`;
   }, []);
 
   // derived

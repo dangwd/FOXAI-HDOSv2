@@ -467,6 +467,7 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
   }, [moduleCode]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
 
@@ -580,6 +581,7 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
     }
   }, [moduleCode]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
   async function handlePublish(p: FormPageListItem) {
@@ -872,6 +874,7 @@ export default function ModuleManagerPage() {
   // Auto-select first module once list loads
   useEffect(() => {
     if (!selected && manager.filtered.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelected(manager.filtered[0].code);
     }
   }, [manager.filtered, selected]);

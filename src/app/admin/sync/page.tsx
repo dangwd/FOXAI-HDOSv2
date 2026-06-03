@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { Loader2, RefreshCw, Wifi } from "lucide-react";
@@ -223,12 +223,11 @@ function RegionProgressBar({ pct }: { pct: number }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DataSyncMonitor() {
-  const [sseUrl, setSseUrl] = useState<string | null>(null);
-  useLayoutEffect(() => {
+  const sseUrl = useMemo(() => {
     const token = useAuthStore.getState().accessToken;
-    if (!token) return;
+    if (!token) return null;
     const base = process.env.NEXT_PUBLIC_SSE_URL ?? "/notifications/sse";
-    setSseUrl(`${base}?access_token=${encodeURIComponent(token)}`);
+    return `${base}?access_token=${encodeURIComponent(token)}`;
   }, []);
 
   // ── Data ──────────────────────────────────────────────────────────────────

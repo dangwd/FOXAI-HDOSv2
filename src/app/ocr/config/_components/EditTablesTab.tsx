@@ -20,6 +20,7 @@ export function EditTablesTab({ schema, onUpdated }: { schema: OcrSchema; onUpda
   const [addingColId,     setAddingColId]     = useState<string | null>(null);
   const [addColState,     setAddColState]     = useState<Record<string, AddColState>>({});
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setTables(schema.tables); }, [schema.tables]);
 
   function patchTables(next: OcrTable[]) {

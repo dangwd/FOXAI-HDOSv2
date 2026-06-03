@@ -4,7 +4,7 @@ import { useThemeStore } from "@/store/themeStore";
 import { ocrApi, type OcrSchemaListItem } from "@/infrastructure/http/ocrApi";
 import { App, ConfigProvider } from "antd";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -152,24 +152,6 @@ function IconBoxes() {
   );
 }
 
-function IconForms() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M3 9h18" />
-      <path d="M9 21V9" />
-    </svg>
-  );
-}
 
 function IconBack() {
   return (
@@ -587,7 +569,9 @@ export default function AdminLayout({
       }}
     >
       <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-[#010409]">
-        <AdminSidebar />
+        <Suspense fallback={null}>
+          <AdminSidebar />
+        </Suspense>
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <AdminTopBar />
           <App className="flex-1 min-h-0 flex flex-col">

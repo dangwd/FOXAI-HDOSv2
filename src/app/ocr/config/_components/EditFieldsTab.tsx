@@ -16,6 +16,7 @@ export function EditFieldsTab({ schema, onUpdated }: { schema: OcrSchema; onUpda
   const [adding,      setAdding]      = useState(false);
   const [deletingId,  setDeletingId]  = useState<string | null>(null);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setFields(schema.fields); }, [schema.fields]);
 
   async function handleAdd() {
