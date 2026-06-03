@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { Layout, LayoutItem } from "react-grid-layout";
 import type { WidgetCatalogEntry, ScreenTabApi } from "@/infrastructure/http/adminApi";
 import { adminApi } from "@/infrastructure/http/adminApi";
@@ -96,11 +96,14 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
   const widgets        = widgetsByTab.get(activeTabId) ?? [];
   const selectedWidget = selectedKey ? (widgets.find((w) => w.widgetKey === selectedKey) ?? null) : null;
 
-  const gridLayout: Layout = widgets.map((w) => ({
-    i: w.widgetKey,
-    x: w.gridX, y: w.gridY, w: w.gridW, h: w.gridH,
-    minW: 2, minH: 1,
-  }));
+  const gridLayout = useMemo<Layout>(
+    () => widgets.map((w) => ({
+      i: w.widgetKey,
+      x: w.gridX, y: w.gridY, w: w.gridW, h: w.gridH,
+      minW: 2, minH: 1,
+    })),
+    [widgets],
+  );
 
   // ── Load layout when slug changes ─────────────────────────────────────────
   useEffect(() => {
@@ -186,9 +189,15 @@ export function useDesignerState(selectedSlug: string): DesignerStateReturn {
 
   // ── Layout change (drag / resize) ────────────────────────────────────────────
   function handleLayoutChange(newLayout: Layout) {
+    const current = widgetsByTab.get(activeTabId) ?? [];
+    const hasChange = current.some((w) => {
+      const li = newLayout.find((l) => l.i === w.widgetKey);
+      return li && (li.x !== w.gridX || li.y !== w.gridY || li.w !== w.gridW || li.h !== w.gridH);
+    });
+    if (!hasChange) return;
     setWidgetsByTab((prev) => {
-      const current = prev.get(activeTabId) ?? [];
-      const updated = current.map((w) => {
+      const cur = prev.get(activeTabId) ?? [];
+      const updated = cur.map((w) => {
         const li = newLayout.find((l) => l.i === w.widgetKey);
         if (!li) return w;
         return { ...w, gridX: li.x, gridY: li.y, gridW: li.w, gridH: li.h };
