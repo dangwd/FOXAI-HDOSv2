@@ -1,10 +1,18 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { ModuleRenderer }  from "@/components/ModuleRenderer";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { adminApi } from "@/infrastructure/http/adminApi";
+import { FormScreenRenderer } from "@/components/FormScreenRenderer";
+import { ModuleRenderer } from "@/components/ModuleRenderer";
 import useAuthStore from "@/core/auth/authStore";
-import type { ModuleLayout } from "@/infrastructure/http/adminApi";
+import type {
+  FormScreen,
+  ModuleLayout,
+  ScreenLayout,
+} from "@/infrastructure/http/adminApi";
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
 
@@ -13,67 +21,244 @@ function PageSkeleton() {
     <div className="p-6 space-y-4">
       <div className={`${SK} h-7 w-48`} />
       <div className="grid grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => <div key={i} className={`${SK} h-24`} />)}
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className={`${SK} h-24`} />
+        ))}
       </div>
       <div className="grid grid-cols-2 gap-4">
-        {Array.from({ length: 2 }).map((_, i) => <div key={i} className={`${SK} h-52`} />)}
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className={`${SK} h-52`} />
+        ))}
       </div>
       <div className="grid grid-cols-3 gap-4">
-        {Array.from({ length: 3 }).map((_, i) => <div key={i} className={`${SK} h-40`} />)}
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className={`${SK} h-40`} />
+        ))}
       </div>
     </div>
   );
 }
 
-type PageState =
+// ─── Module kind detection ────────────────────────────────────────────────────
+
+type ModuleKind =
   | { kind: "loading" }
-  | { kind: "module"; layout: ModuleLayout }
+  | { kind: "old"; layout: ModuleLayout }
+  | { kind: "forms"; screens: FormScreen[] }
   | { kind: "error"; message: string };
 
-function HdosContent({ moduleId }: { moduleId: string }) {
-  const [state, setState] = useState<PageState>({ kind: "loading" });
+// ─── Main content ─────────────────────────────────────────────────────────────
 
+function HdosContent({
+  moduleId,
+  screenCode,
+  onScreenChange,
+}: {
+  moduleId: string;
+  screenCode: string | null;
+  onScreenChange: (code: string) => void;
+}) {
+  const [moduleState, setModuleState] = useState<ModuleKind>({ kind: "loading" });
+  const [screenLayout, setScreenLayout] = useState<ScreenLayout | null>(null);
+  const [screenLoading, setScreenLoading] = useState(false);
+
+  // Probe: DynamicFormService first, then fall back to old admin layout
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
-      const token = useAuthStore.getState().accessToken;
-      const authHeaders: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+    async function probe() {
+      setModuleState({ kind: "loading" });
+      setScreenLayout(null);
 
-      const modRes = await fetch(`/api/v1/modules/${moduleId}/layout`, { headers: authHeaders });
-      if (!cancelled && modRes.ok) {
-        const layout = (await modRes.json()) as ModuleLayout;
-        if (!cancelled) setState({ kind: "module", layout });
-        return;
+      // 1. Try DynamicFormService
+      try {
+        const all = await adminApi.listFormScreens(moduleId);
+        const published = all
+          .filter((s) => s.status === "Published")
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+
+        if (!cancelled && published.length > 0) {
+          setModuleState({ kind: "forms", screens: published });
+          return;
+        }
+      } catch {
+        // not a forms module — fall through
       }
 
-      if (!cancelled) setState({ kind: "error", message: `Màn hình chưa được cấu hình: ${moduleId}` });
+      if (cancelled) return;
+
+      // 2. Fallback: old admin module layout
+      try {
+        const token = useAuthStore.getState().accessToken;
+        const authHeaders: HeadersInit = token
+          ? { Authorization: `Bearer ${token}` }
+          : {};
+        const res = await fetch(`/api/v1/modules/${moduleId}/layout`, {
+          headers: authHeaders,
+        });
+        if (!cancelled && res.ok) {
+          const layout = (await res.json()) as ModuleLayout;
+          if (!cancelled) setModuleState({ kind: "old", layout });
+          return;
+        }
+      } catch {}
+
+      if (!cancelled) {
+        setModuleState({
+          kind: "error",
+          message: `Màn hình chưa được cấu hình: ${moduleId}`,
+        });
+      }
     }
 
-    load().catch(() => {
-      if (!cancelled) setState({ kind: "error", message: "Không thể tải dữ liệu màn hình." });
+    probe().catch(() => {
+      if (!cancelled)
+        setModuleState({
+          kind: "error",
+          message: "Không thể tải dữ liệu màn hình.",
+        });
     });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [moduleId]);
 
-  if (state.kind === "loading") return <PageSkeleton />;
+  // Resolve active screen code for forms modules
+  const formsScreens =
+    moduleState.kind === "forms" ? moduleState.screens : null;
+  const activeScreenCode = formsScreens
+    ? (screenCode ?? formsScreens[0]?.code ?? null)
+    : null;
 
-  if (state.kind === "error") {
+  // Load screen layout when active screen changes
+  useEffect(() => {
+    if (!activeScreenCode) return;
+
+    let cancelled = false;
+
+    async function load() {
+      setScreenLoading(true);
+      setScreenLayout(null);
+      try {
+        const layout = await adminApi.getScreenLayout(moduleId, activeScreenCode!);
+        if (!cancelled) setScreenLayout(layout);
+      } catch {
+        if (!cancelled) setScreenLayout(null);
+      } finally {
+        if (!cancelled) setScreenLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [moduleId, activeScreenCode]);
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
+  if (moduleState.kind === "loading") return <PageSkeleton />;
+
+  if (moduleState.kind === "error") {
     return (
       <div className="p-8 text-gray-400 dark:text-[#484f58] text-sm">
-        <code className="text-red-400">{state.message}</code>
+        <code className="text-red-400">{moduleState.message}</code>
       </div>
     );
   }
 
-  return <ModuleRenderer layout={state.layout} />;
+  if (moduleState.kind === "old") {
+    return <ModuleRenderer layout={moduleState.layout} />;
+  }
+
+  // ── Forms module ──────────────────────────────────────────────────────────
+
+  const { screens } = moduleState;
+  const activeScreen =
+    screens.find((s) => s.code === activeScreenCode) ?? screens[0] ?? null;
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Screen navigation tabs */}
+      {screens.length > 1 && (
+        <div className="bg-white dark:bg-[#0d1117] border-b border-gray-200 dark:border-[#30363d] flex items-end px-4 shrink-0 overflow-x-auto">
+          {screens.map((s) => {
+            const active = s.code === activeScreenCode;
+            return (
+              <button
+                key={s.code}
+                onClick={() => onScreenChange(s.code)}
+                className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  active
+                    ? "border-violet-500 text-violet-600 dark:text-violet-400"
+                    : "border-transparent text-gray-500 dark:text-[#8b949e] hover:text-gray-800 dark:hover:text-[#e6edf3] hover:border-gray-300 dark:hover:border-[#484f58]"
+                }`}
+              >
+                {s.title}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Screen header */}
+      {activeScreen && (
+        <div className="px-5 py-3 border-b border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] shrink-0">
+          <h1 className="text-base font-bold text-gray-900 dark:text-[#e6edf3] m-0 leading-tight">
+            {activeScreen.title}
+          </h1>
+          {activeScreen.description && (
+            <p className="text-[11px] text-gray-500 dark:text-[#8b949e] m-0 mt-0.5">
+              {activeScreen.description}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Screen content */}
+      <div className="flex-1 overflow-hidden">
+        {screenLoading ? (
+          <PageSkeleton />
+        ) : screenLayout ? (
+          <FormScreenRenderer layout={screenLayout} />
+        ) : (
+          <div className="flex items-center justify-center h-64 text-sm text-gray-400 dark:text-[#484f58]">
+            {screens.length === 0
+              ? "Module này chưa có màn hình nào được xuất bản."
+              : "Không tải được layout màn hình."}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
+
+// ─── Page wrapper ─────────────────────────────────────────────────────────────
 
 function HdosPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const moduleId = searchParams.get("module") ?? "dashboard";
-  return <HdosContent key={moduleId} moduleId={moduleId} />;
+  const screenCode = searchParams.get("screen");
+
+  const handleScreenChange = useCallback(
+    (code: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("screen", code);
+      router.push(`/client?${params.toString()}`);
+    },
+    [router, searchParams],
+  );
+
+  return (
+    <HdosContent
+      key={moduleId}
+      moduleId={moduleId}
+      screenCode={screenCode}
+      onScreenChange={handleScreenChange}
+    />
+  );
 }
 
 export default function HdosPage() {

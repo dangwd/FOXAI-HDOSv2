@@ -57,8 +57,23 @@ export default function Sidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const activeId = searchParams.get("module") ?? "dashboard";
+  const activeModule = searchParams.get("module") ?? "dashboard";
+  const activeScreen = searchParams.get("screen");
   const isDark = theme === "dark";
+
+  function isMenuItemActive(item: import("@/types/menu").MenuItem): boolean {
+    if (!item.href) return activeModule === item.id;
+    try {
+      const url = new URL(item.href, "http://x");
+      const m = url.searchParams.get("module");
+      const s = url.searchParams.get("screen");
+      if (m && m !== activeModule) return false;
+      if (s && activeScreen && s !== activeScreen) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   useEffect(() => { fetchReports(); }, [fetchReports]);
   return (
@@ -134,9 +149,7 @@ export default function Sidebar() {
                 </p>
                 <ul className="space-y-0.5">
                   {group.items.map((item) => {
-                    const isActive = item.href
-                      ? pathname === item.href
-                      : activeId === item.id;
+                    const isActive = isMenuItemActive(item);
                     return (
                       <li key={item.id}>
                         <button
