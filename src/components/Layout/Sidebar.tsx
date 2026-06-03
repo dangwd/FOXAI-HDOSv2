@@ -1,19 +1,66 @@
 "use client";
 import { useMenuStore } from "@/store/menuStore";
+import { useReportStore, type ReportMenuNode } from "@/store/reportStore";
 import { useThemeStore } from "@/store/themeStore";
 import { Spin } from "antd";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import MenuBadgeChip from "./MenuBadgeChip";
 import MenuIcon from "./MenuIcon";
 
+function ReportNavItem({
+  node,
+  pathname,
+  router,
+  depth = 0,
+}: {
+  node: ReportMenuNode;
+  pathname: string;
+  router: ReturnType<typeof useRouter>;
+  depth?: number;
+}) {
+  const href = `/client/reports/${node.slug}`;
+  const isActive = pathname === href;
+  const indent = depth > 0 ? "pl-7" : "pl-3";
+
+  return (
+    <>
+      <li>
+        <button
+          onClick={() => router.push(href)}
+          className={`w-full flex items-center gap-2.5 ${indent} pr-3 py-2 rounded-lg text-sm transition-colors cursor-pointer
+            ${isActive
+              ? "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-medium"
+              : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3]"
+            }`}
+        >
+          <span className={isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-400 dark:text-[#8b949e]"}>
+            <MenuIcon name={node.icon ?? ""} />
+          </span>
+          <span className="flex-1 text-left truncate">{node.name}</span>
+        </button>
+      </li>
+      {node.children.map((child) => (
+        <ReportNavItem key={child.id} node={child} pathname={pathname} router={router} depth={depth + 1} />
+      ))}
+    </>
+  );
+}
+
 export default function Sidebar() {
-  const groups = useMenuStore((s) => s.groups);
+  const groups  = useMenuStore((s) => s.groups);
   const loading = useMenuStore((s) => s.loading);
+  const reportMenus    = useReportStore((s) => s.menus);
+  const reportsLoading = useReportStore((s) => s.loading);
+  const fetchReports   = useReportStore((s) => s.fetch);
   const { theme, toggle } = useThemeStore();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const activeId = searchParams.get("module") ?? "dashboard";
   const isDark = theme === "dark";
+
+  useEffect(() => { fetchReports(); }, [fetchReports]);
   return (
     <aside className="w-64 h-screen bg-white dark:bg-[#0d1117] border-r border-gray-200 dark:border-[#30363d] flex flex-col flex-shrink-0">
       {/* Logo + theme toggle */}
@@ -87,11 +134,15 @@ export default function Sidebar() {
                 </p>
                 <ul className="space-y-0.5">
                   {group.items.map((item) => {
-                    const isActive = activeId === item.id;
+                    const isActive = item.href
+                      ? pathname === item.href
+                      : activeId === item.id;
                     return (
                       <li key={item.id}>
                         <button
-                          onClick={() => router.push(`/hdos?module=${item.id}`)}
+                          onClick={() =>
+                            router.push(item.href ?? `/client?module=${item.id}`)
+                          }
                           className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer
                             ${
                               isActive
@@ -119,20 +170,29 @@ export default function Sidebar() {
             ))}
           </div>
         )}
-      </nav>
 
-      {/* User at bottom */}
-      {/* <div className="px-3 py-3 border-t border-gray-200 dark:border-[#30363d]">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-            {avatarLetter}
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-gray-800 dark:text-[#e6edf3] truncate m-0">{user?.name ?? 'Người dùng'}</p>
-            <p className="text-[10px] text-gray-400 dark:text-[#8b949e] m-0">Admin</p>
-          </div>
+        {/* Reports section */}
+        <div className="mt-2">
+          <p className="text-[10px] font-semibold text-gray-400 dark:text-[#8b949e] uppercase tracking-wider px-2 mb-1">
+            Báo cáo
+          </p>
+          {reportsLoading ? (
+            <div className="flex justify-center py-3">
+              <Spin size="small" />
+            </div>
+          ) : reportMenus.length === 0 ? (
+            <p className="text-[11px] text-gray-400 dark:text-[#484f58] px-3 py-1">
+              Chưa có báo cáo
+            </p>
+          ) : (
+            <ul className="space-y-0.5">
+              {reportMenus.map((node) => (
+                <ReportNavItem key={node.id} node={node} pathname={pathname} router={router} />
+              ))}
+            </ul>
+          )}
         </div>
-      </div> */}
+      </nav>
     </aside>
   );
 }

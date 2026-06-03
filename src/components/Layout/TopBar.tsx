@@ -1,5 +1,6 @@
 'use client';
 import { useRef, useState } from 'react';
+import Link from 'next/link';
 import useAuthStore from '@/core/auth/authStore';
 import { authService } from '@/core/auth/authService';
 import { useNotificationStore } from '@/store/notificationStore';
@@ -36,6 +37,19 @@ export default function TopBar() {
 
       {/* Right section */}
       <div className="flex items-center gap-2 ml-auto">
+        {/* Admin button */}
+        <Link
+          href="/admin"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-950/70 border border-violet-200 dark:border-violet-800 transition-colors"
+          title="Quản trị hệ thống"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+          </svg>
+          Quản trị
+        </Link>
+
         {/* Bell with unread badge */}
         <div ref={bellRef} className="relative">
           <button

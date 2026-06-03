@@ -15,11 +15,11 @@ export const useMenuStore = create<MenuStore>((set) => ({
   fetchMenu: async () => {
     set({ loading: true });
     try {
-      const accessToken = useAuthStore.getState().accessToken;
+      const token = useAuthStore.getState().accessToken;
       const res = await fetch('/api/menu', {
-        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      const data = await res.json();
+      const data = await res.json() as { groups: MenuGroup[] };
       set({ groups: data.groups });
     } finally {
       set({ loading: false });

@@ -21,7 +21,7 @@ export function ChartLine({
   dataKey = "value",
   series,
   title,
-  height = 280,
+  height = 220,
   color = "#1677ff",
   legend = false,
   unit,
@@ -29,48 +29,50 @@ export function ChartLine({
 }: BaseChartProps) {
   if (loading) {
     return (
-      <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22]">
+      <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full">
         {title && <div className={`${SK} h-3 w-32 mb-3`} />}
-        <div className={`${SK} w-full`} style={{ height }} />
+        <div className={`${SK} w-full flex-1`} style={{ height }} />
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg p-4 border border-gray-200 bg-white">
+    <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full flex flex-col">
       {title && (
-        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-3">
+        <p className="text-[11px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-3 shrink-0">
           {title}
         </p>
       )}
-      <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={data} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} unit={unit} />
-          <Tooltip
-            formatter={(v) => [`${v ?? ""}${unit ?? ""}`, ""]}
-            contentStyle={{ fontSize: 12 }}
-          />
-          {legend && <Legend wrapperStyle={{ fontSize: 12 }} />}
+      <div className="flex-1 min-h-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} unit={unit} />
+            <Tooltip
+              formatter={(v) => [`${v ?? ""}${unit ?? ""}`, ""]}
+              contentStyle={{ fontSize: 12 }}
+            />
+            {legend && <Legend wrapperStyle={{ fontSize: 12 }} />}
 
-          {series ? (
-            series.map((s, i) => (
-              <Line
-                key={s.key}
-                dataKey={s.key}
-                name={s.name ?? s.key}
-                stroke={s.color ?? DEFAULT_COLORS[i % DEFAULT_COLORS.length]}
-                strokeWidth={2}
-                dot={{ r: 3 }}
-                activeDot={{ r: 5 }}
-              />
-            ))
-          ) : (
-            <Line dataKey={dataKey} stroke={color} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-          )}
-        </LineChart>
-      </ResponsiveContainer>
+            {series ? (
+              series.map((s, i) => (
+                <Line
+                  key={s.key}
+                  dataKey={s.key}
+                  name={s.name ?? s.key}
+                  stroke={s.color ?? DEFAULT_COLORS[i % DEFAULT_COLORS.length]}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              ))
+            ) : (
+              <Line dataKey={dataKey} stroke={color} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+            )}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

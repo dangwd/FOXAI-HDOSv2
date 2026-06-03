@@ -13,7 +13,7 @@ function LoginContent() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      const redirect = searchParams.get('redirect') ?? '/hdos';
+      const redirect = searchParams.get('redirect') ?? '/client';
       router.replace(redirect);
     }
   }, [isAuthenticated, router, searchParams]);
@@ -42,7 +42,7 @@ function LoginContent() {
           </p>
         </div>
 
-        {error && <Alert type="error" message={error} showIcon />}
+        {error && <Alert type="error" title={error} showIcon />}
 
         <Form
           layout="vertical"
