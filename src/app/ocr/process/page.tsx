@@ -34,7 +34,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -154,7 +154,7 @@ function ConfidenceDot({ value }: { value: number }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function OcrProcessPage() {
+function OcrProcessInner() {
   const { message } = App.useApp();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -693,7 +693,7 @@ export default function OcrProcessPage() {
             const items = lineItemsByTable.get(table.tableKey) ?? [];
 
             // Flatten nested values for Ant Design Table
-            const rows = items.map((item) => ({ ...item.values })) as Record<
+            const rows = items.map((item, i) => ({ __k: String(i), ...item.values })) as Record<
               string,
               string
             >[];
@@ -742,7 +742,7 @@ export default function OcrProcessPage() {
                   <Table<Record<string, string>>
                     dataSource={rows}
                     columns={columns}
-                    rowKey={(_r, idx) => String(idx)}
+                    rowKey="__k"
                     pagination={false}
                     size="small"
                     locale={{
@@ -797,5 +797,13 @@ export default function OcrProcessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OcrProcessPage() {
+  return (
+    <Suspense fallback={null}>
+      <OcrProcessInner />
+    </Suspense>
   );
 }

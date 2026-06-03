@@ -4,7 +4,7 @@ import { useThemeStore } from "@/store/themeStore";
 import { ocrApi, type OcrSchemaListItem } from "@/infrastructure/http/ocrApi";
 import { App, ConfigProvider } from "antd";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -569,7 +569,9 @@ export default function AdminLayout({
       }}
     >
       <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-[#010409]">
-        <AdminSidebar />
+        <Suspense fallback={null}>
+          <AdminSidebar />
+        </Suspense>
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <AdminTopBar />
           <App className="flex-1 min-h-0 flex flex-col">
