@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { MenuGroup } from '@/types/menu';
-import { getAdminToken } from '@/infrastructure/http/httpForProvider';
+import useAuthStore from '@/core/auth/authStore';
 
 interface MenuStore {
   groups: MenuGroup[];
@@ -15,7 +15,7 @@ export const useMenuStore = create<MenuStore>((set) => ({
   fetchMenu: async () => {
     set({ loading: true });
     try {
-      const token = await getAdminToken();
+      const token = useAuthStore.getState().accessToken;
       const res = await fetch('/api/menu', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });

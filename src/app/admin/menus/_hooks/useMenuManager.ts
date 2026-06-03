@@ -4,7 +4,49 @@ import { useState, useEffect, useCallback } from "react";
 import { App } from "antd";
 import { adminApi } from "@/infrastructure/http/adminApi";
 import type { AdminMenuNode, AdminScreen, AdminPermission, AdminWidgetDef } from "@/infrastructure/http/adminApi";
-import type { DesignerState, DesignerWidget, MenuUpsertForm } from "../_lib/types";
+import type {
+  DesignerState, DesignerWidget, MenuUpsertForm,
+  FormPageDesignerState, FormPageCompType, FormPageRow, FormPageComponent,
+} from "../_lib/types";
+
+// ─── FormPage layout helpers ──────────────────────────────────────────────────
+
+function apiToInternalRows(rows: unknown[]): FormPageRow[] {
+  let rowSeq  = 0;
+  let compSeq = 0;
+  return (rows as Array<{ components?: unknown[] }>).map((row) => ({
+    id: `row_${++rowSeq}`,
+    components: ((row.components ?? []) as Array<{
+      type?: string;
+      formKey?: string;
+      title?: string;
+      content?: string;
+      align?: string;
+      span?: number;
+    }>).map((c): FormPageComponent => ({
+      id:      `comp_${++compSeq}`,
+      type:    (c.type ?? "Divider") as FormPageCompType,
+      span:    c.span ?? 12,
+      formKey: c.formKey,
+      title:   c.title,
+      content: c.content,
+      align:   c.align as "left" | "center" | "right" | undefined,
+    })),
+  }));
+}
+
+function internalToApiLayout(rows: FormPageRow[]): object {
+  return {
+    rows: rows.map((row) => ({
+      components: row.components.map((c) => {
+        const base: Record<string, unknown> = { type: c.type, span: c.span };
+        if (c.type === "FormSection") { base.formKey = c.formKey ?? ""; if (c.title) base.title = c.title; }
+        if (c.type === "TextBlock")   { base.content = c.content ?? ""; base.align = c.align ?? "left"; }
+        return base;
+      }),
+    })),
+  };
+}
 
 function apiWidgetToDesigner(w: AdminWidgetDef): DesignerWidget {
   let parsed: Record<string, unknown> = {};
@@ -33,7 +75,9 @@ export function useMenuManager() {
   const [selId,    setSelId]    = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [tab,      setTab]      = useState<"screens" | "perms" | "info">("screens");
-  const [designer, setDesigner] = useState<DesignerState | null>(null);
+  const [designer,          setDesigner]          = useState<DesignerState | null>(null);
+  const [formPageDesigner,  setFormPageDesigner]  = useState<FormPageDesignerState | null>(null);
+  const [formPageLoading,   setFormPageLoading]   = useState(false);
   const [infoEdit, setInfoEdit] = useState<Partial<MenuUpsertForm> | null>(null);
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
@@ -234,6 +278,73 @@ export function useMenuManager() {
 
   function closeDesigner() { setDesigner(null); }
 
+  // ── FormPage designer ──────────────────────────────────────────────────────
+  const openFormPageDesigner = useCallback(async (
+    pageId:     string,
+    pageCode:   string,
+    pageTitle:  string,
+    pageStatus: string,
+    moduleCode: string,
+  ) => {
+    setFormPageLoading(true);
+    setFormPageDesigner(null);
+    try {
+      const [formList, schema] = await Promise.allSettled([
+        adminApi.listForms(moduleCode),
+        adminApi.getPageSchema(moduleCode, pageCode),
+      ]);
+
+      const forms = formList.status === "fulfilled"
+        ? formList.value.map((f) => ({ id: f.id, key: f.key, name: f.name }))
+        : [];
+
+      const rows = schema.status === "fulfilled"
+        ? apiToInternalRows((schema.value as { rows?: unknown[] }).rows ?? [])
+        : [];
+
+      setFormPageDesigner({
+        pageId, pageCode, pageTitle, pageStatus, moduleCode,
+        rows, selCompId: null, availableForms: forms,
+      });
+    } finally {
+      setFormPageLoading(false);
+    }
+  }, []);
+
+  async function saveFormPageDesigner(): Promise<void> {
+    if (!formPageDesigner) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await adminApi.updatePageLayout(formPageDesigner.pageId, internalToApiLayout(formPageDesigner.rows));
+      message.success("Đã lưu layout thành công");
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? "Lưu thất bại");
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function publishFormPageDesigner(): Promise<void> {
+    if (!formPageDesigner) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await adminApi.updatePageLayout(formPageDesigner.pageId, internalToApiLayout(formPageDesigner.rows));
+      await adminApi.publishPage(formPageDesigner.pageId);
+      setFormPageDesigner((prev) => prev ? { ...prev, pageStatus: "published" } : null);
+      message.success("Đã xuất bản page thành công");
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? "Xuất bản thất bại");
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function closeFormPageDesigner() { setFormPageDesigner(null); }
+
   // ── Permission CRUD ────────────────────────────────────────────────────────
   async function addPerm(principalType: "role" | "user", principalValue: string): Promise<void> {
     if (!selId) return;
@@ -280,10 +391,12 @@ export function useMenuManager() {
   return {
     menus, screens, perms, selId, expanded, tab, designer, infoEdit, loading, saving, error,
     selectedMenu,
+    formPageDesigner, formPageLoading,
     selectMenu, toggleExpand, setTab,
     createMenu, updateMenuInfo, deleteMenu,
     createScreen, deleteScreen,
     openDesigner, saveDesigner, closeDesigner, setDesigner,
+    openFormPageDesigner, saveFormPageDesigner, publishFormPageDesigner, closeFormPageDesigner, setFormPageDesigner,
     addPerm, togglePerm, deletePerm,
     setInfoEdit,
   };

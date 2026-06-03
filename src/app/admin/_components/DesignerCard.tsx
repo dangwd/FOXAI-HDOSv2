@@ -1,6 +1,5 @@
-import { Tag } from "antd";
-import type { WidgetSchemaEntry } from "@/infrastructure/http/adminApi";
-import { CATEGORY_COLOR, CATEGORY_LABELS } from "../_lib/constants";
+import type { WidgetCatalogEntry } from "@/infrastructure/http/adminApi";
+import { WIDGET_TYPE_LABELS } from "../_lib/constants";
 import type { DesignerWidget } from "../_lib/types";
 import { IconGrip, IconX } from "./shared";
 
@@ -13,10 +12,12 @@ export function DesignerCard({
 }: {
   widget:   DesignerWidget;
   selected: boolean;
-  entry:    WidgetSchemaEntry | undefined;
+  entry:    WidgetCatalogEntry | undefined;
   onSelect: () => void;
   onDelete: () => void;
 }) {
+  const typeLabel = WIDGET_TYPE_LABELS[widget.widgetType] ?? widget.widgetType;
+
   return (
     <div
       onClick={onSelect}
@@ -34,10 +35,10 @@ export function DesignerCard({
             ? "bg-violet-200 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300"
             : "bg-gray-100 dark:bg-[#21262d] text-gray-500 dark:text-[#8b949e]"
           }`}>
-          {widget.chartType}
+          {widget.widgetType}
         </span>
         <span className="text-[11px] text-gray-700 dark:text-[#e6edf3] truncate flex-1 font-medium">
-          {widget.title || widget.widgetKey}
+          {widget.label || widget.widgetKey}
         </span>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
@@ -51,17 +52,18 @@ export function DesignerCard({
 
       {/* Body */}
       <div className="flex-1 flex flex-col items-center justify-center p-2 text-center overflow-hidden">
-        {entry?.icon && <span className="text-lg mb-0.5 leading-none">{entry.icon}</span>}
-        <p className="text-[10px] text-gray-400 dark:text-[#8b949e] m-0 leading-tight line-clamp-2">
-          {widget.subtitle || widget.operationPattern || "Chưa cấu hình"}
+        <p className="text-xs font-medium text-gray-600 dark:text-[#8b949e] m-0 mb-1">
+          {typeLabel}
         </p>
-        {entry && (
-          <Tag
-            color={CATEGORY_COLOR[entry.category]}
-            style={{ fontSize: 9, padding: "0 3px", lineHeight: "14px", margin: "4px 0 0 0" }}
-          >
-            {CATEGORY_LABELS[entry.category]}
-          </Tag>
+        {widget.referenceId && (
+          <p className="text-[10px] text-violet-500 dark:text-violet-400 m-0 font-mono truncate max-w-full px-1">
+            ref: {widget.referenceId.slice(0, 8)}…
+          </p>
+        )}
+        {entry?.description && (
+          <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0 line-clamp-2 mt-0.5">
+            {entry.description}
+          </p>
         )}
       </div>
 

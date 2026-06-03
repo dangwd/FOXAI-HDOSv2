@@ -33,7 +33,7 @@ export function proxy(request: NextRequest): NextResponse {
   // Already logged in → skip login page
   if (pathname === "/login") {
     if (isAuthenticated) {
-      return NextResponse.redirect(new URL("/hdos", request.url));
+      return NextResponse.redirect(new URL("/client", request.url));
     }
     return NextResponse.next();
   }

@@ -8,7 +8,7 @@ import {
   type LucideProps,
 } from "lucide-react";
 import type React from "react";
-import { getAdminToken } from "@/infrastructure/http/httpForProvider";
+import useAuthStore from "@/core/auth/authStore";
 import type { MenuDetail, ScreenDetail, ScreenSummary, WidgetDef } from "@/types/report";
 import { WidgetPreview } from "@/app/admin/menus/_components/WidgetPreview";
 import type { DesignerWidget } from "@/app/admin/menus/_lib/types";
@@ -160,7 +160,7 @@ export default function ReportViewerPage() {
     async function load() {
       setMenuState({ kind: "loading" });
       try {
-        const token = await getAdminToken();
+        const token = useAuthStore.getState().accessToken;
         const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
         const res = await fetch(`/api/v1/reports/menus/${slug}`, { headers });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -182,7 +182,7 @@ export default function ReportViewerPage() {
   const loadScreen = useCallback(async (screenId: string) => {
     setScreenState({ kind: "loading" });
     try {
-      const token = await getAdminToken();
+      const token = useAuthStore.getState().accessToken;
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
       const res = await fetch(`/api/v1/reports/menus/${slug}/screens/${screenId}`, { headers });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -198,7 +198,7 @@ export default function ReportViewerPage() {
     (async () => {
       setScreenState({ kind: "loading" });
       try {
-        const token = await getAdminToken();
+        const token = useAuthStore.getState().accessToken;
         const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
         const res = await fetch(`/api/v1/reports/menus/${slug}/screens/${activeId}`, { headers });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

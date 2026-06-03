@@ -14,7 +14,7 @@ export function useLogin() {
     setError(null);
     try {
       await authService.login(email, password);
-      const redirect = searchParams.get('redirect') ?? '/hdos';
+      const redirect = searchParams.get('redirect') ?? '/client';
       router.replace(redirect);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đăng nhập thất bại');
