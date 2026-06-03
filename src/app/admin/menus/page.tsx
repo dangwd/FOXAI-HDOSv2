@@ -1,10 +1,10 @@
 "use client";
 
 import { LayoutDashboard, Plus } from "lucide-react";
-import { useMenuManager } from "./_hooks/useMenuManager";
-import { TreeSidebar }    from "./_components/TreeSidebar";
-import { EditorPanel }    from "./_components/EditorPanel";
-import { ScreenDesigner } from "./_components/ScreenDesigner";
+import { useMenuManager }  from "./_hooks/useMenuManager";
+import { TreeSidebar }     from "./_components/TreeSidebar";
+import { EditorPanel }     from "./_components/EditorPanel";
+import { ScreenDesigner }  from "./_components/ScreenDesigner";
 
 function LoadingSkeleton() {
   return (
@@ -48,7 +48,6 @@ export default function MenusPage() {
 
   if (m.loading) return <LoadingSkeleton />;
 
-  // Designer fills the full content area — NOT as a fixed overlay
   if (m.designer) {
     return (
       <ScreenDesigner
@@ -93,7 +92,6 @@ export default function MenusPage() {
         <div className="flex-1 flex flex-col items-center justify-center gap-5 bg-gray-50/40 dark:bg-[#010409]/40 p-8">
           {m.menus.length === 0 ? (
             <>
-              {/* Visual hierarchy illustration */}
               <div className="flex flex-col items-center gap-2 opacity-30 dark:opacity-20 select-none">
                 <div className="w-10 h-10 rounded-xl bg-gray-300 dark:bg-[#30363d]" />
                 <div className="w-px h-4 bg-gray-300 dark:bg-[#30363d]" />

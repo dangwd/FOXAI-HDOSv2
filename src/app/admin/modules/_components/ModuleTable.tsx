@@ -1,105 +1,62 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
-import { Table, Switch, Button, Space, Tag, Typography, Popconfirm } from "antd";
+import { Table, Button, Tag, Typography, Space } from "antd";
 import type { TableColumnsType } from "antd";
-import type { AdminModule, ModuleGroupRecord } from "@/infrastructure/http/adminApi";
+import type { FormsModule } from "@/infrastructure/http/adminApi";
 import { Inbox, LayoutDashboard } from "lucide-react";
-import { ROLE_META } from "../_lib/constants";
 import { ModuleIcon } from "./ModuleIcon";
 
 const { Text } = Typography;
 
-// ─── Flat row types for grouped antd Table ────────────────────────────────────
+// ─── Color palette keyed by code hash ─────────────────────────────────────────
 
-type GroupRow = { _kind: "group"; id: string; groupId: string; label: string; color: string; count: number };
-type ItemRow  = { _kind: "item" } & AdminModule;
-type FlatRow  = GroupRow | ItemRow;
+const PALETTE = ["#1677ff", "#0ca678", "#722ed1", "#f5a623", "#e8475f", "#13c2c2", "#eb2f96"];
 
-function buildRows(
-  groups: ModuleGroupRecord[],
-  grouped: Map<string, AdminModule[]>,
-  groupColor: (slug: string) => string,
-): FlatRow[] {
-  const rows: FlatRow[] = [];
-  const knownSlugs = new Set(groups.map((g) => g.slug));
-
-  for (const g of groups) {
-    const items = (grouped.get(g.slug) ?? []).slice().sort((a, b) => a.sortOrder - b.sortOrder);
-    if (!items.length) continue;
-    rows.push({ _kind: "group", id: `__${g.slug}`, groupId: g.id, label: g.label, color: groupColor(g.slug), count: items.length });
-    items.forEach((m) => rows.push({ _kind: "item", ...m }));
-  }
-
-  // orphaned modules whose groupSlug doesn't match any known group
-  const orphans: AdminModule[] = [];
-  for (const [slug, items] of grouped) {
-    if (!knownSlugs.has(slug) && slug !== "") orphans.push(...items);
-  }
-  if (orphans.length) {
-    rows.push({ _kind: "group", id: "__orphan", groupId: "", label: "Không phân nhóm", color: "#6b7280", count: orphans.length });
-    orphans.sort((a, b) => a.sortOrder - b.sortOrder).forEach((m) => rows.push({ _kind: "item", ...m }));
-  }
-
-  return rows;
+function codeColor(code: string): string {
+  let h = 0;
+  for (let i = 0; i < code.length; i++) h = code.charCodeAt(i) + ((h << 5) - h);
+  return PALETTE[Math.abs(h) % PALETTE.length];
 }
 
-const NCOLS = 5;
+function codeAbbr(code: string): string {
+  const parts = code.split("-").filter(Boolean);
+  return parts.slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "??";
+}
 
 // ─── Table ────────────────────────────────────────────────────────────────────
 
 export function ModuleTable({
-  groups,
-  grouped,
-  groupColor,
+  modules,
   search,
-  onEdit,
-  onDelete,
-  onToggle,
+  loading,
 }: {
-  groups:     ModuleGroupRecord[];
-  grouped:    Map<string, AdminModule[]>;
-  groupColor: (id: string) => string;
-  search:     string;
-  onEdit:     (m: AdminModule) => void;
-  onDelete:   (m: AdminModule) => void;
-  onToggle:   (id: string) => void;
+  modules:  FormsModule[];
+  search:   string;
+  loading?: boolean;
 }) {
-  const rows = useMemo(() => buildRows(groups, grouped, groupColor), [groups, grouped, groupColor]);
-
-  const columns: TableColumnsType<FlatRow> = [
+  const columns: TableColumnsType<FormsModule> = [
     {
       title: "Module",
       key: "module",
-      onCell: (row) =>
-        row._kind === "group" ? { colSpan: NCOLS, style: { padding: 0 } } : {},
       render: (_, row) => {
-        if (row._kind === "group") {
-          return (
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-[#0d1117]">
-              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: row.color }} />
-              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: row.color }}>
-                {row.label}
-              </span>
-              <span className="text-[10px] text-gray-400 dark:text-[#6e7681]">· {row.count} module</span>
-            </div>
-          );
-        }
-        const isActive = row.isActive ?? true;
-        const color = groupColor(row.groupSlug);
+        const color    = codeColor(row.code);
+        const isActive = row.status.toLowerCase() === "active";
         return (
           <div className="flex items-center gap-3">
-            <ModuleIcon icon={row.icon} groupColor={color} iconSize={15} boxSize={34} />
+            <ModuleIcon icon={codeAbbr(row.code)} groupColor={color} iconSize={15} boxSize={34} />
             <div className="min-w-0">
-              <p className={`text-sm font-semibold m-0 truncate leading-tight ${isActive ? "text-gray-800 dark:text-[#e6edf3]" : "text-gray-400 dark:text-[#484f58]"}`}>
-                {row.label}
+              <p
+                className={`text-sm font-semibold m-0 truncate leading-tight ${
+                  isActive
+                    ? "text-gray-800 dark:text-[#e6edf3]"
+                    : "text-gray-400 dark:text-[#484f58]"
+                }`}
+              >
+                {row.name}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <Text code className="!text-[10px]">{row.slug}</Text>
-                {row.isVisible === false && (
-                  <Tag className="!text-[9px] !px-1 !m-0 !leading-none !py-0.5">ẩn</Tag>
-                )}
+                <Text code className="!text-[10px]">{row.code}</Text>
               </div>
             </div>
           </div>
@@ -107,104 +64,67 @@ export function ModuleTable({
       },
     },
     {
-      title: "Nhóm",
-      key: "group",
-      width: 130,
-      onCell: (row) => (row._kind === "group" ? { colSpan: 0 } : {}),
-      render: (_, row) => {
-        if (row._kind === "group") return null;
-        const g = groups.find((gr) => gr.slug === row.groupSlug);
-        const color = groupColor(row.groupSlug);
-        return g ? (
-          <Tag style={{ color, background: `${color}1a`, border: "none", fontWeight: 600 }}>
-            {g.label}
-          </Tag>
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+      render: (d?: string) =>
+        d ? (
+          <span className="text-sm text-gray-500 dark:text-[#8b949e] line-clamp-1">{d}</span>
         ) : (
           <Text type="secondary">—</Text>
-        );
-      },
+        ),
     },
     {
-      title: "Phân quyền",
-      key: "roles",
-      width: 170,
-      onCell: (row) => (row._kind === "group" ? { colSpan: 0 } : {}),
-      render: (_, row) => {
-        if (row._kind === "group") return null;
-        if (!row.requiredRoles?.length) return <Text type="secondary">—</Text>;
-        return (
-          <div className="flex gap-1 flex-wrap">
-            {row.requiredRoles.map((r) => {
-              const meta = ROLE_META[r];
-              return meta ? (
-                <Tag key={r} style={{ color: meta.color, background: meta.bg, border: "none", fontWeight: 600 }}>
-                  {meta.label}
-                </Tag>
-              ) : (
-                <Tag key={r}>{r}</Tag>
-              );
-            })}
-          </div>
-        );
-      },
+      title: "Trạng thái",
+      key: "status",
+      width: 130,
+      render: (_, row) => (
+        <Tag
+          style={
+            row.status.toLowerCase() === "active"
+              ? { color: "#0ca678", background: "rgba(12,166,120,.12)", border: "none", fontWeight: 600 }
+              : { color: "#8b949e", background: "rgba(139,148,158,.12)", border: "none", fontWeight: 600 }
+          }
+        >
+          {row.status.toLowerCase() === "active" ? "● Hoạt động" : "○ Tạm dừng"}
+        </Tag>
+      ),
     },
     {
-      title: "Active",
-      key: "active",
+      title: "Forms",
+      dataIndex: "formCount",
+      key: "formCount",
       width: 70,
       align: "center" as const,
-      onCell: (row) => (row._kind === "group" ? { colSpan: 0 } : {}),
-      render: (_, row) => {
-        if (row._kind === "group") return null;
-        return (
-          <Switch
-            size="small"
-            checked={row.isActive ?? true}
-            onChange={() => onToggle(row.id)}
-          />
-        );
-      },
+      render: (count: number) => (
+        <Tag style={{ fontWeight: 600, minWidth: 28, textAlign: "center" }}>{count}</Tag>
+      ),
     },
     {
       title: "",
       key: "actions",
-      width: 170,
+      width: 110,
       align: "right" as const,
-      onCell: (row) => (row._kind === "group" ? { colSpan: 0 } : {}),
-      render: (_, row) => {
-        if (row._kind === "group") return null;
-        return (
-          <Space size={4}>
-            <Link href={`/admin?slug=${row.slug}`}>
-              <Button size="small" icon={<LayoutDashboard size={12} />}>Canvas</Button>
-            </Link>
-            <Button size="small" onClick={() => onEdit(row)}>Sửa</Button>
-            <Popconfirm
-              title={`Xóa module "${row.label}"?`}
-              description="Hành động này không thể hoàn tác."
-              onConfirm={() => onDelete(row)}
-              okText="Xóa"
-              cancelText="Hủy"
-              okButtonProps={{ danger: true }}
-            >
-              <Button size="small" danger>Xóa</Button>
-            </Popconfirm>
-          </Space>
-        );
-      },
+      render: (_, row) => (
+        <Space size={4}>
+          <Link href={`/admin?slug=${row.code}`}>
+            <Button size="small" icon={<LayoutDashboard size={12} />}>
+              Canvas
+            </Button>
+          </Link>
+        </Space>
+      ),
     },
   ];
 
   return (
-    <Table<FlatRow>
+    <Table<FormsModule>
       columns={columns}
-      dataSource={rows}
+      dataSource={modules}
       rowKey="id"
       size="small"
+      loading={loading}
       pagination={false}
-      onRow={(row) => ({
-        style: row._kind === "group" ? { cursor: "default" } : {},
-      })}
       locale={{
         emptyText: (
           <div className="flex flex-col items-center py-14 gap-2 text-gray-400">

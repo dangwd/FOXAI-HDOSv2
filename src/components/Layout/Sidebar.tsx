@@ -19,7 +19,7 @@ function ReportNavItem({
   router: ReturnType<typeof useRouter>;
   depth?: number;
 }) {
-  const href = `/hdos/reports/${node.slug}`;
+  const href = `/client/reports/${node.slug}`;
   const isActive = pathname === href;
   const indent = depth > 0 ? "pl-7" : "pl-3";
 
@@ -57,8 +57,23 @@ export default function Sidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const activeId = searchParams.get("module") ?? "dashboard";
+  const activeModule = searchParams.get("module") ?? "dashboard";
+  const activeScreen = searchParams.get("screen");
   const isDark = theme === "dark";
+
+  function isMenuItemActive(item: import("@/types/menu").MenuItem): boolean {
+    if (!item.href) return activeModule === item.id;
+    try {
+      const url = new URL(item.href, "http://x");
+      const m = url.searchParams.get("module");
+      const s = url.searchParams.get("screen");
+      if (m && m !== activeModule) return false;
+      if (s && activeScreen && s !== activeScreen) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   useEffect(() => { fetchReports(); }, [fetchReports]);
   return (
@@ -134,14 +149,12 @@ export default function Sidebar() {
                 </p>
                 <ul className="space-y-0.5">
                   {group.items.map((item) => {
-                    const isActive = item.href
-                      ? pathname === item.href
-                      : activeId === item.id;
+                    const isActive = isMenuItemActive(item);
                     return (
                       <li key={item.id}>
                         <button
                           onClick={() =>
-                            router.push(item.href ?? `/hdos?module=${item.id}`)
+                            router.push(item.href ?? `/client?module=${item.id}`)
                           }
                           className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer
                             ${

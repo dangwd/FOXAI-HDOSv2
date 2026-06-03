@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button, Input, InputNumber, Select } from "antd";
 import { Loader2, Wifi } from "lucide-react";
-import httpProvider, { getAdminToken } from "@/infrastructure/http/httpForProvider";
+import httpClient from "@/infrastructure/http/httpClient";
+import useAuthStore from "@/core/auth/authStore";
 import { poolSubscribe } from "@/core/sse/ssePool";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -217,14 +218,12 @@ export default function ConsolePage() {
   const pollingRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   const logEndRef      = useRef<HTMLDivElement>(null);
 
-  // auth — dùng admin KC token, không phải main auth store
   const [sseUrl, setSseUrl] = useState<string | null>(null);
   useLayoutEffect(() => {
-    getAdminToken().then((token) => {
-      if (!token) return;
-      const base = process.env.NEXT_PUBLIC_SSE_URL ?? "/notifications/sse";
-      setSseUrl(`${base}?access_token=${encodeURIComponent(token)}`);
-    });
+    const token = useAuthStore.getState().accessToken;
+    if (!token) return;
+    const base = process.env.NEXT_PUBLIC_SSE_URL ?? "/notifications/sse";
+    setSseUrl(`${base}?access_token=${encodeURIComponent(token)}`);
   }, []);
 
   // derived
@@ -285,7 +284,7 @@ export default function ConsolePage() {
       if (pushedRef.current) { stopPolling(); return; }
       try {
         setIsPolling(true);
-        const res = await httpProvider.get<{ status: string; data?: unknown; error?: string }>(
+        const res = await httpClient.get<{ status: string; data?: unknown; error?: string }>(
           `/requests/${requestId}/result`,
         );
         const d = res.data;
@@ -330,7 +329,7 @@ export default function ConsolePage() {
     setSubmitError(null);
 
     const newId    = uid();
-    const rawToken = await getAdminToken();
+    const rawToken = useAuthStore.getState().accessToken ?? null;
     const userId   = parseJwtClaim(rawToken, "sub") ?? "anonymous";
     const tenantId = parseJwtClaim(rawToken, "tenant_id") ?? userId;
 
@@ -345,7 +344,7 @@ export default function ConsolePage() {
     stopPolling();
 
     try {
-      await httpProvider.post("/requests", {
+      await httpClient.post("/requests", {
         requestId: newId,
         operation,
         params,

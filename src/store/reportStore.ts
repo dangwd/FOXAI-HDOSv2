@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { MenuSummary } from "@/types/report";
-import { getAdminToken } from "@/infrastructure/http/httpForProvider";
+import useAuthStore from "@/core/auth/authStore";
 
 export interface ReportMenuNode extends MenuSummary {
   children: ReportMenuNode[];
@@ -35,7 +35,7 @@ export const useReportStore = create<ReportStore>((set) => ({
   fetch: async () => {
     set({ loading: true });
     try {
-      const token = await getAdminToken();
+      const token = useAuthStore.getState().accessToken;
       const res = await fetch("/api/reports", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
