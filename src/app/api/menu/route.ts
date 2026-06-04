@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { MenuGroup, MenuItem } from "@/types/menu";
 
-const ADMIN_BASE = (process.env.NEXT_PUBLIC_ADMIN_API_URL ?? "http://localhost:17080").replace(/\/+$/, "");
-const API_BASE   = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000").replace(/\/+$/, "");
+const ADMIN_BASE = (process.env.NEXT_PUBLIC_ADMIN_API_URL ?? "https://192.168.100.60:8443").replace(/\/+$/, "");
+const API_BASE   = (process.env.NEXT_PUBLIC_API_URL ?? "https://192.168.100.60:8443").replace(/\/+$/, "");
 
 // ─── Old admin system DTOs ────────────────────────────────────────────────────
 

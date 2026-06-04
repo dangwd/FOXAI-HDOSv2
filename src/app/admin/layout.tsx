@@ -1,11 +1,11 @@
 "use client";
 
-import { useThemeStore } from "@/store/themeStore";
 import { ocrApi, type OcrSchemaListItem } from "@/infrastructure/http/ocrApi";
+import { useThemeStore } from "@/store/themeStore";
 import { App, ConfigProvider } from "antd";
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -152,7 +152,6 @@ function IconBoxes() {
   );
 }
 
-
 function IconBack() {
   return (
     <svg
@@ -170,6 +169,42 @@ function IconBack() {
   );
 }
 
+function IconChevronsLeft() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="11 17 6 12 11 7" />
+      <polyline points="18 17 13 12 18 7" />
+    </svg>
+  );
+}
+
+function IconChevronsRight() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="13 17 18 12 13 7" />
+      <polyline points="6 17 11 12 6 7" />
+    </svg>
+  );
+}
+
 function IconChevron({ open }: { open: boolean }) {
   return (
     <svg
@@ -181,7 +216,10 @@ function IconChevron({ open }: { open: boolean }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+      style={{
+        transform: open ? "rotate(180deg)" : "rotate(0deg)",
+        transition: "transform 0.2s",
+      }}
     >
       <polyline points="6 9 12 15 18 9" />
     </svg>
@@ -265,7 +303,13 @@ const MENU_ITEMS = [
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function AdminSidebar() {
+function AdminSidebar({
+  collapsed,
+  onToggle,
+}: {
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { theme, toggle } = useThemeStore();
@@ -274,42 +318,58 @@ function AdminSidebar() {
   const [ocrExpanded, setOcrExpanded] = useState(true);
 
   useEffect(() => {
-    ocrApi.listSchemas({ isActive: true }).then(setOcrSchemas).catch(() => {});
+    ocrApi
+      .listSchemas({ isActive: true })
+      .then(setOcrSchemas)
+      .catch(() => {});
   }, []);
 
+  const iconBtn =
+    "w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors";
+
   return (
-    <aside className="w-64 h-screen bg-white dark:bg-[#0d1117] border-r border-gray-200 dark:border-[#30363d] flex flex-col shrink-0">
+    <aside
+      className={`${collapsed ? "w-14" : "w-64"} transition-[width] duration-200 ease-in-out h-screen bg-white dark:bg-[#0d1117] border-r border-gray-200 dark:border-[#30363d] flex flex-col shrink-0 overflow-hidden`}
+    >
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-4 py-4 border-b border-gray-100 dark:border-[#30363d]">
-        <div className="w-7 h-7 rounded bg-violet-600 flex items-center justify-center text-white">
+      <div
+        className={`flex items-center gap-2.5 px-3 py-4 border-b border-gray-100 dark:border-[#30363d] ${collapsed ? "justify-center" : ""}`}
+      >
+        <div className="w-7 h-7 rounded bg-violet-600 flex items-center justify-center text-white shrink-0">
           <IconSettings />
         </div>
-        <span className="font-bold text-gray-800 dark:text-[#e6edf3] text-sm">
-          HDOS Admin
-        </span>
-        <div className="ml-auto flex items-center gap-1">
-          <button
-            onClick={toggle}
-            title={isDark ? "Chuyển sang Light" : "Chuyển sang Dark"}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors"
-          >
-            {isDark ? <IconSun /> : <IconMoon />}
-          </button>
-          <Link
-            href="/client"
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors"
-            title="Quay lại HDOS"
-          >
-            <IconBack />
-          </Link>
-        </div>
+        {!collapsed && (
+          <>
+            <span className="font-bold text-gray-800 dark:text-[#e6edf3] text-sm whitespace-nowrap">
+              HDOS Admin
+            </span>
+            <div className="ml-auto flex items-center gap-1">
+              <button
+                onClick={toggle}
+                title={isDark ? "Chuyển sang Light" : "Chuyển sang Dark"}
+                className={iconBtn}
+              >
+                {isDark ? <IconSun /> : <IconMoon />}
+              </button>
+              <button
+                onClick={onToggle}
+                title={collapsed ? "Mở rộng menu" : "Thu nhỏ menu"}
+                className={`${collapsed ? "w-8 h-8" : "ml-auto w-7 h-7"} flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors cursor-pointer`}
+              >
+                {collapsed ? <IconChevronsRight /> : <IconChevronsLeft />}
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-2 py-3">
-        <p className="text-[10px] font-semibold text-gray-400 dark:text-[#8b949e] uppercase tracking-wider px-2 mb-2">
-          QUẢN TRỊ
-        </p>
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3">
+        {!collapsed && (
+          <p className="text-[10px] font-semibold text-gray-400 dark:text-[#8b949e] uppercase tracking-wider px-2 mb-2">
+            QUẢN TRỊ
+          </p>
+        )}
         <ul className="space-y-0.5">
           {MENU_ITEMS.map((item) => {
             const isActive =
@@ -322,7 +382,9 @@ function AdminSidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
+                  title={collapsed ? item.label : undefined}
+                  className={`w-full flex items-center gap-2.5 py-2 rounded-lg text-sm transition-colors
+                    ${collapsed ? "justify-center px-0" : "px-3"}
                     ${
                       isActive
                         ? "bg-violet-50 dark:bg-[#2d2542] text-violet-600 dark:text-violet-400 font-medium"
@@ -338,37 +400,50 @@ function AdminSidebar() {
                   >
                     <Icon />
                   </span>
-                  {item.label}
+                  {!collapsed && item.label}
                 </Link>
               </li>
             );
           })}
         </ul>
 
-        <p className="text-[10px] font-semibold text-gray-400 dark:text-[#8b949e] uppercase tracking-wider px-2 mt-4 mb-2">
-          XỬ LÝ TÀI LIỆU
-        </p>
+        {!collapsed && (
+          <p className="text-[10px] font-semibold text-gray-400 dark:text-[#8b949e] uppercase tracking-wider px-2 mt-4 mb-2">
+            XỬ LÝ TÀI LIỆU
+          </p>
+        )}
+        {collapsed && (
+          <div className="my-2 border-t border-gray-100 dark:border-[#30363d]" />
+        )}
         <ul className="space-y-0.5">
           {/* Static: config page */}
           <li>
             <Link
               href="/ocr/config"
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
+              title={collapsed ? "Thiết lập Chứng từ OCR" : undefined}
+              className={`w-full flex items-center gap-2.5 py-2 rounded-lg text-sm transition-colors
+                ${collapsed ? "justify-center px-0" : "px-3"}
                 ${
                   pathname === "/ocr/config"
                     ? "bg-violet-50 dark:bg-[#2d2542] text-violet-600 dark:text-violet-400 font-medium"
                     : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3]"
                 }`}
             >
-              <span className={pathname === "/ocr/config" ? "text-violet-600 dark:text-violet-400" : "text-gray-400 dark:text-[#8b949e]"}>
+              <span
+                className={
+                  pathname === "/ocr/config"
+                    ? "text-violet-600 dark:text-violet-400"
+                    : "text-gray-400 dark:text-[#8b949e]"
+                }
+              >
                 <IconBoxes />
               </span>
-              Thiết lập Chứng từ OCR
+              {!collapsed && "Thiết lập Chứng từ OCR"}
             </Link>
           </li>
 
-          {/* Collapsible: Nhận dạng OCR with dynamic schema children */}
-          {ocrSchemas.length > 0 && (
+          {/* Collapsible OCR schemas — full list when expanded */}
+          {!collapsed && ocrSchemas.length > 0 && (
             <li>
               <button
                 onClick={() => setOcrExpanded((v) => !v)}
@@ -386,7 +461,9 @@ function AdminSidebar() {
                 <ul className="mt-0.5 space-y-0.5">
                   {ocrSchemas.map((schema) => {
                     const href = `/ocr/process?schema=${schema.id}`;
-                    const isActive = pathname === "/ocr/process" && searchParams.get("schema") === schema.id;
+                    const isActive =
+                      pathname === "/ocr/process" &&
+                      searchParams.get("schema") === schema.id;
                     return (
                       <li key={schema.id}>
                         <Link
@@ -410,8 +487,46 @@ function AdminSidebar() {
               )}
             </li>
           )}
+
+          {/* Icon-only OCR entry when collapsed */}
+          {collapsed && ocrSchemas.length > 0 && (
+            <li>
+              <Link
+                href={`/ocr/process?schema=${ocrSchemas[0].id}`}
+                title="Nhận dạng OCR"
+                className={`w-full flex items-center justify-center py-2 rounded-lg text-sm transition-colors
+                  ${pathname === "/ocr/process" ? "bg-violet-50 dark:bg-[#2d2542] text-violet-600 dark:text-violet-400" : "text-gray-400 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3]"}`}
+              >
+                <IconScan />
+              </Link>
+            </li>
+          )}
         </ul>
       </nav>
+
+      {/* Footer: collapse toggle + theme/back when collapsed */}
+      <div
+        className={`border-t border-gray-100 dark:border-[#30363d] p-2 flex ${collapsed ? "flex-col items-center gap-1" : "items-center"}`}
+      >
+        {collapsed && (
+          <>
+            <button
+              onClick={toggle}
+              title={isDark ? "Chuyển sang Light" : "Chuyển sang Dark"}
+              className={iconBtn}
+            >
+              {isDark ? <IconSun /> : <IconMoon />}
+            </button>
+            <button
+              onClick={onToggle}
+              title={collapsed ? "Mở rộng menu" : "Thu nhỏ menu"}
+              className={`${collapsed ? "w-8 h-8" : "ml-auto w-7 h-7"} flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors cursor-pointer`}
+            >
+              {collapsed ? <IconChevronsRight /> : <IconChevronsLeft />}
+            </button>
+          </>
+        )}
+      </div>
     </aside>
   );
 }
@@ -447,12 +562,14 @@ function AdminTopBar() {
       </div>
 
       <div className="flex items-center gap-2 ml-auto">
-        {/* <button className="px-3 py-1.5 text-xs rounded-lg bg-gray-100 dark:bg-[#21262d] text-gray-600 dark:text-[#8b949e] hover:bg-gray-200 dark:hover:bg-[#30363d] transition-colors">
-          Xem trước
-        </button>
-        <button className="px-3 py-1.5 text-xs rounded-lg bg-violet-600 hover:bg-violet-700 text-white transition-colors font-medium">
-          Lưu thay đổi
-        </button> */}
+        <Link
+          href="/client"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-950/70 border border-blue-200 dark:border-blue-800 transition-colors"
+          title="Màn hình chính HDOS"
+        >
+          <IconBack />
+          Màn hình chính
+        </Link>
         <div className="w-px h-6 bg-gray-200 dark:bg-[#30363d] mx-1" />
         <div className="w-7 h-7 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-bold">
           A
@@ -471,6 +588,7 @@ export default function AdminLayout({
 }) {
   const { theme } = useThemeStore();
   const dk = theme === "dark";
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <ConfigProvider
@@ -570,7 +688,10 @@ export default function AdminLayout({
     >
       <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-[#010409]">
         <Suspense fallback={null}>
-          <AdminSidebar />
+          <AdminSidebar
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed((c) => !c)}
+          />
         </Suspense>
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <AdminTopBar />
