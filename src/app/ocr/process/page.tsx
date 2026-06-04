@@ -72,6 +72,7 @@ function FilePreviewPane({ file }: { file: UploadFile | null }) {
   const [converting, setConverting] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setBlobUrl(null);
     setHtmlDoc(null);
     setConverting(false);
@@ -169,6 +170,7 @@ function FilePreviewPane({ file }: { file: UploadFile | null }) {
   if (blobUrl && mime.startsWith("image/")) {
     return (
       <div className="w-full h-full flex items-start justify-center overflow-auto p-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={blobUrl} alt="preview" className="max-w-full object-contain rounded shadow-sm" />
       </div>
     );
@@ -271,6 +273,7 @@ function OcrProcessInner() {
     if (!document) return;
     const map: Record<string, string> = {};
     for (const v of (document.values ?? [])) map[v.fieldKey] = v.value;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFieldValues(map);
   }, [document]);
 
