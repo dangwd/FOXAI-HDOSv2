@@ -12,8 +12,8 @@ import { slugify } from "../_lib/slugify";
 
 function PreviewCard({ form }: { form: Partial<MenuUpsertForm> }) {
   return (
-    <div className="flex items-center gap-3 p-3.5 rounded-xl border border-dashed border-gray-200 dark:border-[#30363d] bg-gray-50/60 dark:bg-[#0d1117]/60 mb-5">
-      <span className="text-3xl w-12 h-12 flex items-center justify-center rounded-xl bg-white dark:bg-[#161b22] border border-gray-100 dark:border-[#21262d] shadow-sm shrink-0">
+    <div className="flex items-center gap-3 p-3.5 rounded-xl border border-dashed border-gray-200 dark:border-[#1f2937] bg-gray-50/60 dark:bg-[#0a0f1a]/60 mb-5">
+      <span className="text-3xl w-12 h-12 flex items-center justify-center rounded-xl bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-[#1f2937] shadow-sm shrink-0">
         {form.icon || "📊"}
       </span>
       <div className="flex-1 min-w-0">
@@ -51,8 +51,8 @@ function IconPicker({ value, onChange }: { value: string; onChange: (v: string) 
           onClick={() => onChange(e)}
           className={`w-9 h-9 rounded-lg text-base flex items-center justify-center border-2 transition-colors ${
             value === e
-              ? "border-violet-500 bg-violet-50 dark:bg-[#2d2542]"
-              : "border-gray-100 dark:border-[#30363d] hover:border-violet-300 dark:hover:border-violet-700"
+              ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+              : "border-gray-100 dark:border-[#1f2937] hover:border-emerald-300 dark:hover:border-emerald-700"
           }`}
         >
           {e}
@@ -129,7 +129,7 @@ export function InfoTab({
       </Form.Item>
 
       <Form.Item label="Hiển thị công khai">
-        <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-100 dark:border-[#21262d] bg-gray-50/60 dark:bg-[#0d1117]/60">
+        <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-100 dark:border-[#1f2937] bg-gray-50/60 dark:bg-[#0a0f1a]/60">
           <div>
             <p className="text-xs font-semibold text-gray-700 dark:text-[#e6edf3] m-0">
               {form.isVisible ? "Đang hiển thị" : "Đang ẩn"}
@@ -142,7 +142,7 @@ export function InfoTab({
         </div>
       </Form.Item>
 
-      <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-[#21262d]">
+      <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-[#1f2937]">
         <Popconfirm
           title={`Xóa menu "${menu.name}"?`}
           description="Toàn bộ màn hình, widget và phân quyền sẽ bị xóa theo."

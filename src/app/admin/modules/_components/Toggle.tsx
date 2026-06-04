@@ -20,8 +20,8 @@ export function Toggle({
       aria-checked={on}
       onClick={() => onChange(!on)}
       className={`relative inline-flex shrink-0 items-center rounded-full transition-colors duration-200
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-1
-        ${track} ${on ? "bg-violet-600" : "bg-gray-300 dark:bg-[#30363d]"}`}
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1
+        ${track} ${on ? "bg-emerald-600" : "bg-gray-300 dark:bg-[#30363d]"}`}
     >
       <span
         className={`inline-block transform rounded-full bg-white shadow-sm transition-transform duration-200

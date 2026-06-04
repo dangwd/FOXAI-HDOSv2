@@ -44,9 +44,9 @@ function formatAbs(iso: string) {
 // ── Realtime item (from SSE store) ───────────────────────────────────────────
 function RealtimeItem({ item }: { item: NotificationItem }) {
   return (
-    <div className={`px-4 py-3 border-b border-gray-100 dark:border-gray-800 transition-colors hover:bg-gray-50 dark:hover:bg-[#21262d] ${!item.read ? 'bg-blue-50/40 dark:bg-blue-900/10' : ''}`}>
+    <div className={`px-4 py-3 border-b border-gray-100 dark:border-gray-800 transition-colors hover:bg-gray-50 dark:hover:bg-[#0f172a] ${!item.read ? 'bg-emerald-50/40 dark:bg-emerald-900/10' : ''}`}>
       <div className="flex items-start gap-2">
-        {!item.read && <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />}
+        {!item.read && <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />}
         <div className="min-w-0 flex-1" style={item.read ? { marginLeft: '14px' } : undefined}>
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
@@ -128,7 +128,7 @@ export function NotificationPanel({ onClose }: Props) {
       label: (
         <span className="flex items-center gap-1.5">
           Mới nhận
-          {unreadCount > 0 && <Badge count={unreadCount} color="#1677ff" overflowCount={99} size="small" />}
+          {unreadCount > 0 && <Badge count={unreadCount} color="#059669" overflowCount={99} size="small" />}
         </span>
       ),
       children: (
@@ -138,7 +138,7 @@ export function NotificationPanel({ onClose }: Props) {
               <span className="text-[10px] text-gray-400">{items.length} thông báo</span>
               <div className="flex gap-1">
                 {unreadCount > 0 && (
-                  <Button size="small" type="text" icon={<CheckOutlined />} onClick={markAllRead} className="text-[10px] h-6 text-blue-500">
+                  <Button size="small" type="text" icon={<CheckOutlined />} onClick={markAllRead} className="text-[10px] h-6 text-emerald-600">
                     Đọc hết
                   </Button>
                 )}
@@ -195,7 +195,7 @@ export function NotificationPanel({ onClose }: Props) {
   return (
     <div
       ref={panelRef}
-      className="absolute right-0 top-full mt-2 z-50 bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-[#30363d] rounded-xl shadow-2xl overflow-hidden"
+      className="absolute right-0 top-full mt-2 z-50 bg-white dark:bg-[#0a0f1a] border border-gray-100 dark:border-[#1f2937] rounded-2xl shadow-2xl overflow-hidden"
       style={{ width: 420 }}
     >
       {/* Header */}

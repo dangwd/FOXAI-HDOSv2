@@ -75,7 +75,7 @@ const WIDGET_CHANNEL = "widget:main-dashboard:main-dashboard";
 
 const KIND_META: Record<EventKind, { dot: string; label: string }> = {
   startup:    { dot: "bg-gray-400",               label: "Khởi động"  },
-  push:       { dot: "bg-indigo-500",             label: "Excel push" },
+  push:       { dot: "bg-emerald-500",             label: "Excel push" },
   refreshing: { dot: "bg-amber-400 animate-pulse", label: "Làm mới…"  },
   done:       { dot: "bg-green-500",              label: "Đã cập nhật" },
   error:      { dot: "bg-red-500",               label: "Lỗi"         },
@@ -146,7 +146,7 @@ function TimelineCard({ entry }: { entry: TimelineEntry }) {
     <div className="flex gap-2.5 group">
       <div className="flex flex-col items-center pt-1">
         <span className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
-        <div className="flex-1 w-px bg-gray-100 dark:bg-[#21262d] mt-1 min-h-[12px]" />
+        <div className="flex-1 w-px bg-gray-100 dark:bg-[#1f2937] mt-1 min-h-[12px]" />
       </div>
       <div className="flex-1 pb-3 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -168,10 +168,10 @@ function TimelineCard({ entry }: { entry: TimelineEntry }) {
 
 function SkeletonCard() {
   return (
-    <div className="bg-white dark:bg-[#161b22] rounded-xl border border-gray-100 dark:border-[#21262d] p-4 animate-pulse">
-      <div className="h-2.5 w-20 bg-gray-100 dark:bg-[#21262d] rounded mb-3" />
-      <div className="h-7 w-28 bg-gray-100 dark:bg-[#21262d] rounded mb-2" />
-      <div className="h-2.5 w-12 bg-gray-100 dark:bg-[#21262d] rounded" />
+    <div className="bg-white dark:bg-[#0f172a] rounded-xl border border-gray-100 dark:border-[#1f2937] p-4 animate-pulse">
+      <div className="h-2.5 w-20 bg-gray-100 dark:bg-[#1f2937] rounded mb-3" />
+      <div className="h-7 w-28 bg-gray-100 dark:bg-[#1f2937] rounded mb-2" />
+      <div className="h-2.5 w-12 bg-gray-100 dark:bg-[#1f2937] rounded" />
     </div>
   );
 }
@@ -187,7 +187,7 @@ function KpiCard({
   warning?:   string;
 }) {
   return (
-    <div className="bg-white dark:bg-[#161b22] rounded-xl border border-gray-100 dark:border-[#21262d] p-4">
+    <div className="bg-white dark:bg-[#0f172a] rounded-xl border border-gray-100 dark:border-[#1f2937] p-4">
       <p className="text-[10px] font-bold text-gray-400 dark:text-[#484f58] uppercase tracking-widest m-0 mb-2">
         {label}
       </p>
@@ -201,7 +201,7 @@ function KpiCard({
         <p className="text-[11px] text-gray-400 dark:text-[#484f58] m-0 mt-1">{unit}</p>
       )}
       {prevValue && (
-        <p className="text-[11px] text-indigo-500 dark:text-indigo-400 m-0 mt-1">← {prevValue}</p>
+        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 m-0 mt-1">← {prevValue}</p>
       )}
       {warning && (
         <p className="text-[11px] text-amber-600 dark:text-amber-400 m-0 mt-1">{warning}</p>
@@ -214,7 +214,7 @@ function RegionProgressBar({ pct }: { pct: number }) {
   const clamped = Math.min(100, Math.max(0, pct));
   const color   = clamped >= 80 ? "bg-green-500" : clamped >= 60 ? "bg-amber-400" : "bg-red-400";
   return (
-    <div className="w-20 h-1.5 bg-gray-100 dark:bg-[#21262d] rounded-full overflow-hidden shrink-0">
+    <div className="w-20 h-1.5 bg-gray-100 dark:bg-[#1f2937] rounded-full overflow-hidden shrink-0">
       <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${clamped}%` }} />
     </div>
   );
@@ -546,7 +546,7 @@ export default function DataSyncMonitor() {
   const pollingMode = sseOpen ? "tắt" : "bật (3 s)";
 
   const sseBadge = (() => {
-    if (sseStatus === null)            return { label: "Chưa khởi tạo",  cls: "bg-gray-100 text-gray-600 dark:bg-[#21262d] dark:text-[#8b949e]" };
+    if (sseStatus === null)            return { label: "Chưa khởi tạo",  cls: "bg-gray-100 text-gray-600 dark:bg-[#1f2937] dark:text-[#8b949e]" };
     if (sseStatus === "reconnecting")  return { label: "Đang kết nối…",  cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" };
     if (sseStatus === "connected")     return { label: "Đã kết nối ✓",   cls: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" };
     return                                    { label: "Đã đóng ✗",      cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" };
@@ -564,7 +564,7 @@ export default function DataSyncMonitor() {
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
 
       {/* ── Header ── */}
-      <div className="shrink-0 px-6 py-4 border-b border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117]">
+      <div className="shrink-0 px-6 py-4 border-b border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a]">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-[#e6edf3] m-0 leading-tight">
@@ -584,8 +584,8 @@ export default function DataSyncMonitor() {
 
             {/* Push counter */}
             {pushCount > 0 && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 {pushCount} push nhận được
               </span>
             )}
@@ -625,9 +625,9 @@ export default function DataSyncMonitor() {
       <div className="flex-1 min-h-0 grid grid-cols-[290px_1fr] overflow-hidden">
 
         {/* ── Left: Timeline ── */}
-        <div className="flex flex-col border-r border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] overflow-hidden">
+        <div className="flex flex-col border-r border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] overflow-hidden">
           {/* Panel header */}
-          <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-[#21262d]">
+          <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-[#1f2937]">
             <span className="text-xs font-semibold text-gray-700 dark:text-[#e6edf3]">Lịch sử sự kiện</span>
             {timeline.length > 0 && (
               <button
@@ -652,8 +652,8 @@ export default function DataSyncMonitor() {
           </div>
 
           {/* Footer */}
-          <div className="shrink-0 px-4 py-2.5 border-t border-gray-100 dark:border-[#21262d] bg-gray-50/60 dark:bg-[#010409]/40">
-            <p className="text-[11px] font-mono text-indigo-500 dark:text-indigo-400 m-0 truncate">
+          <div className="shrink-0 px-4 py-2.5 border-t border-gray-100 dark:border-[#1f2937] bg-gray-50/60 dark:bg-[#010409]/40">
+            <p className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 m-0 truncate">
               📡 {WIDGET_CHANNEL}
             </p>
             <p className="text-[11px] text-gray-400 dark:text-[#484f58] m-0 mt-0.5">
@@ -756,11 +756,11 @@ export default function DataSyncMonitor() {
             {!hasRegions ? (
               <div className="space-y-2">
                 {[0, 1, 2, 3].map((i) => (
-                  <div key={i} className="h-11 rounded-xl bg-white dark:bg-[#161b22] border border-gray-100 dark:border-[#21262d] animate-pulse" />
+                  <div key={i} className="h-11 rounded-xl bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-[#1f2937] animate-pulse" />
                 ))}
               </div>
             ) : (
-              <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-[#30363d]">
+              <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-[#1f2937]">
                 <Table<RegionPerformanceRow>
                   dataSource={regions}
                   rowKey="name"

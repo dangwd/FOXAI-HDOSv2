@@ -92,8 +92,8 @@ function CreateFormDrawer({
     <Drawer
       title={
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-            <FileText size={14} className="text-blue-500" />
+          <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+            <FileText size={14} className="text-emerald-600" />
           </div>
           <span>Tạo Form mới</span>
         </div>
@@ -136,7 +136,7 @@ function CreateFormDrawer({
             className="font-mono"
           />
           <p className="text-[11px] text-gray-400 dark:text-[#484f58] m-0 mt-1.5 leading-relaxed">
-            Dùng chữ thường, số và dấu <code className="bg-gray-100 dark:bg-[#21262d] px-1 rounded">_</code>.
+            Dùng chữ thường, số và dấu <code className="bg-gray-100 dark:bg-[#1f2937] px-1 rounded">_</code>.
             Không thể thay đổi sau khi tạo.
           </p>
         </Form.Item>
@@ -219,7 +219,7 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
       dataIndex: "key",
       width:     180,
       render:    (v: string) => (
-        <code className="text-[12px] bg-gray-100 dark:bg-[#21262d] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
+        <code className="text-[12px] bg-gray-100 dark:bg-[#1f2937] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
           {v}
         </code>
       ),
@@ -266,7 +266,7 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
     <>
       <div className="flex flex-col h-full">
         {/* Sub-toolbar */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 dark:border-[#21262d] shrink-0">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
           <span className="text-xs text-gray-500 dark:text-[#8b949e]">
             {forms.length} form
           </span>
@@ -353,7 +353,7 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
   return (
     <div className="flex flex-col h-full">
       {/* Sub-toolbar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 dark:border-[#21262d] shrink-0">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
         <span className="text-xs text-gray-500 dark:text-[#8b949e]">
           {pages.length} page
         </span>
@@ -392,7 +392,7 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                 dataIndex: "code",
                 width:     180,
                 render:    (v: string) => (
-                  <code className="text-[12px] bg-gray-100 dark:bg-[#21262d] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
+                  <code className="text-[12px] bg-gray-100 dark:bg-[#1f2937] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
                     {v}
                   </code>
                 ),
@@ -410,8 +410,8 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                 render:    (v: number) => (
                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold ${
                     v > 0
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                      : "bg-gray-100 dark:bg-[#21262d] text-gray-400 dark:text-[#484f58]"
+                      ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
+                      : "bg-gray-100 dark:bg-[#1f2937] text-gray-400 dark:text-[#484f58]"
                   }`}>
                     {v}
                   </span>
@@ -480,7 +480,7 @@ export default function ModuleCanvasPage() {
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-[#0d1117] border-b border-gray-200 dark:border-[#30363d] px-6 py-4 shrink-0">
+      <div className="bg-white dark:bg-[#0a0f1a] border-b border-gray-200 dark:border-[#1f2937] px-6 py-4 shrink-0">
         {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-[#8b949e] mb-3">
           <button
@@ -538,7 +538,7 @@ export default function ModuleCanvasPage() {
                 <span className="flex items-center gap-1.5">
                   <FileText size={13} />
                   Forms
-                  <span className="ml-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-[#21262d] text-gray-500 dark:text-[#8b949e]">
+                  <span className="ml-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-[#1f2937] text-gray-500 dark:text-[#8b949e]">
                     {module.formCount}
                   </span>
                 </span>

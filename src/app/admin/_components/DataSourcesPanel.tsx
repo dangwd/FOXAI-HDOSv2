@@ -47,11 +47,11 @@ function SourceRow({
   }
 
   return (
-    <div className="rounded-lg border border-gray-100 dark:border-[#21262d] p-3 space-y-2 bg-gray-50 dark:bg-[#161b22]">
+    <div className="rounded-lg border border-gray-100 dark:border-[#1f2937] p-3 space-y-2 bg-gray-50 dark:bg-[#0f172a]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <Database size={11} className="text-violet-500" />
-          <code className="text-[11px] font-mono text-violet-600 dark:text-violet-400">
+          <Database size={11} className="text-emerald-600" />
+          <code className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
             {local.namespace || "namespace"}
           </code>
         </div>
@@ -166,7 +166,7 @@ export function DataSourcesPanel({ selectedSlug }: { selectedSlug: string }) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-200 dark:border-[#30363d] shrink-0">
+      <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-200 dark:border-[#1f2937] shrink-0">
         <div>
           <p className="text-xs font-semibold text-gray-800 dark:text-[#e6edf3] m-0">
             Data Sources
@@ -178,7 +178,7 @@ export function DataSourcesPanel({ selectedSlug }: { selectedSlug: string }) {
         <button
           title="Thêm data source"
           onClick={add}
-          className="w-6 h-6 flex items-center justify-center rounded-lg text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
+          className="w-6 h-6 flex items-center justify-center rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
         >
           <Plus size={13} />
         </button>
@@ -194,7 +194,7 @@ export function DataSourcesPanel({ selectedSlug }: { selectedSlug: string }) {
             </p>
             <button
               onClick={add}
-              className="text-xs text-violet-600 dark:text-violet-400 hover:underline"
+              className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
             >
               + Thêm mới
             </button>
@@ -229,11 +229,11 @@ export function DataSourcesPanel({ selectedSlug }: { selectedSlug: string }) {
       </div>
 
       {/* Footer hint */}
-      <div className="px-3 py-2.5 border-t border-gray-100 dark:border-[#21262d] shrink-0 bg-gray-50 dark:bg-[#010409]">
+      <div className="px-3 py-2.5 border-t border-gray-100 dark:border-[#1f2937] shrink-0 bg-gray-50 dark:bg-[#010409]">
         <p className="text-[10px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider m-0 mb-1">
           Cú pháp expression
         </p>
-        <code className="text-[10px] text-violet-600 dark:text-violet-400">
+        <code className="text-[10px] text-emerald-600 dark:text-emerald-400">
           {"{{sources.<namespace>.<field>}}"}
         </code>
         <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0 mt-0.5">

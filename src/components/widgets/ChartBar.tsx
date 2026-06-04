@@ -20,14 +20,14 @@ export function ChartBar({
   series,
   title,
   height = 220,
-  color = "#1677ff",
+  color = "#059669",
   legend = false,
   unit,
   loading = false,
 }: BaseChartProps) {
   if (loading) {
     return (
-      <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full">
+      <div className="rounded-2xl p-4 border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm h-full">
         {title && <div className={`${SK} h-3 w-32 mb-3`} />}
         <div className={`${SK} w-full`} style={{ height }} />
       </div>
@@ -35,7 +35,7 @@ export function ChartBar({
   }
 
   return (
-    <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full flex flex-col">
+    <div className="rounded-2xl p-4 border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm h-full flex flex-col">
       {title && (
         <p className="text-[11px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-3 shrink-0">
           {title}

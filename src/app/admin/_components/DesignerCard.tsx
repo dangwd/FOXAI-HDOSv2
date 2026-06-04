@@ -23,17 +23,17 @@ export function DesignerCard({
       onClick={onSelect}
       className={`group flex flex-col h-full rounded-xl border-2 cursor-pointer transition-all
         ${selected
-          ? "border-violet-500 bg-violet-50 dark:bg-violet-950/30 shadow-md shadow-violet-500/15"
-          : "border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] hover:border-violet-300 dark:hover:border-violet-700"
+          ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 shadow-md shadow-emerald-500/15"
+          : "border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] hover:border-emerald-300 dark:hover:border-emerald-700"
         }`}
     >
       {/* Drag handle — .drag-handle class is required by ReactGridLayout */}
-      <div className="drag-handle flex items-center gap-1.5 px-2 py-1.5 border-b border-gray-100 dark:border-[#21262d] cursor-grab active:cursor-grabbing select-none">
+      <div className="drag-handle flex items-center gap-1.5 px-2 py-1.5 border-b border-gray-100 dark:border-[#1f2937] cursor-grab active:cursor-grabbing select-none">
         <IconGrip />
         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider truncate max-w-20
           ${selected
-            ? "bg-violet-200 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300"
-            : "bg-gray-100 dark:bg-[#21262d] text-gray-500 dark:text-[#8b949e]"
+            ? "bg-emerald-200 dark:bg-violet-900/60 text-emerald-700 dark:text-emerald-300"
+            : "bg-gray-100 dark:bg-[#1f2937] text-gray-500 dark:text-[#8b949e]"
           }`}>
           {widget.widgetType}
         </span>
@@ -56,7 +56,7 @@ export function DesignerCard({
           {typeLabel}
         </p>
         {widget.referenceId && (
-          <p className="text-[10px] text-violet-500 dark:text-violet-400 m-0 font-mono truncate max-w-full px-1">
+          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 m-0 font-mono truncate max-w-full px-1">
             ref: {widget.referenceId.slice(0, 8)}…
           </p>
         )}
@@ -70,7 +70,7 @@ export function DesignerCard({
       {/* X/Y/W/H footer */}
       <div className="flex items-center gap-1 px-2 pb-1.5 justify-center">
         {(["X", "Y", "W", "H"] as const).map((lbl, i) => (
-          <div key={lbl} className="text-center bg-gray-50 dark:bg-[#21262d] rounded px-1 py-0.5 min-w-6.5">
+          <div key={lbl} className="text-center bg-gray-50 dark:bg-[#1f2937] rounded px-1 py-0.5 min-w-6.5">
             <div className="text-[8px] font-semibold text-gray-400 dark:text-[#484f58]">{lbl}</div>
             <div className="text-[9px] font-mono text-gray-600 dark:text-[#8b949e]">
               {[widget.gridX, widget.gridY, widget.gridW, widget.gridH][i]}

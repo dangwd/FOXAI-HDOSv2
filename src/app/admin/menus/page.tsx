@@ -9,32 +9,32 @@ import { ScreenDesigner }  from "./_components/ScreenDesigner";
 function LoadingSkeleton() {
   return (
     <div className="flex h-full overflow-hidden">
-      <div className="w-64 shrink-0 border-r border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] flex flex-col animate-pulse">
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-[#30363d] flex items-center justify-between">
-          <div className="h-3.5 w-24 rounded bg-gray-100 dark:bg-[#21262d]" />
-          <div className="h-6 w-6 rounded-md bg-gray-100 dark:bg-[#21262d]" />
+      <div className="w-64 shrink-0 border-r border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] flex flex-col animate-pulse">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-[#1f2937] flex items-center justify-between">
+          <div className="h-3.5 w-24 rounded bg-gray-100 dark:bg-[#1f2937]" />
+          <div className="h-6 w-6 rounded-md bg-gray-100 dark:bg-[#1f2937]" />
         </div>
         <div className="px-2 py-3 space-y-1">
           {[80, 64, 72, 56, 68].map((w, i) => (
             <div key={i} className="flex items-center gap-2 px-2 py-2">
-              <div className="h-4 w-4 rounded bg-gray-100 dark:bg-[#21262d]" />
-              <div className="h-3 rounded bg-gray-100 dark:bg-[#21262d]" style={{ width: w }} />
+              <div className="h-4 w-4 rounded bg-gray-100 dark:bg-[#1f2937]" />
+              <div className="h-3 rounded bg-gray-100 dark:bg-[#1f2937]" style={{ width: w }} />
             </div>
           ))}
         </div>
       </div>
       <div className="flex-1 flex flex-col">
-        <div className="px-5 py-3 border-b border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] flex items-center gap-3 animate-pulse">
-          <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#21262d]" />
+        <div className="px-5 py-3 border-b border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] flex items-center gap-3 animate-pulse">
+          <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#1f2937]" />
           <div className="space-y-1.5">
-            <div className="h-3.5 w-36 rounded bg-gray-100 dark:bg-[#21262d]" />
-            <div className="h-2.5 w-28 rounded bg-gray-100 dark:bg-[#21262d]" />
+            <div className="h-3.5 w-36 rounded bg-gray-100 dark:bg-[#1f2937]" />
+            <div className="h-2.5 w-28 rounded bg-gray-100 dark:bg-[#1f2937]" />
           </div>
         </div>
         <div className="p-6 space-y-4 animate-pulse">
           <div className="grid grid-cols-2 gap-3">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-36 rounded-xl bg-white dark:bg-[#161b22] border border-gray-100 dark:border-[#21262d]" />
+              <div key={i} className="h-36 rounded-xl bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-[#1f2937]" />
             ))}
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function MenusPage() {
                 </p>
                 <p className="text-xs m-0 mt-1 text-gray-400 dark:text-[#484f58]">
                   Nhấn{" "}
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-[#21262d] text-gray-600 dark:text-[#8b949e] font-semibold text-[11px]">
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-[#1f2937] text-gray-600 dark:text-[#8b949e] font-semibold text-[11px]">
                     <Plus size={9} /> Tạo menu
                   </span>
                   {" "}ở thanh bên trái để bắt đầu

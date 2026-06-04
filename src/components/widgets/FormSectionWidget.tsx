@@ -27,7 +27,7 @@ function ReadOnlyValue({ value }: { value: string }) {
     <div
       className={`min-h-7.5 rounded-md border px-3 py-1.5 flex items-center gap-2
         ${value
-          ? "bg-white dark:bg-[#0d1117] border-violet-200 dark:border-violet-800/50"
+          ? "bg-white dark:bg-[#0d1117] border-emerald-200 dark:border-emerald-800/50"
           : "bg-gray-50 dark:bg-[#161b22] border-gray-200 dark:border-[#30363d]"
         }`}
     >
@@ -36,7 +36,7 @@ function ReadOnlyValue({ value }: { value: string }) {
           <span className="text-gray-300 dark:text-[#484f58] italic">—</span>
         )}
       </span>
-      <Lock size={10} className="shrink-0 text-violet-400 dark:text-violet-500" />
+      <Lock size={10} className="shrink-0 text-emerald-500 dark:text-emerald-400" />
     </div>
   );
 }
@@ -219,7 +219,7 @@ export function FormSectionWidget({
                     <span className="text-red-400 ml-0.5">*</span>
                   )}
                   {field.isReadOnly && (
-                    <span className="text-[10px] font-normal text-violet-500 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30 px-1.5 py-0.5 rounded ml-1">
+                    <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded ml-1">
                       Auto
                     </span>
                   )}

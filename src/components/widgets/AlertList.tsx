@@ -42,7 +42,7 @@ export function AlertList({
   const displayTotalCount = live?.totalCount ?? totalCount;
 
   return (
-    <div className="flex flex-col h-full rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] overflow-hidden">
+    <div className="flex flex-col h-full rounded-2xl border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-[#30363d] shrink-0">
         <span className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider">

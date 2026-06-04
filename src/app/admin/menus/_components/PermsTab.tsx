@@ -8,7 +8,7 @@ import type { AdminPermission } from "@/infrastructure/http/adminApi";
 import { PRESET_ROLES } from "../_lib/constants";
 
 const TYPE_META = {
-  role: { label: "Role", color: "#7c3aed", bg: "rgba(124,58,237,0.1)"  },
+  role: { label: "Role", color: "#059669", bg: "rgba(124,58,237,0.1)"  },
   user: { label: "User", color: "#0ea5e9", bg: "rgba(14,165,233,0.1)"  },
 } as const;
 
@@ -101,9 +101,9 @@ export function PermsTab({
     <div className="space-y-4">
 
       {/* Add section */}
-      <div className="p-3 rounded-xl bg-gray-50 dark:bg-[#0d1117] border border-gray-100 dark:border-[#21262d] space-y-3">
+      <div className="p-3 rounded-xl bg-gray-50 dark:bg-[#0a0f1a] border border-gray-100 dark:border-[#1f2937] space-y-3">
         {/* Mode switcher */}
-        <div className="flex items-center gap-1 bg-gray-100 dark:bg-[#21262d] rounded-xl p-1 w-fit">
+        <div className="flex items-center gap-1 bg-gray-100 dark:bg-[#1f2937] rounded-xl p-1 w-fit">
           {(["role", "user"] as const).map((m) => (
             <button
               key={m}
@@ -111,7 +111,7 @@ export function PermsTab({
               onClick={() => setMode(m)}
               className={`px-3 py-1 text-[11px] font-semibold rounded-lg transition-colors whitespace-nowrap ${
                 mode === m
-                  ? "bg-white dark:bg-[#161b22] text-gray-800 dark:text-[#e6edf3] shadow-sm"
+                  ? "bg-white dark:bg-[#0f172a] text-gray-800 dark:text-[#e6edf3] shadow-sm"
                   : "text-gray-500 dark:text-[#8b949e] hover:text-gray-700 dark:hover:text-[#e6edf3]"
               }`}
             >
@@ -132,11 +132,11 @@ export function PermsTab({
                   onClick={() => addRole(r)}
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border-2 transition-all ${
                     exists
-                      ? "border-gray-100 dark:border-[#21262d] text-gray-300 dark:text-[#484f58] cursor-not-allowed"
-                      : "border-violet-200 dark:border-violet-700/40 text-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-[#2d2542]"
+                      ? "border-gray-100 dark:border-[#1f2937] text-gray-300 dark:text-[#484f58] cursor-not-allowed"
+                      : "border-emerald-200 dark:border-emerald-700/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-[#2d2542]"
                   }`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full ${exists ? "bg-gray-300 dark:bg-[#484f58]" : "bg-violet-500"}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${exists ? "bg-gray-300 dark:bg-[#484f58]" : "bg-emerald-500"}`} />
                   {r}
                 </button>
               );
@@ -157,7 +157,7 @@ export function PermsTab({
 
       {/* Permissions table — or empty state */}
       {perms.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 py-10 rounded-xl border border-dashed border-gray-200 dark:border-[#30363d] text-gray-400 dark:text-[#484f58]">
+        <div className="flex flex-col items-center justify-center gap-2 py-10 rounded-xl border border-dashed border-gray-200 dark:border-[#1f2937] text-gray-400 dark:text-[#484f58]">
           <ShieldOff size={28} className="opacity-50" />
           <p className="text-xs font-semibold m-0">Chưa có phân quyền nào</p>
           <p className="text-[11px] m-0 text-center">Thêm role hoặc user ở trên để cấp quyền</p>

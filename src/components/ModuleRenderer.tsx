@@ -61,17 +61,17 @@ function ModuleHeader({
   onReload: () => void;
 }) {
   return (
-    <div className="px-5 py-3 border-b border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] flex items-start justify-between gap-4 shrink-0">
+    <div className="px-5 py-3 border-b border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] flex items-start justify-between gap-4 shrink-0">
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <h1 className="text-base font-bold text-gray-900 dark:text-[#e6edf3] m-0 leading-tight">
             {label}
           </h1>
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 leading-none">
+          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-gray-100 dark:bg-[#1f2937] text-gray-500 dark:text-gray-400 leading-none">
             HDOS v1.0
           </span>
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-600 dark:text-green-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Live
           </span>
         </div>
@@ -85,16 +85,16 @@ function ModuleHeader({
       <div className="flex items-center gap-2 shrink-0">
         <button
           onClick={onReload}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-[#30363d]
-            text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl border border-gray-100 dark:border-[#1f2937]
+            text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1f2937] transition-colors"
         >
           <span className="text-sm leading-none">↺</span> Làm mới
         </button>
-        <button className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-[#30363d]
-          text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">
+        <button className="px-3 py-1.5 text-xs rounded-xl border border-gray-100 dark:border-[#1f2937]
+          text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1f2937] transition-colors">
           Báo cáo giám ban
         </button>
-        <button className="px-3 py-1.5 text-xs rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors">
+        <button className="px-3 py-1.5 text-xs rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors">
           Hỏi AI
         </button>
       </div>
@@ -114,17 +114,17 @@ function TabBar({
   onSelect: (id: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-100 dark:border-[#21262d] bg-white dark:bg-[#0d1117] shrink-0 overflow-x-auto">
+    <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] shrink-0 overflow-x-auto">
       {tabs.map((tab) => {
         const isActive = tab.id === activeId;
         return (
           <button
             key={tab.id}
             onClick={() => onSelect(tab.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-all select-none
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 transition-all select-none
               ${isActive
-                ? "bg-violet-600 text-white shadow-sm shadow-violet-600/30"
-                : "text-gray-500 dark:text-[#8b949e] hover:bg-gray-100 dark:hover:bg-[#21262d] hover:text-gray-700 dark:hover:text-[#e6edf3]"
+                ? "bg-emerald-600 text-white shadow-sm shadow-emerald-600/20"
+                : "text-gray-500 dark:text-[#8b949e] hover:bg-gray-100 dark:hover:bg-[#1f2937] hover:text-gray-700 dark:hover:text-[#e6edf3]"
               }`}
           >
             {tab.label}

@@ -146,7 +146,7 @@ export function OperationsTab() {
       render: (_, o) =>
         o.resultChartType ? (
           <Tooltip title={o.resultChartType}>
-            <span className="text-[11px] text-violet-600 dark:text-violet-400 font-mono">
+            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono">
               {CHART_LABEL[o.resultChartType] ?? o.resultChartType}
             </span>
           </Tooltip>
@@ -177,7 +177,7 @@ export function OperationsTab() {
           <Button
             type="text"
             size="small"
-            className="!text-violet-600 dark:!text-violet-400 !px-2"
+            className="!text-emerald-600 dark:!text-emerald-400 !px-2"
             onClick={() => setDrawer({ mode: "edit", target: o })}
           >
             Sửa

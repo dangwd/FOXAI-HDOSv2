@@ -16,7 +16,7 @@ function PreviewStrip({ form }: { form: ProviderForm }) {
   const statusMeta = STATUS_META[form.status];
 
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl border border-dashed border-gray-200 dark:border-[#30363d] bg-gray-50/60 dark:bg-[#0d1117]/60 mb-5">
+    <div className="flex items-start gap-3 p-3 rounded-xl border border-dashed border-gray-200 dark:border-[#1f2937] bg-gray-50/60 dark:bg-[#0a0f1a]/60 mb-5">
       <div
         className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-[11px] font-bold shrink-0"
         style={{ background: color }}
@@ -51,7 +51,7 @@ function SectionDivider({ children }: { children: React.ReactNode }) {
       <span className="text-[10px] font-bold text-gray-400 dark:text-[#484f58] uppercase tracking-widest whitespace-nowrap">
         {children}
       </span>
-      <div className="flex-1 h-px bg-gray-100 dark:bg-[#21262d]" />
+      <div className="flex-1 h-px bg-gray-100 dark:bg-[#1f2937]" />
     </div>
   );
 }

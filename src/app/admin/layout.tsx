@@ -2,7 +2,7 @@
 
 import { ocrApi, type OcrSchemaListItem } from "@/infrastructure/http/ocrApi";
 import { useThemeStore } from "@/store/themeStore";
-import { App, ConfigProvider } from "antd";
+import { App, ConfigProvider, theme as antTheme } from "antd";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -325,17 +325,17 @@ function AdminSidebar({
   }, []);
 
   const iconBtn =
-    "w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors";
+    "w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#1f2937] transition-colors";
 
   return (
     <aside
-      className={`${collapsed ? "w-14" : "w-64"} transition-[width] duration-200 ease-in-out h-screen bg-white dark:bg-[#0d1117] border-r border-gray-200 dark:border-[#30363d] flex flex-col shrink-0 overflow-hidden`}
+      className={`${collapsed ? "w-14" : "w-64"} transition-[width] duration-200 ease-in-out h-screen bg-white dark:bg-[#0a0f1a] border-r border-gray-100 dark:border-[#1f2937] flex flex-col shrink-0 overflow-hidden`}
     >
       {/* Logo */}
       <div
-        className={`flex items-center gap-2.5 px-3 py-4 border-b border-gray-100 dark:border-[#30363d] ${collapsed ? "justify-center" : ""}`}
+        className={`flex items-center gap-2.5 px-3 py-4 border-b border-gray-100 dark:border-[#1f2937] ${collapsed ? "justify-center" : ""}`}
       >
-        <div className="w-7 h-7 rounded bg-violet-600 flex items-center justify-center text-white shrink-0">
+        <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center text-white shrink-0">
           <IconSettings />
         </div>
         {!collapsed && (
@@ -354,7 +354,7 @@ function AdminSidebar({
               <button
                 onClick={onToggle}
                 title={collapsed ? "Mở rộng menu" : "Thu nhỏ menu"}
-                className={`${collapsed ? "w-8 h-8" : "ml-auto w-7 h-7"} flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors cursor-pointer`}
+                className={`${collapsed ? "w-8 h-8" : "ml-auto w-7 h-7"} flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#1f2937] transition-colors cursor-pointer`}
               >
                 {collapsed ? <IconChevronsRight /> : <IconChevronsLeft />}
               </button>
@@ -383,18 +383,18 @@ function AdminSidebar({
                 <Link
                   href={item.href}
                   title={collapsed ? item.label : undefined}
-                  className={`w-full flex items-center gap-2.5 py-2 rounded-lg text-sm transition-colors
+                  className={`w-full flex items-center gap-2.5 py-2 rounded-xl text-sm transition-colors
                     ${collapsed ? "justify-center px-0" : "px-3"}
                     ${
                       isActive
-                        ? "bg-violet-50 dark:bg-[#2d2542] text-violet-600 dark:text-violet-400 font-medium"
-                        : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3]"
+                        ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-medium"
+                        : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3]"
                     }`}
                 >
                   <span
                     className={
                       isActive
-                        ? "text-violet-600 dark:text-violet-400"
+                        ? "text-emerald-700 dark:text-emerald-400"
                         : "text-gray-400 dark:text-[#8b949e]"
                     }
                   >
@@ -413,7 +413,7 @@ function AdminSidebar({
           </p>
         )}
         {collapsed && (
-          <div className="my-2 border-t border-gray-100 dark:border-[#30363d]" />
+          <div className="my-2 border-t border-gray-100 dark:border-[#1f2937]" />
         )}
         <ul className="space-y-0.5">
           {/* Static: config page */}
@@ -421,18 +421,18 @@ function AdminSidebar({
             <Link
               href="/ocr/config"
               title={collapsed ? "Thiết lập Chứng từ OCR" : undefined}
-              className={`w-full flex items-center gap-2.5 py-2 rounded-lg text-sm transition-colors
+              className={`w-full flex items-center gap-2.5 py-2 rounded-xl text-sm transition-colors
                 ${collapsed ? "justify-center px-0" : "px-3"}
                 ${
                   pathname === "/ocr/config"
-                    ? "bg-violet-50 dark:bg-[#2d2542] text-violet-600 dark:text-violet-400 font-medium"
-                    : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3]"
+                    ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-medium"
+                    : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3]"
                 }`}
             >
               <span
                 className={
                   pathname === "/ocr/config"
-                    ? "text-violet-600 dark:text-violet-400"
+                    ? "text-emerald-700 dark:text-emerald-400"
                     : "text-gray-400 dark:text-[#8b949e]"
                 }
               >
@@ -447,7 +447,7 @@ function AdminSidebar({
             <li>
               <button
                 onClick={() => setOcrExpanded((v) => !v)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3] cursor-pointer"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3] cursor-pointer"
               >
                 <span className="text-gray-400 dark:text-[#8b949e]">
                   <IconScan />
@@ -471,8 +471,8 @@ function AdminSidebar({
                           className={`w-full flex items-center gap-2.5 pl-9 pr-3 py-2 rounded-lg text-sm transition-colors
                             ${
                               isActive
-                                ? "bg-violet-50 dark:bg-[#2d2542] text-violet-600 dark:text-violet-400 font-medium"
-                                : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3]"
+                                ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-medium"
+                                : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3]"
                             }`}
                         >
                           <span className="text-gray-400 dark:text-[#8b949e]">
@@ -495,7 +495,7 @@ function AdminSidebar({
                 href={`/ocr/process?schema=${ocrSchemas[0].id}`}
                 title="Nhận dạng OCR"
                 className={`w-full flex items-center justify-center py-2 rounded-lg text-sm transition-colors
-                  ${pathname === "/ocr/process" ? "bg-violet-50 dark:bg-[#2d2542] text-violet-600 dark:text-violet-400" : "text-gray-400 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3]"}`}
+                  ${pathname === "/ocr/process" ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400" : "text-gray-400 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3]"}`}
               >
                 <IconScan />
               </Link>
@@ -506,7 +506,7 @@ function AdminSidebar({
 
       {/* Footer: collapse toggle + theme/back when collapsed */}
       <div
-        className={`border-t border-gray-100 dark:border-[#30363d] p-2 flex ${collapsed ? "flex-col items-center gap-1" : "items-center"}`}
+        className={`border-t border-gray-100 dark:border-[#1f2937] p-2 flex ${collapsed ? "flex-col items-center gap-1" : "items-center"}`}
       >
         {collapsed && (
           <>
@@ -520,7 +520,7 @@ function AdminSidebar({
             <button
               onClick={onToggle}
               title={collapsed ? "Mở rộng menu" : "Thu nhỏ menu"}
-              className={`${collapsed ? "w-8 h-8" : "ml-auto w-7 h-7"} flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors cursor-pointer`}
+              className={`${collapsed ? "w-8 h-8" : "ml-auto w-7 h-7"} flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#1f2937] transition-colors cursor-pointer`}
             >
               {collapsed ? <IconChevronsRight /> : <IconChevronsLeft />}
             </button>
@@ -535,7 +535,7 @@ function AdminSidebar({
 
 function AdminTopBar() {
   return (
-    <header className="h-14 shrink-0 bg-white dark:bg-[#0d1117] border-b border-gray-200 dark:border-[#30363d] flex items-center px-5 gap-4">
+    <header className="h-14 shrink-0 bg-white dark:bg-[#0a0f1a] border-b border-gray-100 dark:border-[#1f2937] flex items-center px-5 gap-4">
       <div className="flex-1 max-w-lg">
         <div className="relative">
           <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400 dark:text-[#8b949e]">
@@ -556,7 +556,7 @@ function AdminTopBar() {
           <input
             type="text"
             placeholder="Tìm module, widget, config..."
-            className="w-full pl-9 pr-4 py-2 text-sm rounded-lg bg-gray-100 dark:bg-[#21262d] border border-transparent focus:border-violet-500 focus:bg-white dark:focus:bg-[#161b22] outline-none text-gray-700 dark:text-[#e6edf3] placeholder-gray-400 dark:placeholder-[#8b949e] transition-colors"
+            className="w-full pl-9 pr-4 py-2 text-sm rounded-xl bg-gray-50 dark:bg-[#1f2937] border border-gray-100 dark:border-[#1f2937] focus:border-emerald-400 dark:focus:border-emerald-600 focus:bg-white dark:focus:bg-[#0f172a] outline-none text-gray-700 dark:text-[#e6edf3] placeholder-gray-400 dark:placeholder-[#8b949e] transition-colors"
           />
         </div>
       </div>
@@ -564,14 +564,14 @@ function AdminTopBar() {
       <div className="flex items-center gap-2 ml-auto">
         <Link
           href="/client"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-950/70 border border-blue-200 dark:border-blue-800 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-[#1f2937] hover:bg-gray-200 dark:hover:bg-[#2d3748] border border-gray-100 dark:border-[#1f2937] transition-colors"
           title="Màn hình chính HDOS"
         >
           <IconBack />
           Màn hình chính
         </Link>
-        <div className="w-px h-6 bg-gray-200 dark:bg-[#30363d] mx-1" />
-        <div className="w-7 h-7 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-bold">
+        <div className="w-px h-6 bg-gray-100 dark:bg-[#1f2937] mx-1" />
+        <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold">
           A
         </div>
       </div>
@@ -593,100 +593,99 @@ export default function AdminLayout({
   return (
     <ConfigProvider
       theme={{
+        // Fix: include algorithm so dark mode tokens apply correctly
+        algorithm: dk ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
         token: {
-          // ── Primary → violet-600 (matches bg-violet-600 across admin) ──────
-          colorPrimary: "#7c3aed",
-          colorPrimaryHover: "#6d28d9",
-          colorPrimaryActive: "#5b21b6",
+          // ── Primary → emerald-600 ─────────────────────────────────────────
+          colorPrimary: "#059669",
+          colorPrimaryHover: "#047857",
+          colorPrimaryActive: "#065f46",
 
           // ── Background tokens ─────────────────────────────────────────────
-          colorBgContainer: dk ? "#161b22" : "#ffffff", // inputs, table body, cards
-          colorBgElevated: dk ? "#161b22" : "#ffffff", // modals, drawers, dropdowns
-          colorBgSpotlight: dk ? "#21262d" : "#f3f4f6",
-          colorFillAlter: dk ? "#0d1117" : "#f9fafb", // table header stripe
-          colorFillSecondary: dk ? "#21262d" : "#f5f5f5",
-          colorFillTertiary: dk ? "#161b22" : "#f9fafb",
+          colorBgContainer: dk ? "#0f172a" : "#ffffff",
+          colorBgElevated: dk ? "#0f172a" : "#ffffff",
+          colorBgSpotlight: dk ? "#1f2937" : "#f3f4f6",
+          colorFillAlter: dk ? "#0a0f1a" : "#f9fafb",
+          colorFillSecondary: dk ? "#1f2937" : "#f5f5f5",
+          colorFillTertiary: dk ? "#0f172a" : "#f9fafb",
 
           // ── Border tokens ─────────────────────────────────────────────────
-          colorBorder: dk ? "#30363d" : "#e5e7eb", // inputs, cards
-          colorBorderSecondary: dk ? "#21262d" : "#f0f0f0", // subtle dividers
-          colorSplit: dk ? "#21262d" : "#f0f0f0",
+          colorBorder: dk ? "#1f2937" : "#e5e7eb",
+          colorBorderSecondary: dk ? "#1f2937" : "#f0f0f0",
+          colorSplit: dk ? "#1f2937" : "#f0f0f0",
 
           // ── Text tokens ───────────────────────────────────────────────────
-          colorText: dk ? "#e6edf3" : "#111827",
-          colorTextSecondary: dk ? "#8b949e" : "#6b7280",
-          colorTextTertiary: dk ? "#484f58" : "#9ca3af",
-          colorTextQuaternary: dk ? "#30363d" : "#d1d5db",
+          colorText: dk ? "#f1f5f9" : "#111827",
+          colorTextSecondary: dk ? "#94a3b8" : "#6b7280",
+          colorTextTertiary: dk ? "#64748b" : "#9ca3af",
+          colorTextQuaternary: dk ? "#374151" : "#d1d5db",
 
           // ── Shape & type ──────────────────────────────────────────────────
-          borderRadius: 8,
-          borderRadiusLG: 10,
-          borderRadiusSM: 6,
-          borderRadiusXS: 4,
+          borderRadius: 10,
+          borderRadiusLG: 14,
+          borderRadiusSM: 8,
+          borderRadiusXS: 6,
           fontSize: 13,
           fontSizeSM: 11,
           fontSizeLG: 14,
         },
         components: {
           Table: {
-            // header sáng hơn body để tạo hierarchy, không hoà vào page background
-            headerBg: dk ? "#1c2128" : "#f0f2f5",
-            headerColor: dk ? "#cdd3de" : "#374151",
-            headerSplitColor: dk ? "#30363d" : "#d1d5db",
-            // row
-            rowHoverBg: dk ? "#21262d" : "rgba(124,58,237,0.04)",
-            // border rõ hơn
-            borderColor: dk ? "#30363d" : "#e2e8f0",
+            headerBg: dk ? "#1f2937" : "#f8fafc",
+            headerColor: dk ? "#cbd5e1" : "#374151",
+            headerSplitColor: dk ? "#1f2937" : "#e2e8f0",
+            rowHoverBg: dk ? "#1f2937" : "rgba(5,150,105,0.04)",
+            borderColor: dk ? "#1f2937" : "#e2e8f0",
             cellPaddingBlock: 8,
             cellPaddingInline: 12,
           },
           Drawer: {
-            colorBgElevated: dk ? "#161b22" : "#ffffff",
-            colorSplit: dk ? "#21262d" : "#f0f0f0",
+            colorBgElevated: dk ? "#0f172a" : "#ffffff",
+            colorSplit: dk ? "#1f2937" : "#f0f0f0",
           },
           Modal: {
-            contentBg: dk ? "#161b22" : "#ffffff",
-            headerBg: dk ? "#161b22" : "#ffffff",
-            colorSplit: dk ? "#21262d" : "#f0f0f0",
+            contentBg: dk ? "#0f172a" : "#ffffff",
+            headerBg: dk ? "#0f172a" : "#ffffff",
+            colorSplit: dk ? "#1f2937" : "#f0f0f0",
           },
           Tabs: {
-            itemActiveColor: "#7c3aed",
-            itemSelectedColor: "#7c3aed",
-            inkBarColor: "#7c3aed",
-            itemColor: dk ? "#8b949e" : "#6b7280",
-            itemHoverColor: dk ? "#e6edf3" : "#111827",
-            colorBorderSecondary: dk ? "#21262d" : "#f0f0f0",
+            itemActiveColor: "#059669",
+            itemSelectedColor: "#059669",
+            inkBarColor: "#059669",
+            itemColor: dk ? "#94a3b8" : "#6b7280",
+            itemHoverColor: dk ? "#f1f5f9" : "#111827",
+            colorBorderSecondary: dk ? "#1f2937" : "#f0f0f0",
           },
           Input: {
-            colorBgContainer: dk ? "#0d1117" : "#ffffff",
-            activeBorderColor: "#7c3aed",
-            hoverBorderColor: "#a78bfa",
+            colorBgContainer: dk ? "#0a0f1a" : "#ffffff",
+            activeBorderColor: "#059669",
+            hoverBorderColor: "#34d399",
           },
           Select: {
-            colorBgContainer: dk ? "#0d1117" : "#ffffff",
-            optionSelectedBg: dk ? "#2d2542" : "#f3f0ff",
-            optionActiveBg: dk ? "#21262d" : "#f5f5f5",
+            colorBgContainer: dk ? "#0a0f1a" : "#ffffff",
+            optionSelectedBg: dk ? "#064e3b" : "#ecfdf5",
+            optionActiveBg: dk ? "#1f2937" : "#f0fdf4",
           },
           InputNumber: {
-            colorBgContainer: dk ? "#0d1117" : "#ffffff",
-            activeBorderColor: "#7c3aed",
-            hoverBorderColor: "#a78bfa",
+            colorBgContainer: dk ? "#0a0f1a" : "#ffffff",
+            activeBorderColor: "#059669",
+            hoverBorderColor: "#34d399",
           },
           Button: {
-            colorPrimaryBg: "#7c3aed",
+            colorPrimaryBg: "#059669",
           },
           Alert: {
-            colorInfoBg: dk ? "rgba(22,119,255,.1)" : "rgba(22,119,255,.08)",
+            colorInfoBg: dk ? "rgba(5,150,105,.1)" : "rgba(5,150,105,.06)",
             colorWarningBg: dk ? "rgba(250,140,22,.1)" : "rgba(250,140,22,.08)",
             colorErrorBg: dk ? "rgba(255,77,79,.1)" : "rgba(255,77,79,.08)",
           },
           Tag: {
-            borderRadiusSM: 6,
+            borderRadiusSM: 8,
           },
         },
       }}
     >
-      <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-[#010409]">
+      <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-[#060c18]">
         <Suspense fallback={null}>
           <AdminSidebar
             collapsed={sidebarCollapsed}

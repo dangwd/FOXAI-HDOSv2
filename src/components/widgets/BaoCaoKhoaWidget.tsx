@@ -160,9 +160,9 @@ export function BaoCaoKhoaWidget({
           <KpiCard
             title="TỔNG LƯỢT KHÁM (SỐ BỆNH NHÂN)"
             value={summary ? `${summary.tongLuotKham} Bệnh nhân` : "—"}
-            accent="#1677ff"
+            accent="#059669"
             hint={khoaCaoNhat ? `Khoa cao nhất: ${tenKhoaShort} — ${khoaCaoNhat.soBenhNhan} BN` : undefined}
-            hintColor="#1677ff"
+            hintColor="#059669"
             loading={loading}
           />
         </Col>
@@ -195,12 +195,12 @@ export function BaoCaoKhoaWidget({
         summaryRowIndex={tableData.length - 1}
         loading={loading}
         columns={[
-          { key: "maKhoa",  title: "MÃ KHOA",       color: "#1677ff" },
+          { key: "maKhoa",  title: "MÃ KHOA",       color: "#059669" },
           { key: "tenKhoa", title: "TÊN KHOA/PHÒNG" },
-          { key: "soBN",    title: "SỐ BN",         align: "right", color: "#1677ff" },
+          { key: "soBN",    title: "SỐ BN",         align: "right", color: "#059669" },
           { key: "tongThu", title: "TỔNG THU",      align: "right" },
           { key: "bhytTra", title: "BHYT TRẢ",      align: "right", color: "#52c41a" },
-          { key: "bnTra",   title: "BN TRẢ",        align: "right", color: "#1677ff" },
+          { key: "bnTra",   title: "BN TRẢ",        align: "right", color: "#059669" },
           { key: "haoPhi",  title: "HAO PHÍ/KHÁC",  align: "right" },
         ]}
         data={tableData}

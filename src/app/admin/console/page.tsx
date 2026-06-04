@@ -64,14 +64,14 @@ const STATUS_PROGRESS: Partial<Record<RequestStatus, number>> = {
 
 const LOG_META = {
   Submitted: {
-    badge:       "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-    cardCurrent: "border-violet-200 bg-violet-50 dark:border-violet-800 dark:bg-violet-950/30",
-    cardOther:   "border-gray-100 bg-white dark:border-[#30363d] dark:bg-[#0d1117]",
+    badge:       "bg-emerald-100 text-violet-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+    cardCurrent: "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30",
+    cardOther:   "border-gray-100 bg-white dark:border-[#1f2937] dark:bg-[#0a0f1a]",
   },
   RequestCompleted: {
     badge:       "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
     cardCurrent: "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30",
-    cardOther:   "border-gray-100 bg-gray-50 dark:border-[#30363d] dark:bg-[#161b22]",
+    cardOther:   "border-gray-100 bg-gray-50 dark:border-[#1f2937] dark:bg-[#0f172a]",
   },
   RequestFailed: {
     badge:       "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
@@ -129,10 +129,10 @@ function ProgressBar({ status, requestId }: { status: RequestStatus | null; requ
   const done   = status === "Completed";
   const failed = status === "Failed";
   const live   = !TERMINAL.includes(status ?? "Queued");
-  const color  = done ? "bg-green-500" : failed ? "bg-red-500" : "bg-violet-500";
+  const color  = done ? "bg-green-500" : failed ? "bg-red-500" : "bg-emerald-500";
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 h-1.5 bg-gray-100 dark:bg-[#21262d] rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-gray-100 dark:bg-[#1f2937] rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-700 ${color} ${live ? "animate-pulse" : ""}`}
           style={{ width: `${pct}%` }}
@@ -152,7 +152,7 @@ function StatusBadge({ result, polling }: { result: RequestResult; polling: bool
   const colors: Partial<Record<string, string>> = {
     Completed: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
     Failed:    "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
-    Cancelled: "bg-gray-100 text-gray-600 dark:bg-[#21262d] dark:text-[#8b949e]",
+    Cancelled: "bg-gray-100 text-gray-600 dark:bg-[#1f2937] dark:text-[#8b949e]",
   };
   const color = colors[status] ?? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300";
   return (
@@ -180,7 +180,7 @@ function LogCard({ entry }: { entry: LogEntry }) {
           {entry.ts.toLocaleTimeString()}
         </span>
         {entry.isCurrent && (
-          <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400">● CURRENT</span>
+          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">● CURRENT</span>
         )}
       </div>
       <pre className="text-[10px] font-mono text-gray-600 dark:text-[#8b949e] max-h-40 overflow-auto break-all whitespace-pre-wrap m-0">
@@ -382,7 +382,7 @@ export default function ConsolePage() {
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* Header */}
-      <div className="shrink-0 px-6 py-4 border-b border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117]">
+      <div className="shrink-0 px-6 py-4 border-b border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a]">
         <h1 className="text-xl font-bold text-gray-900 dark:text-[#e6edf3] m-0">Test Console</h1>
         <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0 mt-0.5">
           Gửi operation request thủ công và theo dõi kết quả theo thời gian thực.
@@ -396,7 +396,7 @@ export default function ConsolePage() {
         <div className="flex flex-col gap-4 overflow-y-auto min-h-0 pr-0.5">
 
           {/* Quick-pick */}
-          <div className="bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-[#30363d] rounded-xl p-4 shrink-0">
+          <div className="bg-white dark:bg-[#0a0f1a] border border-gray-200 dark:border-[#1f2937] rounded-xl p-4 shrink-0">
             <SectionLabel>Chọn nhanh</SectionLabel>
             <div className="flex flex-wrap gap-1.5">
               {SAMPLES.map((op) => (
@@ -405,8 +405,8 @@ export default function ConsolePage() {
                   onClick={() => pickOperation(op)}
                   className={`text-[11px] font-mono px-2.5 py-1 rounded-lg border transition-all ${
                     operation === op
-                      ? "bg-violet-600 text-white border-violet-600"
-                      : "bg-gray-50 dark:bg-[#161b22] text-gray-600 dark:text-[#8b949e] border-gray-200 dark:border-[#30363d] hover:border-violet-400 dark:hover:border-violet-600"
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "bg-gray-50 dark:bg-[#0f172a] text-gray-600 dark:text-[#8b949e] border-gray-200 dark:border-[#1f2937] hover:border-emerald-400 dark:hover:border-emerald-600"
                   }`}
                 >
                   {op}
@@ -416,7 +416,7 @@ export default function ConsolePage() {
           </div>
 
           {/* Form */}
-          <div className="bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-[#30363d] rounded-xl p-4 space-y-4 shrink-0">
+          <div className="bg-white dark:bg-[#0a0f1a] border border-gray-200 dark:border-[#1f2937] rounded-xl p-4 space-y-4 shrink-0">
             <SectionLabel>Form yêu cầu</SectionLabel>
 
             {/* Operation */}
@@ -505,7 +505,7 @@ export default function ConsolePage() {
 
           {/* Result area */}
           {(requestId || result) && (
-            <div className="bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-[#30363d] rounded-xl p-4 space-y-4 shrink-0">
+            <div className="bg-white dark:bg-[#0a0f1a] border border-gray-200 dark:border-[#1f2937] rounded-xl p-4 space-y-4 shrink-0">
               <SectionLabel>Kết quả</SectionLabel>
 
               <ProgressBar status={displayStatus} requestId={requestId} />
@@ -519,7 +519,7 @@ export default function ConsolePage() {
                       <p className="text-[10px] font-bold text-gray-400 dark:text-[#484f58] uppercase tracking-widest mb-1.5 m-0">
                         Data
                       </p>
-                      <pre className="text-[11px] font-mono bg-gray-50 dark:bg-[#161b22] border border-gray-100 dark:border-[#21262d] rounded-xl p-3 max-h-72 overflow-auto break-all whitespace-pre-wrap m-0">
+                      <pre className="text-[11px] font-mono bg-gray-50 dark:bg-[#0f172a] border border-gray-100 dark:border-[#1f2937] rounded-xl p-3 max-h-72 overflow-auto break-all whitespace-pre-wrap m-0">
                         {JSON.stringify(result.data, null, 2)}
                       </pre>
                     </div>
@@ -531,10 +531,10 @@ export default function ConsolePage() {
         </div>
 
         {/* ── Cột phải — Event log ── */}
-        <div className="bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-[#30363d] rounded-xl flex flex-col min-h-0">
+        <div className="bg-white dark:bg-[#0a0f1a] border border-gray-200 dark:border-[#1f2937] rounded-xl flex flex-col min-h-0">
 
           {/* Log header */}
-          <div className="px-4 py-3 border-b border-gray-200 dark:border-[#30363d] flex items-center gap-2.5 shrink-0">
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-[#1f2937] flex items-center gap-2.5 shrink-0">
             <span className="relative flex h-2 w-2 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
@@ -549,7 +549,7 @@ export default function ConsolePage() {
             </div>
             <button
               onClick={() => setEntries([])}
-              className="text-[11px] text-gray-400 dark:text-[#484f58] hover:text-gray-600 dark:hover:text-[#8b949e] transition-colors px-2 py-1 rounded-lg hover:bg-gray-50 dark:hover:bg-[#21262d] shrink-0"
+              className="text-[11px] text-gray-400 dark:text-[#484f58] hover:text-gray-600 dark:hover:text-[#8b949e] transition-colors px-2 py-1 rounded-lg hover:bg-gray-50 dark:hover:bg-[#1f2937] shrink-0"
             >
               Xóa log
             </button>
