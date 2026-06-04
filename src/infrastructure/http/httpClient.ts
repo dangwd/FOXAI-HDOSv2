@@ -2,7 +2,7 @@ import axios from 'axios';
 import useAuthStore from '@/core/auth/authStore';
 
 const httpClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000',
+  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'https://192.168.100.60:8443',
   timeout: 15_000,
 });
 

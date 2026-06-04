@@ -183,7 +183,7 @@ export function CreateSchemaDrawer({ open, onClose, onCreated }: CreateSchemaDra
                 </div>
               ))}
               <Button type="dashed" block icon={<Plus size={13} />} onClick={() => addTable({ columns: [] })}>
-                + Thêm bảng
+                Thêm bảng
               </Button>
             </div>
           )}

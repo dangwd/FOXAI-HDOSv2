@@ -285,7 +285,7 @@ export const ocrApi = {
 
   /** Returns the URL for streaming the original file (use in <img> or <iframe>) */
   getFileUrl: (id: string): string => {
-    const base = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000").replace(/\/+$/, "");
+    const base = (process.env.NEXT_PUBLIC_API_URL ?? "https://192.168.100.60:8443").replace(/\/+$/, "");
     const token = useAuthStore.getState().accessToken;
     return token
       ? `${base}/ocr/documents/${id}/file?access_token=${encodeURIComponent(token)}`
@@ -330,7 +330,7 @@ export const ocrApi = {
 
 /** SSE URL for real-time OCR progress — token passed as query param (EventSource has no custom headers) */
 export function getDocumentSseUrl(documentId: string): string {
-  const base = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000").replace(/\/+$/, "");
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? "https://192.168.100.60:8443").replace(/\/+$/, "");
   const token = useAuthStore.getState().accessToken;
   return token
     ? `${base}/ocr/documents/${documentId}/sse?access_token=${encodeURIComponent(token)}`
