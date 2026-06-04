@@ -1,8 +1,8 @@
 "use client";
 
 import type { WidgetCatalogEntry } from "@/infrastructure/http/adminApi";
-import { Input, Switch, Tooltip } from "antd";
-import { Plus, Trash2, X } from "lucide-react";
+import { Input, InputNumber, Switch, Tooltip } from "antd";
+import { ChevronDown, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import {
   WIDGET_TYPE_DESCRIPTIONS,
@@ -635,6 +635,241 @@ function FormSectionEditor({
   );
 }
 
+// ─── Display category ─────────────────────────────────────────────────────────
+
+type DisplayCategory = "text" | "gauge" | "table-extra" | "filter" | "common";
+
+function getDisplayCategory(widgetType: string): DisplayCategory {
+  if (["text_widget", "TextBlock", "text-widget"].includes(widgetType)) return "text";
+  if (["gauge", "Gauge"].includes(widgetType)) return "gauge";
+  if (["simple_table", "advanced_table", "Table", "DataTable", "data_table"].includes(widgetType))
+    return "table-extra";
+  if (widgetType.startsWith("filter_")) return "filter";
+  return "common";
+}
+
+// ─── Common display config (mọi widget) ──────────────────────────────────────
+
+function CommonDisplayConfig({
+  configJson,
+  onChange,
+}: {
+  configJson: string;
+  onChange: (json: string) => void;
+}) {
+  const cfg = safeJson(configJson);
+
+  function set(key: string, value: string) {
+    onChange(patchJson(configJson, { [key]: value || undefined }));
+  }
+
+  return (
+    <div className="space-y-3">
+      <Field label="Tiêu đề widget">
+        <Input
+          size="small"
+          value={(cfg.title as string) ?? ""}
+          placeholder="Tên hiển thị bên trong widget"
+          onChange={(e) => set("title", e.target.value)}
+        />
+        <p className="text-[10px] text-gray-400 dark:text-[#484f58] mt-0.5 m-0">
+          Khác với nhãn canvas — đây là tiêu đề render lên UI
+        </p>
+      </Field>
+
+      <Field label="Màu accent">
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={(cfg.color as string) ?? "#6366f1"}
+            onChange={(e) => set("color", e.target.value)}
+            className="w-8 h-7 rounded border border-gray-200 dark:border-[#30363d] cursor-pointer shrink-0 p-0.5 bg-transparent"
+          />
+          <Input
+            size="small"
+            value={(cfg.color as string) ?? ""}
+            placeholder="#6366f1"
+            onChange={(e) => set("color", e.target.value)}
+            className="font-mono flex-1"
+          />
+        </div>
+      </Field>
+    </div>
+  );
+}
+
+// ─── Text widget config ───────────────────────────────────────────────────────
+
+function TextWidgetConfig({
+  configJson,
+  onChange,
+}: {
+  configJson: string;
+  onChange: (json: string) => void;
+}) {
+  const cfg = safeJson(configJson);
+  return (
+    <Field label="Nội dung">
+      <Input.TextArea
+        size="small"
+        value={(cfg.content as string) ?? ""}
+        placeholder="Nội dung văn bản hiển thị trong widget…"
+        rows={5}
+        onChange={(e) =>
+          onChange(patchJson(configJson, { content: e.target.value || undefined }))
+        }
+      />
+    </Field>
+  );
+}
+
+// ─── Gauge config ─────────────────────────────────────────────────────────────
+
+function GaugeDisplayConfig({
+  configJson,
+  onChange,
+}: {
+  configJson: string;
+  onChange: (json: string) => void;
+}) {
+  const cfg = safeJson(configJson);
+
+  function set(key: string, value: unknown) {
+    onChange(patchJson(configJson, { [key]: value }));
+  }
+
+  return (
+    <div className="space-y-3">
+      <ExpressionInput
+        label="Value Expression"
+        value={(cfg.valueExpression as string) ?? ""}
+        onChange={(v) => set("valueExpression", v || undefined)}
+        hint="Ví dụ: {{sources.kpi.BORPercent}}"
+      />
+      <div className="grid grid-cols-3 gap-2">
+        <Field label="Min">
+          <InputNumber
+            size="small"
+            value={(cfg.min as number) ?? 0}
+            onChange={(v) => set("min", v)}
+            className="w-full"
+          />
+        </Field>
+        <Field label="Max">
+          <InputNumber
+            size="small"
+            value={(cfg.max as number) ?? 100}
+            onChange={(v) => set("max", v)}
+            className="w-full"
+          />
+        </Field>
+        <Field label="Đơn vị">
+          <Input
+            size="small"
+            value={(cfg.unit as string) ?? ""}
+            placeholder="%"
+            onChange={(e) => set("unit", e.target.value || undefined)}
+          />
+        </Field>
+      </div>
+    </div>
+  );
+}
+
+// ─── Table extra display config ───────────────────────────────────────────────
+
+function TableDisplayConfig({
+  configJson,
+  onChange,
+}: {
+  configJson: string;
+  onChange: (json: string) => void;
+}) {
+  const cfg = safeJson(configJson);
+
+  function set(key: string, value: unknown) {
+    onChange(patchJson(configJson, { [key]: value }));
+  }
+
+  return (
+    <div className="space-y-3">
+      <Field label="Thông báo khi không có dữ liệu">
+        <Input
+          size="small"
+          value={(cfg.emptyMessage as string) ?? ""}
+          placeholder="Không có dữ liệu"
+          onChange={(e) => set("emptyMessage", e.target.value || undefined)}
+        />
+      </Field>
+      <Field label="Số hàng mỗi trang">
+        <InputNumber
+          size="small"
+          value={(cfg.pageSize as number) ?? 10}
+          min={1}
+          max={200}
+          onChange={(v) => set("pageSize", v)}
+          className="w-full"
+        />
+      </Field>
+    </div>
+  );
+}
+
+// ─── Filter display config ────────────────────────────────────────────────────
+
+function FilterDisplayConfig({
+  configJson,
+  onChange,
+  widgetType,
+}: {
+  configJson: string;
+  onChange: (json: string) => void;
+  widgetType: string;
+}) {
+  const cfg = safeJson(configJson);
+
+  function set(key: string, value: string) {
+    onChange(patchJson(configJson, { [key]: value || undefined }));
+  }
+
+  return (
+    <div className="space-y-3">
+      <Field label="Placeholder">
+        <Input
+          size="small"
+          value={(cfg.placeholder as string) ?? ""}
+          placeholder="Gợi ý hiển thị trong input…"
+          onChange={(e) => set("placeholder", e.target.value)}
+        />
+      </Field>
+      {widgetType === "filter_slider" && (
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Min">
+            <InputNumber
+              size="small"
+              value={(cfg.min as number) ?? 0}
+              onChange={(v) =>
+                onChange(patchJson(configJson, { min: v }))
+              }
+              className="w-full"
+            />
+          </Field>
+          <Field label="Max">
+            <InputNumber
+              size="small"
+              value={(cfg.max as number) ?? 100}
+              onChange={(v) =>
+                onChange(patchJson(configJson, { max: v }))
+              }
+              className="w-full"
+            />
+          </Field>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Expression syntax hint box ───────────────────────────────────────────────
 
 function SyntaxHint() {
@@ -655,7 +890,7 @@ function SyntaxHint() {
 
 // ─── Main panel ───────────────────────────────────────────────────────────────
 
-type PanelTab = "config" | "binding";
+type PanelTab = "display" | "binding" | "advanced";
 
 export function WidgetPropertiesPanel({
   widget,
@@ -669,10 +904,14 @@ export function WidgetPropertiesPanel({
   onChange: (updated: DesignerWidget) => void;
 }) {
   const [form, setForm] = useState<DesignerWidget>(widget);
+  const [jsonOpen, setJsonOpen] = useState(false);
+
   const bindingCategory = getBindingCategory(form.widgetType);
+  const displayCategory = getDisplayCategory(form.widgetType);
   const hasBindingTab = bindingCategory !== "none";
+
   const [activeTab, setActiveTab] = useState<PanelTab>(
-    hasBindingTab ? "binding" : "config",
+    hasBindingTab ? "binding" : "display",
   );
 
   const entry = catalog.find((e) => e.widgetType === form.widgetType);
@@ -689,6 +928,20 @@ export function WidgetPropertiesPanel({
   function setConfigJson(json: string) {
     set("configJson", json);
   }
+
+  // Build tab list: Hiển thị | (Data Binding?) | Nâng cao
+  const tabs: { key: PanelTab; label: string }[] = [
+    { key: "display", label: "Hiển thị" },
+    ...(hasBindingTab
+      ? [{ key: "binding" as PanelTab,
+           label: bindingCategory === "form-section" ? "Fields & Binding" : "Data Binding" }]
+      : []),
+    { key: "advanced", label: "Nâng cao" },
+  ];
+
+  // Detect invalid JSON for warning
+  let jsonValid = true;
+  try { JSON.parse(form.configJson); } catch { jsonValid = false; }
 
   return (
     <div className="flex flex-col h-full">
@@ -710,84 +963,119 @@ export function WidgetPropertiesPanel({
         </button>
       </div>
 
-      {/* Tab switcher */}
-      {hasBindingTab && (
-        <div className="flex border-b border-gray-200 dark:border-[#30363d] shrink-0">
-          {(
-            [
-              {
-                key: "binding",
-                label:
-                  bindingCategory === "form-section"
-                    ? "Fields & Binding"
-                    : "Data Binding",
-              },
-              { key: "config", label: "JSON / Cấu hình" },
-            ] as const
-          ).map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
-              className={`flex-1 py-2 text-[11px] font-medium transition-colors ${
-                activeTab === t.key
-                  ? "text-violet-600 dark:text-violet-400 border-b-2 border-violet-600 dark:border-violet-400"
-                  : "text-gray-400 dark:text-[#484f58] hover:text-gray-700 dark:hover:text-[#e6edf3]"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Tab bar */}
+      <div className="flex border-b border-gray-200 dark:border-[#30363d] shrink-0">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key)}
+            className={`flex-1 py-2 text-[11px] font-medium transition-colors ${
+              activeTab === t.key
+                ? "text-violet-600 dark:text-violet-400 border-b-2 border-violet-600 dark:border-violet-400"
+                : "text-gray-400 dark:text-[#484f58] hover:text-gray-700 dark:hover:text-[#e6edf3]"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {/* ── Data Binding tab ── */}
-        {hasBindingTab && activeTab === "binding" ? (
-          <>
-            <SyntaxHint />
 
-            {bindingCategory === "kpi" && (
-              <KpiBinding
-                configJson={form.configJson}
-                onChange={setConfigJson}
-              />
+        {/* ── Hiển thị tab ── */}
+        {activeTab === "display" && (
+          <>
+            <CommonDisplayConfig
+              configJson={form.configJson}
+              onChange={setConfigJson}
+            />
+
+            {displayCategory === "text" && (
+              <>
+                <div className="border-t border-gray-100 dark:border-[#21262d] pt-3" />
+                <TextWidgetConfig
+                  configJson={form.configJson}
+                  onChange={setConfigJson}
+                />
+              </>
             )}
-            {bindingCategory === "series-chart" && (
-              <SeriesChartBinding
-                configJson={form.configJson}
-                onChange={setConfigJson}
-              />
+
+            {displayCategory === "gauge" && (
+              <>
+                <div className="border-t border-gray-100 dark:border-[#21262d] pt-3" />
+                <GaugeDisplayConfig
+                  configJson={form.configJson}
+                  onChange={setConfigJson}
+                />
+              </>
             )}
-            {bindingCategory === "pie-chart" && (
-              <PieChartBinding
-                configJson={form.configJson}
-                onChange={setConfigJson}
-              />
+
+            {displayCategory === "table-extra" && (
+              <>
+                <div className="border-t border-gray-100 dark:border-[#21262d] pt-3" />
+                <TableDisplayConfig
+                  configJson={form.configJson}
+                  onChange={setConfigJson}
+                />
+              </>
             )}
-            {bindingCategory === "table" && (
-              <TableBinding
-                configJson={form.configJson}
-                onChange={setConfigJson}
-              />
-            )}
-            {bindingCategory === "form-section" && (
-              <FormSectionEditor
-                configJson={form.configJson}
-                onChange={setConfigJson}
-              />
+
+            {displayCategory === "filter" && (
+              <>
+                <div className="border-t border-gray-100 dark:border-[#21262d] pt-3" />
+                <FilterDisplayConfig
+                  configJson={form.configJson}
+                  onChange={setConfigJson}
+                  widgetType={form.widgetType}
+                />
+              </>
             )}
           </>
-        ) : (
-          /* ── Config / JSON tab ── */
+        )}
+
+        {/* ── Data Binding tab ── */}
+        {activeTab === "binding" && (
           <>
-            {/* Type badge */}
-            <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-[#21262d] border border-gray-100 dark:border-[#30363d]">
-              <span className="text-[9px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider shrink-0">
-                TYPE
-              </span>
-              <code className="text-[10px] text-violet-600 dark:text-violet-400 flex-1 truncate">
-                {typeLabel}
-              </code>
+            <SyntaxHint />
+            {bindingCategory === "kpi" && (
+              <KpiBinding configJson={form.configJson} onChange={setConfigJson} />
+            )}
+            {bindingCategory === "series-chart" && (
+              <SeriesChartBinding configJson={form.configJson} onChange={setConfigJson} />
+            )}
+            {bindingCategory === "pie-chart" && (
+              <PieChartBinding configJson={form.configJson} onChange={setConfigJson} />
+            )}
+            {bindingCategory === "table" && (
+              <TableBinding configJson={form.configJson} onChange={setConfigJson} />
+            )}
+            {bindingCategory === "form-section" && (
+              <FormSectionEditor configJson={form.configJson} onChange={setConfigJson} />
+            )}
+          </>
+        )}
+
+        {/* ── Nâng cao tab ── */}
+        {activeTab === "advanced" && (
+          <>
+            {/* Type + key info */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-[#21262d] border border-gray-100 dark:border-[#30363d]">
+                <span className="text-[9px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider shrink-0">
+                  TYPE
+                </span>
+                <code className="text-[10px] text-violet-600 dark:text-violet-400 flex-1 truncate">
+                  {typeLabel}
+                </code>
+              </div>
+              <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-[#21262d] border border-gray-100 dark:border-[#30363d]">
+                <span className="text-[9px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider shrink-0">
+                  KEY
+                </span>
+                <code className="text-[10px] text-gray-500 dark:text-[#8b949e] flex-1 truncate">
+                  {widget.widgetKey}
+                </code>
+              </div>
             </div>
 
             {/* Grid coords */}
@@ -807,15 +1095,20 @@ export function WidgetPropertiesPanel({
               ))}
             </div>
 
-            <Field label="Nhãn hiển thị">
+            {/* Canvas label */}
+            <Field label="Nhãn canvas (designer)">
               <Input
                 size="small"
                 value={form.label}
                 onChange={(e) => set("label", e.target.value)}
-                placeholder="Tên widget"
+                placeholder="Tên trong canvas"
               />
+              <p className="text-[10px] text-gray-400 dark:text-[#484f58] mt-0.5 m-0">
+                Chỉ hiện trong admin designer, không render ra widget
+              </p>
             </Field>
 
+            {/* Reference ID (FormSection only) */}
             {bindingCategory === "form-section" && (
               <Field label="Reference ID (FormTemplate UUID)">
                 <Input
@@ -828,28 +1121,41 @@ export function WidgetPropertiesPanel({
               </Field>
             )}
 
-            <Field label="Config JSON">
-              <Input.TextArea
-                value={form.configJson}
-                onChange={(e) => set("configJson", e.target.value)}
-                rows={8}
-                spellCheck={false}
-                placeholder="{}"
-                style={{ fontFamily: "monospace", fontSize: 10 }}
-              />
-            </Field>
-
-            {/* Widget key */}
-            <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-[#21262d] border border-gray-100 dark:border-[#30363d]">
-              <span className="text-[9px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider shrink-0">
-                KEY
-              </span>
-              <code className="text-[10px] text-gray-500 dark:text-[#8b949e] flex-1 truncate">
-                {widget.widgetKey}
-              </code>
+            {/* Collapsible raw JSON */}
+            <div className="rounded-lg border border-gray-200 dark:border-[#30363d] overflow-hidden">
+              <button
+                onClick={() => setJsonOpen((v) => !v)}
+                className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-[#21262d] hover:bg-gray-100 dark:hover:bg-[#30363d] transition-colors"
+              >
+                <span className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider">
+                  Config JSON{!jsonValid && " ⚠ lỗi cú pháp"}
+                </span>
+                {jsonOpen
+                  ? <ChevronDown size={12} className="text-gray-400" />
+                  : <ChevronRight size={12} className="text-gray-400" />
+                }
+              </button>
+              {jsonOpen && (
+                <div className="p-2 border-t border-gray-200 dark:border-[#30363d]">
+                  {!jsonValid && (
+                    <p className="text-[10px] text-orange-500 dark:text-orange-400 mb-1.5 m-0">
+                      JSON không hợp lệ — widget có thể không render đúng
+                    </p>
+                  )}
+                  <Input.TextArea
+                    value={form.configJson}
+                    onChange={(e) => set("configJson", e.target.value)}
+                    rows={10}
+                    spellCheck={false}
+                    placeholder="{}"
+                    style={{ fontFamily: "monospace", fontSize: 10 }}
+                  />
+                </div>
+              )}
             </div>
           </>
         )}
+
       </div>
     </div>
   );
