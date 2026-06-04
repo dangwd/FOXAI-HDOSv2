@@ -1,6 +1,9 @@
 "use client";
 
-import type { ApiWidget } from "@/infrastructure/http/adminApi";
+import type { ApiWidget, FormSchema } from "@/infrastructure/http/adminApi";
+import { evaluateExpression, evaluateRaw, applyDisplayFormat } from "@/core/dataBinding/evaluateExpression";
+import type { ChartDataPoint } from "@/types/chart";
+import { FormSectionWidget } from "./FormSectionWidget";
 import { AlertList } from "./AlertList";
 import { BulletList } from "./BulletList";
 import { ChartArea } from "./ChartArea";
@@ -468,27 +471,89 @@ function safeJson(s: string): Record<string, unknown> {
   }
 }
 
+// ─── Dynamic data helpers ─────────────────────────────────────────────────────
+
+function toChartData(
+  raw: unknown,
+  labelField: string,
+  valueField: string,
+): ChartDataPoint[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => {
+    const r = item as Record<string, unknown>;
+    return { label: String(r[labelField] ?? ""), value: Number(r[valueField] ?? 0) };
+  });
+}
+
+function toTableColumns(rawCols: unknown): { key: string; title: string }[] {
+  if (!Array.isArray(rawCols)) return [];
+  return rawCols.map((c) => {
+    const col = c as Record<string, string>;
+    return { key: col.field ?? col.key ?? "", title: col.header ?? col.title ?? "" };
+  });
+}
+
 // ─── Main resolver ────────────────────────────────────────────────────────────
 
-export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
+export function WidgetRenderer({
+  widget,
+  sourceData = {},
+  moduleCode,
+}: {
+  widget: ApiWidget;
+  sourceData?: Record<string, unknown>;
+  moduleCode?: string;
+}) {
   const { chartType: type, title } = widget;
 
-  // ── KPI ──────────────────────────────────────────────────────────────────────
-  if (type === "kpi") {
-    const { value, hint, accent } = resolveKpiValue(widget);
+  // ── FormSection ───────────────────────────────────────────────────────────────
+  if (type === "FormSection") {
+    const cfg = safeJson(widget.visualConfig);
+    const schema = (cfg.formSchema ?? { fields: [] }) as FormSchema;
+    const formKey = (cfg.formKey as string | undefined) ?? undefined;
     return (
-      <KpiCard
-        title={title ?? ""}
-        value={value}
-        hint={hint}
-        accent={accent}
-        className="h-full"
+      <FormSectionWidget
+        title={title}
+        schema={schema}
+        sourceData={sourceData}
+        moduleCode={moduleCode}
+        formKey={formKey}
       />
     );
   }
 
+  // ── KPI ──────────────────────────────────────────────────────────────────────
+  if (type === "kpi") {
+    const cfg = safeJson(widget.visualConfig);
+    const valueExpr = cfg.valueExpression as string | undefined;
+    if (valueExpr && Object.keys(sourceData).length > 0) {
+      const raw = evaluateExpression(valueExpr, sourceData);
+      if (raw != null) {
+        const fmt = cfg.displayFormat as string | undefined;
+        return (
+          <KpiCard
+            title={title ?? ""}
+            value={fmt ? applyDisplayFormat(raw, fmt) : raw}
+            hint={widget.subtitle}
+            accent={(cfg.color as string | undefined) ?? "#6366f1"}
+            className="h-full"
+          />
+        );
+      }
+    }
+    const { value, hint, accent } = resolveKpiValue(widget);
+    return <KpiCard title={title ?? ""} value={value} hint={hint} accent={accent} className="h-full" />;
+  }
+
   // ── Line chart ───────────────────────────────────────────────────────────────
   if (type === "line_chart") {
+    const cfg = safeJson(widget.visualConfig);
+    const dataExpr = cfg.dataExpression as string | undefined;
+    if (dataExpr && Object.keys(sourceData).length > 0) {
+      const raw = evaluateRaw(dataExpr, sourceData);
+      const dynData = toChartData(raw, (cfg.labelField as string) ?? "label", (cfg.valueField as string) ?? "value");
+      if (dynData.length > 0) return <ChartLine title={title} data={dynData} color={(cfg.color as string) ?? "#1677ff"} />;
+    }
     const tl = title?.toLowerCase() ?? "";
     const isVitals = tl.includes("sinh tồn") || tl.includes("vital");
     if (isVitals) {
@@ -512,6 +577,13 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
 
   // ── Bar chart ────────────────────────────────────────────────────────────────
   if (type === "bar_chart") {
+    const cfg = safeJson(widget.visualConfig);
+    const dataExpr = cfg.dataExpression as string | undefined;
+    if (dataExpr && Object.keys(sourceData).length > 0) {
+      const raw = evaluateRaw(dataExpr, sourceData);
+      const dynData = toChartData(raw, (cfg.labelField as string) ?? "label", (cfg.valueField as string) ?? "value");
+      if (dynData.length > 0) return <ChartBar title={title} data={dynData} color={(cfg.color as string) ?? "#1677ff"} />;
+    }
     const tl = title?.toLowerCase() ?? "";
     const data = tl.includes("tháng") ? MONTH_DATA : TREND_DATA;
     const unit = tl.includes("tháng") ? "B" : undefined;
@@ -520,6 +592,13 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
 
   // ── Area chart ───────────────────────────────────────────────────────────────
   if (type === "area_chart") {
+    const cfg = safeJson(widget.visualConfig);
+    const dataExpr = cfg.dataExpression as string | undefined;
+    if (dataExpr && Object.keys(sourceData).length > 0) {
+      const raw = evaluateRaw(dataExpr, sourceData);
+      const dynData = toChartData(raw, (cfg.labelField as string) ?? "label", (cfg.valueField as string) ?? "value");
+      if (dynData.length > 0) return <ChartArea title={title} data={dynData} color={(cfg.color as string) ?? "#722ed1"} />;
+    }
     const tl = title?.toLowerCase() ?? "";
     const data = tl.includes("giờ") ? HOUR_DATA : TREND_DATA;
     return <ChartArea title={title} data={data} color="#722ed1" />;
@@ -527,6 +606,23 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
 
   // ── Pie / donut ──────────────────────────────────────────────────────────────
   if (type === "pie_chart" || type === "donut_chart") {
+    const cfg = safeJson(widget.visualConfig);
+    const dataExpr = cfg.dataExpression as string | undefined;
+    if (dataExpr && Object.keys(sourceData).length > 0) {
+      const raw = evaluateRaw(dataExpr, sourceData);
+      const dynData = toChartData(raw, (cfg.labelField as string) ?? "label", (cfg.valueField as string) ?? "value");
+      if (dynData.length > 0) {
+        return (
+          <ChartPie
+            title={title}
+            data={dynData}
+            dataKey="value"
+            variant={type === "donut_chart" ? "donut" : "pie"}
+            legend
+          />
+        );
+      }
+    }
     const tl = title?.toLowerCase() ?? "";
     const pieData =
       tl.includes("doanh thu") || tl.includes("nguồn")
@@ -643,6 +739,26 @@ export function WidgetRenderer({ widget }: { widget: ApiWidget }) {
 
   // ── Tables ────────────────────────────────────────────────────────────────────
   if (type === "simple_table" || type === "advanced_table") {
+    const cfg = safeJson(widget.visualConfig);
+    const dataExpr = cfg.dataExpression as string | undefined;
+    if (dataExpr && Object.keys(sourceData).length > 0) {
+      const raw = evaluateRaw(dataExpr, sourceData);
+      if (Array.isArray(raw) && raw.length > 0) {
+        const dynCols = toTableColumns(cfg.columns);
+        const cols = dynCols.length > 0
+          ? dynCols
+          : Object.keys(raw[0] as Record<string, unknown>).map((k) => ({ key: k, title: k }));
+        return (
+          <DataTable
+            title={title}
+            columns={cols}
+            data={raw as Record<string, unknown>[]}
+            pageSize={10}
+            exportButton={type === "advanced_table"}
+          />
+        );
+      }
+    }
     const tl = title?.toLowerCase() ?? "";
     const tbl =
       tl.includes("thuốc") || tl.includes("dùng thuốc")

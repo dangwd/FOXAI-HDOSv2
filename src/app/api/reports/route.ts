@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { MenuSummary } from "@/types/report";
 
-const ADMIN_BASE = (process.env.NEXT_PUBLIC_ADMIN_API_URL ?? "http://localhost:17080").replace(/\/+$/, "");
+const ADMIN_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "https://192.168.100.60:8443").replace(/\/+$/, "");
 
 /** GET /api/reports — proxy GET /api/v1/reports/menus, server-side role filtering */
 export async function GET(req: NextRequest) {
