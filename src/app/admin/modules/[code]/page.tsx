@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Alert, Button, Spin, Table, Tag, Tabs } from "antd";
+import { Alert, Button, Drawer, Form, Input, Spin, Switch, Table, Tag, Tabs } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { ArrowLeft, FileText, LayoutDashboard, Plus, RefreshCw } from "lucide-react";
+import { ArrowLeft, FileText, LayoutDashboard, Plus, RefreshCw, Settings2 } from "lucide-react";
 import { adminApi } from "@/infrastructure/http/adminApi";
 import type { FormsModule, FormTemplateListItem, FormPageListItem } from "@/infrastructure/http/adminApi";
 import { ModuleIcon } from "../_components/ModuleIcon";
+import { FormFieldsDrawer } from "../_components/FormFieldsDrawer";
 
 // ─── Shared color utils (same as ModuleTable) ─────────────────────────────────
 
@@ -42,12 +43,159 @@ function StatusTag({ status }: { status: string }) {
   );
 }
 
+// ─── Create Form Drawer ───────────────────────────────────────────────────────
+
+function CreateFormDrawer({
+  moduleCode,
+  open,
+  onClose,
+  onCreated,
+}: {
+  moduleCode: string;
+  open:       boolean;
+  onClose:    () => void;
+  onCreated:  () => void;
+}) {
+  const blank = { key: "", name: "", submitButtonLabel: "", allowMultiple: false };
+  const [vals,   setVals]   = useState(blank);
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState<string | null>(null);
+
+  const handleClose = () => {
+    setVals(blank);
+    setError(null);
+    onClose();
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await adminApi.createForm(moduleCode, {
+        key:                      vals.key.trim(),
+        name:                     vals.name.trim(),
+        submitButtonLabel:        vals.submitButtonLabel.trim() || undefined,
+        allowMultipleSubmissions: vals.allowMultiple,
+      });
+      onCreated();
+      handleClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const canSave = !!vals.key.trim() && !!vals.name.trim();
+
+  return (
+    <Drawer
+      title={
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+            <FileText size={14} className="text-blue-500" />
+          </div>
+          <span>Tạo Form mới</span>
+        </div>
+      }
+      open={open}
+      onClose={handleClose}
+      styles={{ wrapper: { width: 480 } }}
+      footer={
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs text-gray-400 dark:text-[#484f58]">
+            {canSave ? "Sẵn sàng tạo" : "Điền đầy đủ thông tin bắt buộc"}
+          </span>
+          <div className="flex gap-2">
+            <Button onClick={handleClose}>Hủy</Button>
+            <Button type="primary" disabled={!canSave} loading={saving} onClick={handleSave}>
+              Tạo Form
+            </Button>
+          </div>
+        </div>
+      }
+    >
+      {error && <Alert type="error" message={error} showIcon className="mb-5" />}
+
+      <Form layout="vertical" component="div" requiredMark={false} size="large">
+        <Form.Item
+          label={
+            <span className="text-[13px] font-semibold text-gray-700 dark:text-[#c9d1d9]">
+              Key <span className="text-red-500">*</span>
+            </span>
+          }
+          className="mb-5"
+        >
+          <Input
+            value={vals.key}
+            onChange={(e) =>
+              setVals((p) => ({ ...p, key: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, "_") }))
+            }
+            placeholder="vd: don_kham, benh_an"
+            maxLength={100}
+            className="font-mono"
+          />
+          <p className="text-[11px] text-gray-400 dark:text-[#484f58] m-0 mt-1.5 leading-relaxed">
+            Dùng chữ thường, số và dấu <code className="bg-gray-100 dark:bg-[#21262d] px-1 rounded">_</code>.
+            Không thể thay đổi sau khi tạo.
+          </p>
+        </Form.Item>
+
+        <Form.Item
+          label={
+            <span className="text-[13px] font-semibold text-gray-700 dark:text-[#c9d1d9]">
+              Tên form <span className="text-red-500">*</span>
+            </span>
+          }
+          className="mb-5"
+        >
+          <Input
+            value={vals.name}
+            onChange={(e) => setVals((p) => ({ ...p, name: e.target.value }))}
+            placeholder="vd: Phiếu khám bệnh"
+            maxLength={200}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label={
+            <span className="text-[13px] font-semibold text-gray-700 dark:text-[#c9d1d9]">
+              Nhãn nút gửi
+            </span>
+          }
+          className="mb-5"
+        >
+          <Input
+            value={vals.submitButtonLabel}
+            onChange={(e) => setVals((p) => ({ ...p, submitButtonLabel: e.target.value }))}
+            placeholder="Mặc định: Gửi"
+            maxLength={100}
+          />
+        </Form.Item>
+
+        <div className="flex items-center gap-3">
+          <Switch
+            size="small"
+            checked={vals.allowMultiple}
+            onChange={(v) => setVals((p) => ({ ...p, allowMultiple: v }))}
+          />
+          <span className="text-sm text-gray-700 dark:text-[#c9d1d9]">
+            Cho phép gửi nhiều lần
+          </span>
+        </div>
+      </Form>
+    </Drawer>
+  );
+}
+
 // ─── Forms tab ────────────────────────────────────────────────────────────────
 
 function FormsTab({ moduleCode }: { moduleCode: string }) {
-  const [forms,   setForms]   = useState<FormTemplateListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState<string | null>(null);
+  const [forms,        setForms]        = useState<FormTemplateListItem[]>([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState<string | null>(null);
+  const [createOpen,   setCreateOpen]   = useState(false);
+  const [selectedForm, setSelectedForm] = useState<FormTemplateListItem | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -65,76 +213,117 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
+  const columns: ColumnsType<FormTemplateListItem> = [
+    {
+      title:     "Key",
+      dataIndex: "key",
+      width:     180,
+      render:    (v: string) => (
+        <code className="text-[12px] bg-gray-100 dark:bg-[#21262d] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
+          {v}
+        </code>
+      ),
+    },
+    {
+      title:     "Tên form",
+      dataIndex: "name",
+      render:    (v: string) => (
+        <span className="font-medium text-gray-800 dark:text-[#e6edf3]">{v}</span>
+      ),
+    },
+    {
+      title:     "Trạng thái",
+      dataIndex: "status",
+      width:     130,
+      render:    (v: string) => <StatusTag status={v} />,
+    },
+    {
+      title:     "Version",
+      dataIndex: "version",
+      width:     80,
+      align:     "center",
+      render:    (v: number) => (
+        <span className="text-xs text-gray-400 dark:text-[#484f58] font-mono">v{v}</span>
+      ),
+    },
+    {
+      key:    "actions",
+      width:  110,
+      align:  "right",
+      render: (_: unknown, record: FormTemplateListItem) => (
+        <Button
+          size="small"
+          icon={<Settings2 size={12} />}
+          onClick={() => setSelectedForm(record)}
+        >
+          Fields
+        </Button>
+      ),
+    },
+  ];
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Sub-toolbar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 dark:border-[#21262d] shrink-0">
-        <span className="text-xs text-gray-500 dark:text-[#8b949e]">
-          {forms.length} form
-        </span>
-        <div className="flex items-center gap-2">
-          <Button size="small" icon={<RefreshCw size={12} />} onClick={load} loading={loading}>
-            Làm mới
-          </Button>
-          <Button size="small" type="primary" icon={<Plus size={12} />} disabled>
-            Tạo Form
-          </Button>
+    <>
+      <div className="flex flex-col h-full">
+        {/* Sub-toolbar */}
+        <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 dark:border-[#21262d] shrink-0">
+          <span className="text-xs text-gray-500 dark:text-[#8b949e]">
+            {forms.length} form
+          </span>
+          <div className="flex items-center gap-2">
+            <Button size="small" icon={<RefreshCw size={12} />} onClick={load} loading={loading}>
+              Làm mới
+            </Button>
+            <Button
+              size="small"
+              type="primary"
+              icon={<Plus size={12} />}
+              onClick={() => setCreateOpen(true)}
+            >
+              Tạo Form
+            </Button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-3">
+          {error ? (
+            <Alert type="error" message={error} showIcon />
+          ) : (
+            <Table<FormTemplateListItem>
+              dataSource={forms}
+              rowKey="id"
+              size="middle"
+              loading={loading}
+              pagination={false}
+              columns={columns}
+              locale={{
+                emptyText: (
+                  <div className="flex flex-col items-center gap-2 py-12 text-gray-400 dark:text-[#484f58]">
+                    <FileText size={32} className="text-gray-200 dark:text-[#30363d]" />
+                    <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">
+                      Chưa có form nào trong module này
+                    </p>
+                  </div>
+                ),
+              }}
+            />
+          )}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-3">
-        {error ? (
-          <Alert type="error" message={error} showIcon />
-        ) : (
-          <Table<FormTemplateListItem>
-            dataSource={forms}
-            rowKey="id"
-            size="middle"
-            loading={loading}
-            pagination={false}
-            locale={{
-              emptyText: (
-                <div className="flex flex-col items-center gap-2 py-12 text-gray-400 dark:text-[#484f58]">
-                  <FileText size={32} className="text-gray-200 dark:text-[#30363d]" />
-                  <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">Chưa có form nào trong module này</p>
-                </div>
-              ),
-            }}
-            columns={[
-              {
-                title:     "Key",
-                dataIndex: "key",
-                width:     180,
-                render:    (v: string) => (
-                  <code className="text-[12px] bg-gray-100 dark:bg-[#21262d] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
-                    {v}
-                  </code>
-                ),
-              },
-              {
-                title:     "Tên form",
-                dataIndex: "name",
-                render:    (v: string) => <span className="font-medium text-gray-800 dark:text-[#e6edf3]">{v}</span>,
-              },
-              {
-                title:     "Trạng thái",
-                dataIndex: "status",
-                width:     130,
-                render:    (v: string) => <StatusTag status={v} />,
-              },
-              {
-                title:     "Version",
-                dataIndex: "version",
-                width:     80,
-                align:     "center" as const,
-                render:    (v: number) => <span className="text-xs text-gray-400 dark:text-[#484f58] font-mono">v{v}</span>,
-              },
-            ] as ColumnsType<FormTemplateListItem>}
-          />
-        )}
-      </div>
-    </div>
+      <CreateFormDrawer
+        moduleCode={moduleCode}
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={() => { setCreateOpen(false); load(); }}
+      />
+
+      <FormFieldsDrawer
+        formTemplate={selectedForm}
+        onClose={() => setSelectedForm(null)}
+      />
+    </>
   );
 }
 
