@@ -18,7 +18,7 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { Plus, Table2, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FIELD_DATA_TYPE_OPTIONS } from "../_lib/constants";
 
 type AddColState = { key: string; label: string; dataType: FieldDataType };
@@ -31,7 +31,6 @@ export function EditTablesTab({
   onUpdated: (updated: OcrSchema) => void;
 }) {
   const { message, modal } = App.useApp();
-  const [tables, setTables] = useState<OcrTable[]>(schema.tables);
   const [addTableOpen, setAddTableOpen] = useState(false);
   const [addTableKey, setAddTableKey] = useState("");
   const [addTableName, setAddTableName] = useState("");
@@ -43,13 +42,7 @@ export function EditTablesTab({
     {},
   );
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => {
-    setTables(schema.tables);
-  }, [schema.tables]);
-
   function patchTables(next: OcrTable[]) {
-    setTables(next);
     onUpdated({ ...schema, tables: next });
   }
 
@@ -65,7 +58,7 @@ export function EditTablesTab({
         name: addTableName.trim(),
         columns: [],
       });
-      patchTables([...tables, table]);
+      patchTables([...schema.tables, table]);
       setAddTableKey("");
       setAddTableName("");
       setAddTableOpen(false);
@@ -86,7 +79,7 @@ export function EditTablesTab({
         setDeletingTableId(tableId);
         try {
           await ocrApi.deleteTable(schema.id, tableId);
-          patchTables(tables.filter((t) => t.id !== tableId));
+          patchTables(schema.tables.filter((t) => t.id !== tableId));
           message.success("Đã xóa bảng");
         } catch (err) {
           message.error(
@@ -113,7 +106,7 @@ export function EditTablesTab({
         dataType: st.dataType ?? "TEXT",
       });
       patchTables(
-        tables.map((t) =>
+        schema.tables.map((t) =>
           t.id === tableId ? { ...t, columns: [...t.columns, col] } : t,
         ),
       );
@@ -134,7 +127,7 @@ export function EditTablesTab({
     try {
       await ocrApi.deleteColumn(schema.id, tableId, colId);
       patchTables(
-        tables.map((t) =>
+        schema.tables.map((t) =>
           t.id === tableId
             ? { ...t, columns: t.columns.filter((c) => c.id !== colId) }
             : t,
@@ -190,7 +183,7 @@ export function EditTablesTab({
     ];
   }
 
-  const collapseItems = tables.map((table) => ({
+  const collapseItems = schema.tables.map((table) => ({
     key: table.id,
     label: (
       <div className="flex items-center gap-2">
@@ -301,7 +294,7 @@ export function EditTablesTab({
 
   return (
     <div className="space-y-4">
-      {tables.length === 0 ? (
+      {schema.tables.length === 0 ? (
         <div className="text-center py-8 text-gray-400 dark:text-[#484f58]">
           <Table2
             size={36}
