@@ -177,6 +177,46 @@ export interface FormField {
   isReadOnly?: boolean;
 }
 
+export interface FormFieldOption {
+  label: string;
+  value: string;
+}
+
+export interface FormFieldValidationRule {
+  type: string;
+  value: string;
+  errorMessage: string;
+}
+
+export interface FormFieldConditionalLogic {
+  sourceFieldKey: string;
+  operator: string;
+  value: string;
+  action: string;
+}
+
+export interface AdminFormField {
+  id?: string;
+  formTemplateId: string;
+  key: string;
+  label: string;
+  fieldType: number;
+  order: number;
+  required: boolean;
+  width?: number;
+  placeholder?: string;
+  helpText?: string;
+  options?: FormFieldOption[];
+  validationRules?: FormFieldValidationRule[];
+  conditionalLogic?: FormFieldConditionalLogic | null;
+  dataBindingExpression?: string;
+  displayFormat?: string;
+  isReadOnly?: boolean;
+}
+
+export type CreateFormFieldRequest = Omit<AdminFormField, "id">;
+export type UpdateFormFieldRequest = Partial<Omit<AdminFormField, "id" | "formTemplateId">>;
+
 export interface FormSchema {
   fields: FormField[];
 }
@@ -886,6 +926,51 @@ export const adminApi = {
         })),
       )
       .then((r) => unwrapForms<{ saved: number }>(r.data)),
+
+  // ── Form Template field management ───────────────────────────────────────
+
+  listFormFields: (formTemplateId: string): Promise<AdminFormField[]> =>
+    httpClient
+      .get<{ success?: boolean; data?: AdminFormField[] } | AdminFormField[]>(
+        `/forms/admin/forms/${formTemplateId}/fields`,
+      )
+      .then((r) => unwrapForms<AdminFormField[]>(r.data)),
+
+  createFormField: (
+    formTemplateId: string,
+    body: CreateFormFieldRequest,
+  ): Promise<AdminFormField> =>
+    httpClient
+      .post<{ success?: boolean; data?: AdminFormField } | AdminFormField>(
+        `/forms/admin/forms/${formTemplateId}/fields`,
+        body,
+      )
+      .then((r) => unwrapForms<AdminFormField>(r.data)),
+
+  updateFormField: (
+    formTemplateId: string,
+    fieldId: string,
+    body: UpdateFormFieldRequest,
+  ): Promise<AdminFormField> =>
+    httpClient
+      .put<{ success?: boolean; data?: AdminFormField } | AdminFormField>(
+        `/forms/admin/forms/${formTemplateId}/fields/${fieldId}`,
+        body,
+      )
+      .then((r) => unwrapForms<AdminFormField>(r.data)),
+
+  deleteFormField: (formTemplateId: string, fieldId: string): Promise<void> =>
+    httpClient
+      .delete(`/forms/admin/forms/${formTemplateId}/fields/${fieldId}`)
+      .then(() => undefined),
+
+  reorderFormFields: (
+    formTemplateId: string,
+    fieldOrders: { fieldId: string; order: number }[],
+  ): Promise<void> =>
+    httpClient
+      .put(`/forms/admin/forms/${formTemplateId}/fields/reorder`, fieldOrders)
+      .then(() => undefined),
 
   generateFromSource: (body: {
     moduleCode: string;

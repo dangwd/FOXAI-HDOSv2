@@ -45,11 +45,13 @@ function TabCanvas({
   tab,
   width,
   sourceData,
+  sourcesLoading,
   moduleCode,
 }: {
   tab: ScreenTabApi;
   width: number;
   sourceData: Record<string, unknown>;
+  sourcesLoading: boolean;
   moduleCode: string;
 }) {
   if (!tab.widgets.length) {
@@ -82,7 +84,12 @@ function TabCanvas({
     >
       {tab.widgets.map((w) => (
         <div key={w.widgetKey} className="overflow-hidden">
-          <WidgetRenderer widget={toApiWidget(w)} sourceData={sourceData} moduleCode={moduleCode} />
+          <WidgetRenderer
+            widget={toApiWidget(w)}
+            sourceData={sourceData}
+            sourcesLoading={sourcesLoading}
+            moduleCode={moduleCode}
+          />
         </div>
       ))}
     </ReactGridLayout>
@@ -98,7 +105,7 @@ export function FormScreenRenderer({ layout }: { layout: ScreenLayout }) {
   const routeParams: Record<string, string> = {};
   searchParams.forEach((value, key) => { routeParams[key] = value; });
 
-  const { sourceData } = useDataSources(layout.dataSources ?? [], routeParams);
+  const { sourceData, sourcesLoading } = useDataSources(layout.dataSources ?? [], routeParams);
 
   const sortedTabs = [...layout.tabs].sort((a, b) => a.sortOrder - b.sortOrder);
   const defaultTab = sortedTabs.find((t) => t.isDefault) ?? sortedTabs[0];
@@ -153,7 +160,7 @@ export function FormScreenRenderer({ layout }: { layout: ScreenLayout }) {
         className="flex-1 overflow-y-auto bg-gray-50 dark:bg-[#010409]"
       >
         {activeTab && (
-          <TabCanvas tab={activeTab} width={width} sourceData={sourceData} moduleCode={layout.moduleCode} />
+          <TabCanvas tab={activeTab} width={width} sourceData={sourceData} sourcesLoading={sourcesLoading} moduleCode={layout.moduleCode} />
         )}
       </div>
     </div>
