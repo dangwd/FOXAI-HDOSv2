@@ -88,6 +88,7 @@ function FormFieldFormDrawer({
 
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setError(null);
     if (field) {
       form.setFieldsValue({
@@ -450,6 +451,7 @@ export function FormFieldsDrawer({ formTemplate, onClose }: FormFieldsDrawerProp
 
   useEffect(() => {
     if (formTemplate) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       load();
     } else {
       setFields([]);
@@ -592,7 +594,7 @@ export function FormFieldsDrawer({ formTemplate, onClose }: FormFieldsDrawerProp
               <div className="py-10 text-center">
                 <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">Chưa có field nào</p>
                 <p className="text-xs text-gray-400 dark:text-[#484f58] m-0 mt-1">
-                  Nhấn "Thêm Field" để bắt đầu
+                  Nhấn &ldquo;Thêm Field&rdquo; để bắt đầu
                 </p>
               </div>
             ),
