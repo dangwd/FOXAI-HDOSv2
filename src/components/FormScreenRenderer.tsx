@@ -4,6 +4,7 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ReactGridLayout from "react-grid-layout/legacy";
 import type {
   ApiWidget,
@@ -11,6 +12,7 @@ import type {
   ScreenTabApi,
   ScreenWidgetApi,
 } from "@/infrastructure/http/adminApi";
+import { useDataSources } from "@/core/dataBinding/useDataSources";
 import { WidgetRenderer } from "./widgets/WidgetRenderer";
 
 function safeJson(s: string | null): Record<string, unknown> {
@@ -39,7 +41,17 @@ function toApiWidget(w: ScreenWidgetApi): ApiWidget {
   };
 }
 
-function TabCanvas({ tab, width }: { tab: ScreenTabApi; width: number }) {
+function TabCanvas({
+  tab,
+  width,
+  sourceData,
+  moduleCode,
+}: {
+  tab: ScreenTabApi;
+  width: number;
+  sourceData: Record<string, unknown>;
+  moduleCode: string;
+}) {
   if (!tab.widgets.length) {
     return (
       <div className="flex items-center justify-center h-48 text-gray-400 dark:text-[#484f58] text-sm">
@@ -70,7 +82,7 @@ function TabCanvas({ tab, width }: { tab: ScreenTabApi; width: number }) {
     >
       {tab.widgets.map((w) => (
         <div key={w.widgetKey} className="overflow-hidden">
-          <WidgetRenderer widget={toApiWidget(w)} />
+          <WidgetRenderer widget={toApiWidget(w)} sourceData={sourceData} moduleCode={moduleCode} />
         </div>
       ))}
     </ReactGridLayout>
@@ -80,6 +92,13 @@ function TabCanvas({ tab, width }: { tab: ScreenTabApi; width: number }) {
 export function FormScreenRenderer({ layout }: { layout: ScreenLayout }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(900);
+  const searchParams = useSearchParams();
+
+  // Build routeParams from all URL search params (patientId, visitId, etc.)
+  const routeParams: Record<string, string> = {};
+  searchParams.forEach((value, key) => { routeParams[key] = value; });
+
+  const { sourceData } = useDataSources(layout.dataSources ?? [], routeParams);
 
   const sortedTabs = [...layout.tabs].sort((a, b) => a.sortOrder - b.sortOrder);
   const defaultTab = sortedTabs.find((t) => t.isDefault) ?? sortedTabs[0];
@@ -133,7 +152,9 @@ export function FormScreenRenderer({ layout }: { layout: ScreenLayout }) {
         ref={containerRef}
         className="flex-1 overflow-y-auto bg-gray-50 dark:bg-[#010409]"
       >
-        {activeTab && <TabCanvas tab={activeTab} width={width} />}
+        {activeTab && (
+          <TabCanvas tab={activeTab} width={width} sourceData={sourceData} moduleCode={layout.moduleCode} />
+        )}
       </div>
     </div>
   );

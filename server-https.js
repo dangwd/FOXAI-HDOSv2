@@ -1,5 +1,8 @@
 'use strict';
 
+// Backend dùng self-signed cert — cho phép Node.js gọi HTTPS nội bộ
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const https  = require('https');
 const http   = require('http');
 const fs     = require('fs');

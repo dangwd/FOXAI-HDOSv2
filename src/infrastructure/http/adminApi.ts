@@ -153,11 +153,40 @@ export interface ScreenTabApi {
   widgets: ScreenWidgetApi[];
 }
 
+export interface DataSource {
+  namespace: string;
+  serviceId: string;
+  resourcePath: string;
+  requiredParams: string[];
+}
+
+export interface DataBinding {
+  expression: string;
+  displayFormat: string | null;
+}
+
+export interface FormField {
+  key: string;
+  label: string;
+  fieldType: string;
+  order: number;
+  required: boolean;
+  width?: "Full" | "Half" | "Third";
+  placeholder?: string;
+  dataBinding?: DataBinding | null;
+  isReadOnly?: boolean;
+}
+
+export interface FormSchema {
+  fields: FormField[];
+}
+
 export interface ScreenLayout {
   id: string;
   moduleCode: string;
   code: string;
   title: string;
+  dataSources: DataSource[];
   tabs: ScreenTabApi[];
 }
 
@@ -297,8 +326,40 @@ function unwrapForms<T>(body: { success?: boolean; data?: T } | T): T {
   return body as T;
 }
 
+function normalizeDataSource(raw: Record<string, unknown>): DataSource {
+  return {
+    namespace:      (raw.namespace      ?? raw.Namespace      ?? "") as string,
+    serviceId:      (raw.serviceId      ?? raw.ServiceId      ?? "") as string,
+    resourcePath:   (raw.resourcePath   ?? raw.ResourcePath   ?? "") as string,
+    requiredParams: (raw.requiredParams ?? raw.RequiredParams ?? []) as string[],
+  };
+}
+
 // Normalize a raw widget object — handles both camelCase and PascalCase from .NET
+// Backend may send:
+//   - configJson / ConfigJson  (string)
+//   - config                   (object) — alias for configJson
+//   - formSchema               (object, top-level) — expanded FormTemplate schema
+// We merge all into a single configJson string so WidgetRenderer can safeJson() it.
 function normalizeWidget(raw: Record<string, unknown>): ScreenWidgetApi {
+  // Resolve base config object
+  const cfgRaw = raw.configJson ?? raw.ConfigJson ?? raw.config ?? raw.Config;
+  let base: Record<string, unknown> =
+    typeof cfgRaw === "string"
+      ? (() => { try { return JSON.parse(cfgRaw) as Record<string, unknown>; } catch { return {}; } })()
+      : ((cfgRaw ?? {}) as Record<string, unknown>);
+
+  // Top-level formSchema (auto-generated from FormTemplate) takes precedence over config.formSchema
+  const topFormSchema = raw.formSchema ?? raw.FormSchema;
+  if (topFormSchema != null) {
+    const fs = topFormSchema as Record<string, unknown>;
+    base = { ...base, formSchema: fs };
+    // Hoist formKey so FormSectionWidget can use it for submit
+    if (fs.formKey) base.formKey = fs.formKey;
+  }
+
+  const configJson = Object.keys(base).length > 0 ? JSON.stringify(base) : null;
+
   return {
     widgetKey:   (raw.widgetKey   ?? raw.WidgetKey   ?? "") as string,
     widgetType:  (raw.widgetType  ?? raw.WidgetType  ?? "") as string,
@@ -306,7 +367,7 @@ function normalizeWidget(raw: Record<string, unknown>): ScreenWidgetApi {
     gridY:       (raw.gridY       ?? raw.GridY       ?? 0)  as number,
     gridW:       (raw.gridW       ?? raw.GridW       ?? 6)  as number,
     gridH:       (raw.gridH       ?? raw.GridH       ?? 4)  as number,
-    configJson:  (raw.configJson  ?? raw.ConfigJson  ?? null) as string | null,
+    configJson,
     referenceId: (raw.referenceId ?? raw.ReferenceId ?? null) as string | null,
   };
 }
@@ -701,6 +762,9 @@ export const adminApi = {
             ),
           }));
         }
+        layout.dataSources = (layout.dataSources ?? []).map((ds) =>
+          normalizeDataSource(ds as unknown as Record<string, unknown>),
+        );
         return layout;
       }),
 
@@ -786,6 +850,18 @@ export const adminApi = {
       .delete(`/forms/admin/screens/${moduleCode}/${screenCode}/tabs/${tabId}`)
       .then(() => undefined),
 
+  saveDataSources: (
+    moduleCode: string,
+    screenCode: string,
+    sources: DataSource[],
+  ): Promise<void> =>
+    httpClient
+      .put(
+        `/forms/admin/screens/${moduleCode}/${screenCode}/data-sources`,
+        sources,
+      )
+      .then(() => undefined),
+
   saveScreenWidgets: (
     moduleCode: string,
     screenCode: string,
@@ -810,4 +886,42 @@ export const adminApi = {
         })),
       )
       .then((r) => unwrapForms<{ saved: number }>(r.data)),
+
+  generateFromSource: (body: {
+    moduleCode: string;
+    moduleName: string;
+    screenCode: string;
+    screenTitle: string;
+    formKey: string;
+    formTitle: string;
+    dataSource: DataSource;
+    fields: Array<{
+      canonicalKey: string | null;
+      fieldKey?: string;
+      label: string;
+      fieldType: string;
+      displayFormat?: string | null;
+      isReadOnly?: boolean;
+      required?: boolean;
+      options?: string[];
+    }>;
+  }): Promise<{
+    moduleCode: string;
+    screenCode: string;
+    formKey: string;
+    formTemplateId: string;
+    fieldsGenerated: number;
+  }> =>
+    httpClient
+      .post<{ success?: boolean; data?: unknown } | unknown>(
+        "/forms/admin/generate-from-source",
+        body,
+      )
+      .then((r) => unwrapForms(r.data) as {
+        moduleCode: string;
+        screenCode: string;
+        formKey: string;
+        formTemplateId: string;
+        fieldsGenerated: number;
+      }),
 };

@@ -1,7 +1,7 @@
 import type { ModuleLayout } from "@/infrastructure/http/adminApi";
 import { NextRequest, NextResponse } from "next/server";
 
-const ADMIN_BASE = (process.env.NEXT_PUBLIC_ADMIN_API_URL ?? "http://localhost:17080").replace(/\/+$/, "");
+const ADMIN_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "https://192.168.100.60:8443").replace(/\/+$/, "");
 
 /** GET /api/v1/modules/[slug]/layout — proxy tới admin backend */
 export async function GET(

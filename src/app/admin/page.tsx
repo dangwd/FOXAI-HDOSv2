@@ -13,6 +13,7 @@ import { useAdminData } from "./_hooks/useAdminData";
 import { useDesignerState } from "./_hooks/useDesignerState";
 import { DEFAULT_SIZES } from "./_lib/constants";
 
+import { DataSourcesPanel } from "./_components/DataSourcesPanel";
 import { DesignerCard } from "./_components/DesignerCard";
 import { ModuleRow } from "./_components/ModuleRow";
 import { PageSkeleton } from "./_components/PageSkeleton";
@@ -36,7 +37,7 @@ function DashboardDesignerInner() {
     screenParam ? `${slugParam}/${screenParam}` : slugParam,
   );
   const [search, setSearch] = useState<string>("");
-  const [rightTab, setRightTab] = useState<"palette" | "json">("palette");
+  const [rightTab, setRightTab] = useState<"palette" | "datasources" | "json">("palette");
 
   const selectedSlug = useMemo(
     () => _selectedSlug || modules[0]?.slug || "",
@@ -325,22 +326,26 @@ function DashboardDesignerInner() {
           <>
             {/* Sidebar tab switcher */}
             <div className="flex border-b border-gray-200 dark:border-[#30363d] shrink-0">
-              {(["palette", "json"] as const).map((t) => (
+              {([
+                { key: "palette",     label: "Palette" },
+                { key: "datasources", label: "DataSources" },
+                { key: "json",        label: "JSON" },
+              ] as const).map((t) => (
                 <button
-                  key={t}
-                  onClick={() => setRightTab(t)}
-                  className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
-                    rightTab === t
+                  key={t.key}
+                  onClick={() => setRightTab(t.key)}
+                  className={`flex-1 py-2.5 text-[11px] font-medium transition-colors ${
+                    rightTab === t.key
                       ? "text-violet-600 dark:text-violet-400 border-b-2 border-violet-600 dark:border-violet-400"
                       : "text-gray-400 dark:text-[#484f58] hover:text-gray-700 dark:hover:text-[#e6edf3]"
                   }`}
                 >
-                  {t === "palette" ? "Widget Palette" : "JSON Preview"}
+                  {t.label}
                 </button>
               ))}
             </div>
 
-            {rightTab === "palette" ? (
+            {rightTab === "palette" && (
               <WidgetCatalogPanel
                 catalog={catalog}
                 search={search}
@@ -349,7 +354,11 @@ function DashboardDesignerInner() {
                 onDragStart={designer.setDroppingEntry}
                 onDragEnd={() => designer.setDroppingEntry(null)}
               />
-            ) : (
+            )}
+            {rightTab === "datasources" && (
+              <DataSourcesPanel selectedSlug={selectedSlug} />
+            )}
+            {rightTab === "json" && (
               <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-[#010409]">
                 <pre className="font-mono text-[10px] text-gray-700 dark:text-[#e6edf3] whitespace-pre-wrap leading-relaxed m-0">
                   {jsonPreview}
