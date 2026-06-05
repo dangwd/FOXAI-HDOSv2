@@ -6,7 +6,7 @@ import { Alert, Button, Drawer, Form, Input, Spin, Switch, Table, Tag, Tabs } fr
 import type { ColumnsType } from "antd/es/table";
 import { ArrowLeft, FileText, LayoutDashboard, Plus, RefreshCw, Settings2 } from "lucide-react";
 import { adminApi } from "@/infrastructure/http/adminApi";
-import type { FormsModule, FormTemplateListItem, FormPageListItem } from "@/infrastructure/http/adminApi";
+import type { FormsModule, FormTemplateListItem, FormScreen } from "@/infrastructure/http/adminApi";
 import { ModuleIcon } from "../_components/ModuleIcon";
 import { FormFieldsDrawer } from "../_components/FormFieldsDrawer";
 
@@ -327,10 +327,10 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
   );
 }
 
-// ─── Pages tab ────────────────────────────────────────────────────────────────
+// ─── Screens tab ─────────────────────────────────────────────────────────────
 
-function PagesTab({ moduleCode }: { moduleCode: string }) {
-  const [pages,   setPages]   = useState<FormPageListItem[]>([]);
+function ScreensTab({ moduleCode }: { moduleCode: string }) {
+  const [screens, setScreens] = useState<FormScreen[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
 
@@ -338,8 +338,8 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await adminApi.listPages(moduleCode);
-      setPages(data);
+      const data = await adminApi.listFormScreens(moduleCode);
+      setScreens(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -355,14 +355,11 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
       {/* Sub-toolbar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
         <span className="text-xs text-gray-500 dark:text-[#8b949e]">
-          {pages.length} page
+          {screens.length} screen
         </span>
         <div className="flex items-center gap-2">
           <Button size="small" icon={<RefreshCw size={12} />} onClick={load} loading={loading}>
             Làm mới
-          </Button>
-          <Button size="small" type="primary" icon={<Plus size={12} />} disabled>
-            Tạo Page
           </Button>
         </div>
       </div>
@@ -372,8 +369,8 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
         {error ? (
           <Alert type="error" message={error} showIcon />
         ) : (
-          <Table<FormPageListItem>
-            dataSource={pages}
+          <Table<FormScreen>
+            dataSource={screens}
             rowKey="id"
             size="middle"
             loading={loading}
@@ -382,7 +379,7 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
               emptyText: (
                 <div className="flex flex-col items-center gap-2 py-12 text-gray-400 dark:text-[#484f58]">
                   <LayoutDashboard size={32} className="text-gray-200 dark:text-[#30363d]" />
-                  <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">Chưa có page nào trong module này</p>
+                  <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">Chưa có screen nào trong module này</p>
                 </div>
               ),
             }}
@@ -407,13 +404,13 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                 dataIndex: "tabCount",
                 width:     70,
                 align:     "center" as const,
-                render:    (v: number) => (
+                render:    (v: number | undefined) => (
                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold ${
-                    v > 0
+                    (v ?? 0) > 0
                       ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
                       : "bg-gray-100 dark:bg-[#1f2937] text-gray-400 dark:text-[#484f58]"
                   }`}>
-                    {v}
+                    {v ?? 0}
                   </span>
                 ),
               },
@@ -423,7 +420,7 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                 width:     130,
                 render:    (v: string) => <StatusTag status={v} />,
               },
-            ] as ColumnsType<FormPageListItem>}
+            ] as ColumnsType<FormScreen>}
           />
         )}
       </div>
@@ -546,14 +543,14 @@ export default function ModuleCanvasPage() {
               children: <FormsTab moduleCode={code} />,
             },
             {
-              key: "pages",
+              key: "screens",
               label: (
                 <span className="flex items-center gap-1.5">
                   <LayoutDashboard size={13} />
-                  Pages
+                  Screens
                 </span>
               ),
-              children: <PagesTab moduleCode={code} />,
+              children: <ScreensTab moduleCode={code} />,
             },
           ]}
         />

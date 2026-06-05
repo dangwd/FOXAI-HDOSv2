@@ -55,5 +55,21 @@ export function useModuleManager() {
     message.success("Tạo module thành công");
   }
 
-  return { modules, filtered, loading, loadError, search, setSearch, create };
+  async function update(moduleCode: string, form: Pick<ModuleForm, "name" | "description">): Promise<void> {
+    if (!form.name.trim()) throw new Error("Tên module không được để trống");
+    await adminApi.updateFormsModule(moduleCode, {
+      name:        form.name.trim(),
+      description: form.description.trim() || undefined,
+    });
+    setTick((t) => t + 1);
+    message.success("Cập nhật module thành công");
+  }
+
+  async function remove(moduleCode: string): Promise<void> {
+    await adminApi.deleteFormsModule(moduleCode);
+    setTick((t) => t + 1);
+    message.success("Đã xóa module");
+  }
+
+  return { modules, filtered, loading, loadError, search, setSearch, create, update, remove };
 }

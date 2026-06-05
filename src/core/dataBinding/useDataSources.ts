@@ -37,11 +37,17 @@ export function useDataSources(
 
     Promise.all(
       active.map(async (source) => {
-        const path = source.resourcePath.replace(
+        const rawPath = source.resourcePath ?? "";
+        if (!rawPath) return [source.namespace, null] as const;
+        const path = rawPath.replace(
           /\{(\w+)\}/g,
           (_, key) => encodeURIComponent(params[key] ?? ""),
         );
-        const url = path.startsWith("http") ? path : `${BASE}${path}`;
+        // doc 41: layout response carries baseUrl resolved from Provider Catalog
+        const baseUrl = source.baseUrl?.replace(/\/+$/, "") ?? "";
+        const url = baseUrl
+          ? `${baseUrl}${path}`
+          : path.startsWith("http") ? path : `${BASE}${path}`;
         try {
           const res = await fetch(url, {
             headers: accessToken
@@ -51,27 +57,45 @@ export function useDataSources(
           if (!res.ok) return [source.namespace, null] as const;
           const raw = await res.json() as Record<string, unknown>;
 
-          // Unwrap DynamicFormService / DataMatchingService envelope: { success, data: {...} }
-          const responseData = (raw?.data as Record<string, unknown>) ?? raw;
+          // Unwrap DynamicFormService / DataMatchingService envelope: { success, data: {...|[...]} }
+          const responseData = raw?.data ?? raw;
 
-          // DataMatchingService stores canonicalPayload as a JSON *string* inside data
-          // Parse it and spread at the namespace root so expressions like
-          // {{sources.record.HoTen}} resolve directly without extra nesting
-          const canonicalRaw = responseData?.canonicalPayload;
+          // DataMatchingService stores canonicalPayload as a JSON *string* in each record.
+          // Parse and spread it so expressions like {{sources.ns.HoTen}} (single) or
+          // {{sources.ns[0].HoTen}} (list) resolve directly without extra nesting.
           let data: unknown;
-          if (canonicalRaw != null) {
-            try {
-              const parsed: Record<string, unknown> =
-                typeof canonicalRaw === "string"
-                  ? (JSON.parse(canonicalRaw) as Record<string, unknown>)
-                  : (canonicalRaw as Record<string, unknown>);
-              // Merge: original response fields + all canonical fields at top level
-              data = { ...responseData, ...parsed };
-            } catch {
-              data = responseData;
-            }
+          if (Array.isArray(responseData)) {
+            // List response (e.g. GET /dm/records): parse canonicalPayload in each row
+            data = (responseData as Record<string, unknown>[]).map((item) => {
+              const rawCp = item?.canonicalPayload;
+              if (rawCp == null) return item;
+              try {
+                const parsed: Record<string, unknown> =
+                  typeof rawCp === "string"
+                    ? (JSON.parse(rawCp) as Record<string, unknown>)
+                    : (rawCp as Record<string, unknown>);
+                return { ...item, ...parsed };
+              } catch {
+                return item;
+              }
+            });
           } else {
-            data = responseData;
+            // Single-object response: parse canonicalPayload at top level
+            const obj = responseData as Record<string, unknown>;
+            const rawCp = obj?.canonicalPayload;
+            if (rawCp != null) {
+              try {
+                const parsed: Record<string, unknown> =
+                  typeof rawCp === "string"
+                    ? (JSON.parse(rawCp) as Record<string, unknown>)
+                    : (rawCp as Record<string, unknown>);
+                data = { ...obj, ...parsed };
+              } catch {
+                data = obj;
+              }
+            } else {
+              data = obj;
+            }
           }
 
           return [source.namespace, data] as const;

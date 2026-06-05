@@ -125,12 +125,14 @@ export interface FormPageListItem {
 // ── Screen Designer types (replaces FormPage) ─────────────────────────────────
 
 export interface FormScreen {
-  id: string;
-  code: string;
-  title: string;
+  id:           string;
+  code:         string;
+  title:        string;
   description?: string;
-  status: "Draft" | "Published" | "Archived";
-  sortOrder: number;
+  status:       "Draft" | "Published" | "Archived";
+  sortOrder:    number;
+  tabCount?:    number;
+  createdAtUtc?: string;
 }
 
 export interface ScreenWidgetApi {
@@ -154,11 +156,15 @@ export interface ScreenTabApi {
 }
 
 export interface DataSource {
-  namespace: string;
-  serviceId: string;
-  resourcePath: string;
+  namespace:      string;
+  operationId?:   string | null;   // managed mode: "providerCode::operationKey"
+  serviceId?:     string | null;   // legacy mode
+  resourcePath?:  string | null;   // legacy mode
   requiredParams: string[];
-  schemaPath?: string | null;
+  schemaPath?:    string | null;
+  // resolved fields returned by layout endpoint (read-only):
+  baseUrl?:       string | null;
+  kind?:          "Single" | "List" | null;
 }
 
 export interface DataBinding {
@@ -314,6 +320,38 @@ export interface UpsertWidgetRequest {
   filterKey?: string;
 }
 
+// ─── DynamicFormService Provider Catalog types (doc 41) ─────────────────────
+
+export type FormsProviderStatus   = "Active" | "Inactive";
+export type FormsOperationKind    = "Single" | "List";
+export type FormsOperationStatus  = "Active" | "Inactive";
+
+export interface FormsProviderDto {
+  id:             string;
+  code:           string;
+  displayName:    string;
+  baseUrl:        string;
+  status:         FormsProviderStatus;
+  operationCount: number;
+  createdAtUtc:   string;
+  updatedAtUtc?:  string | null;
+}
+
+export interface FormsOperationDto {
+  id:              string;
+  providerCode:    string;
+  operationKey:    string;
+  displayName:     string;
+  pattern:         string;
+  schemaPath?:     string | null;
+  requiredParams:  string[];
+  kind:            FormsOperationKind;
+  status:          FormsOperationStatus;
+  combinedRef:     string;   // "providerCode::operationKey"
+  createdAtUtc:    string;
+  updatedAtUtc?:   string | null;
+}
+
 // ─── Provider / Operation record types ───────────────────────────────────────
 
 export interface ProviderApiRecord {
@@ -349,6 +387,84 @@ export interface OperationApiRecord {
   status: string;
 }
 
+// ─── DataMatchingService types ───────────────────────────────────────────────
+
+export interface DmSourceProfile {
+  id:               string;
+  sourceSystem:     string;
+  recordType:       string;
+  displayName:      string;
+  businessKeyField: string;
+  mappings:         Record<string, string>;
+}
+
+export interface DmIngestJsonRequest {
+  sourceSystem:        string;
+  recordType:          string;
+  payload:             Record<string, unknown>;
+  businessKeyOverride?: string | null;
+}
+
+export interface DmIngestResult {
+  id:           string;
+  sourceSystem: string;
+  recordType:   string;
+  businessKey:  string;
+  status:       string;
+}
+
+export interface DmIngestBatchResult {
+  count: number;
+  ids:   string[];
+}
+
+export interface DmRecordDto {
+  id:               string;
+  sourceSystem:     string;
+  recordType:       string;
+  businessKey:      string;
+  status:           string;
+  canonicalPayload: string;
+  receivedAt:       string;
+  processedAt:      string | null;
+}
+
+export interface DmRecordsQuery {
+  sourceSystem?: string;
+  recordType?:   string;
+  field?:        string;
+  value?:        string;
+  from?:         string;
+  to?:           string;
+  limit?:        number;
+}
+
+export interface DmReportColumn {
+  key:   string;
+  label: string;
+  type:  string;
+}
+
+export interface DmReportRow {
+  data: Record<string, unknown>;
+}
+
+export interface DmReportDto {
+  reportCode:   string;
+  reportName:   string;
+  generatedAt:  string;
+  columns:      DmReportColumn[];
+  rows:         DmReportRow[];
+  summary:      Record<string, unknown>;
+}
+
+export interface DmReportQuery {
+  sourceSystem?: string;
+  recordType?:   string;
+  from?:         string;
+  to?:           string;
+}
+
 // ─── API ──────────────────────────────────────────────────────────────────────
 // baseURL is NEXT_PUBLIC_API_URL (no /api/v1 suffix).
 // DynamicFormService paths start with /forms/...
@@ -370,10 +486,13 @@ function unwrapForms<T>(body: { success?: boolean; data?: T } | T): T {
 function normalizeDataSource(raw: Record<string, unknown>): DataSource {
   return {
     namespace:      (raw.namespace      ?? raw.Namespace      ?? "") as string,
-    serviceId:      (raw.serviceId      ?? raw.ServiceId      ?? "") as string,
-    resourcePath:   (raw.resourcePath   ?? raw.ResourcePath   ?? "") as string,
+    operationId:    (raw.operationId    ?? raw.OperationId    ?? null) as string | null,
+    serviceId:      (raw.serviceId      ?? raw.ServiceId      ?? null) as string | null,
+    resourcePath:   (raw.resourcePath   ?? raw.ResourcePath   ?? null) as string | null,
     requiredParams: (raw.requiredParams ?? raw.RequiredParams ?? []) as string[],
     schemaPath:     (raw.schemaPath     ?? raw.SchemaPath     ?? null) as string | null,
+    baseUrl:        (raw.baseUrl        ?? raw.BaseUrl        ?? null) as string | null,
+    kind:           (raw.kind           ?? raw.Kind           ?? null) as "Single" | "List" | null,
   };
 }
 
@@ -449,6 +568,22 @@ export const adminApi = {
       >("/forms/admin/modules", body)
       .then((r) => unwrapForms<FormsModule>(r.data)),
 
+  updateFormsModule: (
+    moduleCode: string,
+    body: { name: string; description?: string },
+  ): Promise<FormsModule> =>
+    httpClient
+      .put<{ success?: boolean; data?: FormsModule } | FormsModule>(
+        `/forms/admin/modules/${moduleCode}`,
+        body,
+      )
+      .then((r) => unwrapForms<FormsModule>(r.data)),
+
+  deleteFormsModule: (moduleCode: string): Promise<void> =>
+    httpClient
+      .delete(`/forms/admin/modules/${moduleCode}`)
+      .then(() => undefined),
+
   listForms: (moduleCode: string): Promise<FormTemplateListItem[]> =>
     httpClient
       .get<
@@ -458,11 +593,12 @@ export const adminApi = {
       .then((r) => unwrapForms<FormTemplateListItem[]>(r.data)),
 
   // Admin endpoint — returns all statuses (Draft / Published / Archived)
+  // Migrated from /forms/admin/{mc}/pages (doc 42)
   listPages: (moduleCode: string): Promise<FormPageListItem[]> =>
     httpClient
       .get<
         { success: boolean; data: FormPageListItem[] } | FormPageListItem[]
-      >(`/forms/admin/${moduleCode}/pages`)
+      >(`/forms/admin/screens/${moduleCode}`)
       .then((r) => unwrapForms<FormPageListItem[]>(r.data)),
 
   createForm: (
@@ -480,6 +616,7 @@ export const adminApi = {
       >(`/forms/admin/modules/${moduleCode}/forms`, body)
       .then((r) => unwrapForms<FormTemplateListItem>(r.data)),
 
+  // Migrated from /forms/admin/{mc}/pages (doc 42)
   createPage: (
     moduleCode: string,
     body: { code: string; title: string; description?: string; sortOrder?: number },
@@ -487,7 +624,7 @@ export const adminApi = {
     httpClient
       .post<
         { success: boolean; data: FormPageListItem } | FormPageListItem
-      >(`/forms/admin/${moduleCode}/pages`, body)
+      >("/forms/admin/screens", { moduleCode, ...body })
       .then((r) => unwrapForms<FormPageListItem>(r.data)),
 
   updatePage: (
@@ -498,29 +635,18 @@ export const adminApi = {
     httpClient
       .put<
         { success: boolean; data: FormPageListItem } | FormPageListItem
-      >(`/forms/admin/${moduleCode}/pages/${pageCode}`, body)
+      >(`/forms/admin/screens/${moduleCode}/${pageCode}`, body)
       .then((r) => unwrapForms<FormPageListItem>(r.data)),
 
   deletePage: (moduleCode: string, pageCode: string): Promise<void> =>
     httpClient
-      .delete(`/forms/admin/${moduleCode}/pages/${pageCode}`)
+      .delete(`/forms/admin/screens/${moduleCode}/${pageCode}`)
       .then(() => undefined),
 
-  // v3 endpoint: moduleCode + pageCode in URL
+  // Migrated from /forms/admin/{mc}/pages/{pc}/publish (doc 42)
   publishFormPage: (moduleCode: string, pageCode: string): Promise<void> =>
     httpClient
-      .post(`/forms/admin/${moduleCode}/pages/${pageCode}/publish`)
-      .then(() => undefined),
-
-  // Legacy — used by Screen Designer (menus hook); kept for backward compat
-  updatePageLayout: (pageId: string, layout: object): Promise<void> =>
-    httpClient
-      .put(`/forms/admin/pages/${pageId}/layout`, { layout })
-      .then(() => undefined),
-
-  publishPage: (pageId: string): Promise<void> =>
-    httpClient
-      .post(`/forms/admin/pages/${pageId}/publish`)
+      .post(`/forms/admin/screens/${moduleCode}/${pageCode}/publish`)
       .then(() => undefined),
 
   getPageSchema: (
@@ -540,7 +666,7 @@ export const adminApi = {
         return body as { rows: unknown[] };
       }),
 
-  // ── Page tab management ───────────────────────────────────────────────────
+  // ── Page tab management (migrated from /pages/ to /screens/ — doc 42) ────────
 
   createPageTab: (
     moduleCode: string,
@@ -549,7 +675,7 @@ export const adminApi = {
   ): Promise<{ id: string; slug: string }> =>
     httpClient
       .post<{ success?: boolean; data?: { id: string; slug: string } } | { id: string; slug: string }>(
-        `/forms/admin/${moduleCode}/pages/${pageCode}/tabs`,
+        `/forms/admin/screens/${moduleCode}/${pageCode}/tabs`,
         body,
       )
       .then((r) => unwrapForms<{ id: string; slug: string }>(r.data)),
@@ -561,12 +687,12 @@ export const adminApi = {
     body: { label?: string; sortOrder?: number; isDefault?: boolean },
   ): Promise<void> =>
     httpClient
-      .put(`/forms/admin/${moduleCode}/pages/${pageCode}/tabs/${tabId}`, body)
+      .put(`/forms/admin/screens/${moduleCode}/${pageCode}/tabs/${tabId}`, body)
       .then(() => undefined),
 
   deletePageTab: (moduleCode: string, pageCode: string, tabId: string): Promise<void> =>
     httpClient
-      .delete(`/forms/admin/${moduleCode}/pages/${pageCode}/tabs/${tabId}`)
+      .delete(`/forms/admin/screens/${moduleCode}/${pageCode}/tabs/${tabId}`)
       .then(() => undefined),
 
   savePageWidgets: (
@@ -577,7 +703,7 @@ export const adminApi = {
   ): Promise<{ saved: number }> =>
     httpClient
       .put<{ saved: number }>(
-        `/forms/admin/${moduleCode}/pages/${pageCode}/tabs/${tabId}/widgets`,
+        `/forms/admin/screens/${moduleCode}/${pageCode}/tabs/${tabId}/widgets`,
         widgets,
       )
       .then((r) => r.data),
@@ -973,6 +1099,189 @@ export const adminApi = {
     httpClient
       .put(`/forms/admin/forms/${formTemplateId}/fields/reorder`, fieldOrders)
       .then(() => undefined),
+
+  // ── DynamicFormService Provider Catalog (doc 41) ─────────────────────────
+
+  listFormsProviders: (status?: FormsProviderStatus): Promise<FormsProviderDto[]> =>
+    httpClient
+      .get<{ success?: boolean; data?: FormsProviderDto[] } | FormsProviderDto[]>(
+        "/forms/admin/providers",
+        { params: status ? { status } : undefined },
+      )
+      .then((r) => unwrapForms<FormsProviderDto[]>(r.data)),
+
+  createFormsProvider: (body: {
+    code: string;
+    displayName: string;
+    baseUrl: string;
+  }): Promise<FormsProviderDto> =>
+    httpClient
+      .post<{ success?: boolean; data?: FormsProviderDto } | FormsProviderDto>(
+        "/forms/admin/providers",
+        body,
+      )
+      .then((r) => unwrapForms<FormsProviderDto>(r.data)),
+
+  updateFormsProvider: (
+    providerCode: string,
+    body: { displayName: string; baseUrl: string; status?: FormsProviderStatus },
+  ): Promise<FormsProviderDto> =>
+    httpClient
+      .put<{ success?: boolean; data?: FormsProviderDto } | FormsProviderDto>(
+        `/forms/admin/providers/${providerCode}`,
+        body,
+      )
+      .then((r) => unwrapForms<FormsProviderDto>(r.data)),
+
+  deleteFormsProvider: (providerCode: string): Promise<void> =>
+    httpClient
+      .delete(`/forms/admin/providers/${providerCode}`)
+      .then(() => undefined),
+
+  listFormsOperations: (status?: FormsOperationStatus): Promise<FormsOperationDto[]> =>
+    httpClient
+      .get<{ success?: boolean; data?: FormsOperationDto[] } | FormsOperationDto[]>(
+        "/forms/admin/operations",
+        { params: status ? { status } : undefined },
+      )
+      .then((r) => unwrapForms<FormsOperationDto[]>(r.data)),
+
+  listFormsOperationsByProvider: (
+    providerCode: string,
+  ): Promise<FormsOperationDto[]> =>
+    httpClient
+      .get<{ success?: boolean; data?: FormsOperationDto[] } | FormsOperationDto[]>(
+        `/forms/admin/providers/${providerCode}/operations`,
+      )
+      .then((r) => unwrapForms<FormsOperationDto[]>(r.data)),
+
+  createFormsOperation: (
+    providerCode: string,
+    body: {
+      operationKey: string;
+      displayName: string;
+      pattern: string;
+      schemaPath?: string;
+      requiredParams: string[];
+      kind: FormsOperationKind;
+    },
+  ): Promise<FormsOperationDto> =>
+    httpClient
+      .post<{ success?: boolean; data?: FormsOperationDto } | FormsOperationDto>(
+        `/forms/admin/providers/${providerCode}/operations`,
+        body,
+      )
+      .then((r) => unwrapForms<FormsOperationDto>(r.data)),
+
+  updateFormsOperation: (
+    providerCode: string,
+    operationKey: string,
+    body: {
+      displayName: string;
+      pattern: string;
+      schemaPath?: string | null;
+      requiredParams: string[];
+      kind: FormsOperationKind;
+      status?: FormsOperationStatus;
+    },
+  ): Promise<FormsOperationDto> =>
+    httpClient
+      .put<{ success?: boolean; data?: FormsOperationDto } | FormsOperationDto>(
+        `/forms/admin/providers/${providerCode}/operations/${operationKey}`,
+        body,
+      )
+      .then((r) => unwrapForms<FormsOperationDto>(r.data)),
+
+  deleteFormsOperation: (providerCode: string, operationKey: string): Promise<void> =>
+    httpClient
+      .delete(`/forms/admin/providers/${providerCode}/operations/${operationKey}`)
+      .then(() => undefined),
+
+  // ── DataMatchingService — Source Profiles ────────────────────────────────
+
+  listSourceProfiles: (sourceSystem?: string): Promise<DmSourceProfile[]> =>
+    httpClient
+      .get<{ success: boolean; data: DmSourceProfile[] }>(
+        "/dm/sources",
+        { params: sourceSystem ? { sourceSystem } : undefined },
+      )
+      .then((r) => unwrapForms<DmSourceProfile[]>(r.data)),
+
+  createSourceProfile: (body: {
+    sourceSystem:     string;
+    recordType:       string;
+    displayName:      string;
+    businessKeyField: string;
+    mappings:         Record<string, string>;
+  }): Promise<DmSourceProfile> =>
+    httpClient
+      .post<{ success: boolean; data: DmSourceProfile }>("/dm/sources", body)
+      .then((r) => unwrapForms<DmSourceProfile>(r.data)),
+
+  updateSourceProfile: (id: string, body: {
+    displayName:      string;
+    businessKeyField: string;
+    mappings:         Record<string, string>;
+  }): Promise<DmSourceProfile> =>
+    httpClient
+      .put<{ success: boolean; data: DmSourceProfile }>(`/dm/sources/${id}`, body)
+      .then((r) => unwrapForms<DmSourceProfile>(r.data)),
+
+  deleteSourceProfile: (id: string): Promise<void> =>
+    httpClient
+      .delete(`/dm/sources/${id}`)
+      .then(() => undefined),
+
+  // ── DataMatchingService — Ingest ──────────────────────────────────────────
+
+  ingestJson: (body: DmIngestJsonRequest): Promise<DmIngestResult> =>
+    httpClient
+      .post<{ success: boolean; data: DmIngestResult }>("/dm/ingest/json", body)
+      .then((r) => unwrapForms<DmIngestResult>(r.data)),
+
+  ingestFile: (formData: FormData): Promise<DmIngestBatchResult> =>
+    httpClient
+      .post<{ success: boolean; data: DmIngestBatchResult }>("/dm/ingest/file", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => unwrapForms<DmIngestBatchResult>(r.data)),
+
+  // ── DataMatchingService — Records ─────────────────────────────────────────
+
+  getDmRecords: (params: DmRecordsQuery): Promise<DmRecordDto[]> =>
+    httpClient
+      .get<{ success: boolean; data: DmRecordDto[] }>("/dm/records", { params })
+      .then((r) => unwrapForms<DmRecordDto[]>(r.data)),
+
+  // ── DataMatchingService — Reports ─────────────────────────────────────────
+
+  getDmReport: (reportCode: string, params?: DmReportQuery): Promise<DmReportDto> =>
+    httpClient
+      .get<{ success: boolean; data: DmReportDto }>(
+        `/dm/reports/${encodeURIComponent(reportCode)}`,
+        { params },
+      )
+      .then((r) => unwrapForms<DmReportDto>(r.data)),
+
+  // ── DataMatchingService — Schema Discovery (DynForm integration) ──────────
+
+  getSourceSchema: (
+    sourceSystem: string,
+    recordType: string,
+  ): Promise<{
+    namespace:        string;
+    businessKeyField: string;
+    fields: { key: string; type: string; label: string | null; sourceField: string }[];
+  }> =>
+    httpClient
+      .get<{ success?: boolean; data?: unknown } | unknown>(
+        `/dm/sources/${encodeURIComponent(sourceSystem)}/${encodeURIComponent(recordType)}/schema`,
+      )
+      .then((r) => unwrapForms(r.data) as {
+        namespace:        string;
+        businessKeyField: string;
+        fields: { key: string; type: string; label: string | null; sourceField: string }[];
+      }),
 
   generateFromSource: (body: {
     moduleCode: string;

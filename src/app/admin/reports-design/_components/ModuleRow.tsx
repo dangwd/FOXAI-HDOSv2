@@ -1,5 +1,5 @@
 import type { AdminModule } from "@/infrastructure/http/adminApi";
-import { ICON_REGISTRY } from "../modules/_lib/icons";
+import { ICON_REGISTRY } from "../../modules/_lib/icons";
 import { LayoutDashboard } from "lucide-react";
 
 export function ModuleRow({

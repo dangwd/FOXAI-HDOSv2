@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, Copy, Check, Database, FlaskConical } from "lucide-react";
 import { Input } from "antd";
 import { adminApi, type DataSource } from "@/infrastructure/http/adminApi";
@@ -128,7 +128,7 @@ interface SourceSectionState {
 
 function SourceSection({ source }: { source: DataSource }) {
   const accessToken = useAuthStore((s) => s.accessToken);
-  const requiredParams = extractParams(source.resourcePath);
+  const requiredParams = extractParams(source.resourcePath ?? "");
   const hasSchema = Boolean(source.schemaPath);
 
   const [st, setSt] = useState<SourceSectionState>({
@@ -173,11 +173,16 @@ function SourceSection({ source }: { source: DataSource }) {
   async function probe() {
     setSt((s) => ({ ...s, loading: true, error: null, mode: "probe" }));
     try {
-      const path = source.resourcePath.replace(
+      const rawPath = source.resourcePath ?? "";
+      if (!rawPath) { setSt((s) => ({ ...s, loading: false, error: "Không có resource path" })); return; }
+      const path = rawPath.replace(
         /\{(\w+)\}/g,
         (_, key: string) => encodeURIComponent(st.paramValues[key] ?? ""),
       );
-      const url = path.startsWith("http") ? path : `${BASE}${path}`;
+      const baseUrl = source.baseUrl?.replace(/\/+$/, "") ?? "";
+      const url = baseUrl
+        ? `${baseUrl}${path}`
+        : path.startsWith("http") ? path : `${BASE}${path}`;
       const res = await fetch(url, {
         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       });
@@ -310,7 +315,9 @@ function splitSlug(slug: string): [string, string] {
 
 export function FieldBrowser({ selectedSlug }: { selectedSlug: string }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [sources, setSources] = useState<DataSource[]>([]);
+  const [sources,   setSources]   = useState<DataSource[]>([]);
+  const [height,    setHeight]    = useState(288);
+  const drag = useRef<{ startY: number; startH: number } | null>(null);
 
   useEffect(() => {
     if (!selectedSlug) return;
@@ -323,13 +330,46 @@ export function FieldBrowser({ selectedSlug }: { selectedSlug: string }) {
     return () => { cancelled = true; };
   }, [selectedSlug]);
 
+  function onResizeStart(e: React.PointerEvent<HTMLDivElement>) {
+    e.preventDefault();
+    drag.current = { startY: e.clientY, startH: height };
+
+    function onMove(ev: PointerEvent) {
+      if (!drag.current) return;
+      const delta = drag.current.startY - ev.clientY;
+      setHeight(Math.min(Math.max(drag.current.startH + delta, 80), 560));
+    }
+    function onUp() {
+      drag.current = null;
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+    }
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+  }
+
   if (sources.length === 0) return null;
 
   return (
-    <div className="border-t border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] shrink-0">
+    <div
+      style={collapsed ? undefined : { height }}
+      className="border-t border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] shrink-0 flex flex-col"
+    >
+      {/* Resize handle */}
+      {!collapsed && (
+        <div
+          onPointerDown={onResizeStart}
+          style={{ touchAction: "none" }}
+          className="w-full h-2 flex items-center justify-center cursor-ns-resize hover:bg-emerald-500/10 group shrink-0"
+        >
+          <div className="w-8 h-0.5 rounded-full bg-gray-200 dark:bg-[#1f2937] group-hover:bg-emerald-400 transition-colors" />
+        </div>
+      )}
+
+      {/* Header */}
       <button
         onClick={() => setCollapsed((c) => !c)}
-        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-[#0f172a] transition-colors text-left"
+        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-[#0f172a] transition-colors text-left shrink-0"
       >
         <span className="text-gray-400 dark:text-[#484f58]">
           {collapsed ? <ChevronRight size={11} /> : <ChevronDown size={11} />}
@@ -342,8 +382,9 @@ export function FieldBrowser({ selectedSlug }: { selectedSlug: string }) {
         </span>
       </button>
 
+      {/* Content */}
       {!collapsed && (
-        <div className="px-2 pb-2 space-y-1.5 max-h-72 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-2 space-y-1.5">
           {sources.map((src) => (
             <SourceSection key={src.namespace} source={src} />
           ))}
