@@ -78,10 +78,10 @@ function ProviderCard({
 
   return (
     <div
-      className={`bg-white dark:bg-[#161b22] rounded-xl border transition-all ${
+      className={`bg-white dark:bg-[#0f172a] rounded-xl border transition-all ${
         editing
-          ? "border-violet-300 dark:border-violet-700 shadow-sm shadow-violet-100 dark:shadow-none"
-          : "border-gray-200 dark:border-[#30363d]"
+          ? "border-emerald-300 dark:border-emerald-700 shadow-sm shadow-emerald-100 dark:shadow-none"
+          : "border-gray-200 dark:border-[#1f2937]"
       }`}
     >
       {/* ── Header ── */}
@@ -130,7 +130,7 @@ function ProviderCard({
       </div>
 
       {/* ── Divider ── */}
-      <div className="h-px bg-gray-100 dark:bg-[#21262d] mx-4" />
+      <div className="h-px bg-gray-100 dark:bg-[#1f2937] mx-4" />
 
       {/* ── Operations list ── */}
       <div className="px-4 py-3 min-h-10">
@@ -148,8 +148,8 @@ function ProviderCard({
                 key={pattern}
                 className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono transition-colors ${
                   editing
-                    ? "bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-200 border border-violet-200 dark:border-violet-800/60"
-                    : "bg-gray-100 dark:bg-[#21262d] text-gray-700 dark:text-[#c9d1d9]"
+                    ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60"
+                    : "bg-gray-100 dark:bg-[#1f2937] text-gray-700 dark:text-[#c9d1d9]"
                 }`}
               >
                 {pattern}
@@ -157,7 +157,7 @@ function ProviderCard({
                   <button
                     type="button"
                     onClick={() => handleRemove(pattern)}
-                    className="text-violet-300 hover:text-red-500 dark:hover:text-red-400 ml-0.5 leading-none transition-colors"
+                    className="text-emerald-300 hover:text-red-500 dark:hover:text-red-400 ml-0.5 leading-none transition-colors"
                     aria-label={`Xóa ${pattern}`}
                   >
                     <X size={9} />
@@ -171,7 +171,7 @@ function ProviderCard({
 
       {/* ── Edit controls ── */}
       {editing && (
-        <div className="px-4 pb-4 space-y-2.5 border-t border-gray-100 dark:border-[#21262d] pt-3">
+        <div className="px-4 pb-4 space-y-2.5 border-t border-gray-100 dark:border-[#1f2937] pt-3">
           <div className="flex gap-2">
             <Input
               value={input}

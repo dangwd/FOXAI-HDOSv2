@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import type { BaseChartProps } from "@/types/chart";
 
-const DEFAULT_COLORS = ["#1677ff", "#52c41a", "#faad14", "#ff4d4f", "#722ed1"];
+const DEFAULT_COLORS = ["#059669", "#52c41a", "#faad14", "#ff4d4f", "#722ed1"];
 
 const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
 
@@ -22,14 +22,14 @@ export function ChartLine({
   series,
   title,
   height = 220,
-  color = "#1677ff",
+  color = "#059669",
   legend = false,
   unit,
   loading = false,
 }: BaseChartProps) {
   if (loading) {
     return (
-      <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full">
+      <div className="rounded-2xl p-4 border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm h-full">
         {title && <div className={`${SK} h-3 w-32 mb-3`} />}
         <div className={`${SK} w-full flex-1`} style={{ height }} />
       </div>
@@ -37,7 +37,7 @@ export function ChartLine({
   }
 
   return (
-    <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full flex flex-col">
+    <div className="rounded-2xl p-4 border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm h-full flex flex-col">
       {title && (
         <p className="text-[11px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-3 shrink-0">
           {title}

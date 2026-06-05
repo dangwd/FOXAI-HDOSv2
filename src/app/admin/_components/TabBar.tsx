@@ -25,7 +25,7 @@ export function TabBar({
   onStartAdd, onNewLabelChange, onAddCommit, onAddCancel,
 }: TabBarProps) {
   return (
-    <div className="flex items-center gap-0.5 px-4 py-2 border-b border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] overflow-x-auto shrink-0">
+    <div className="flex items-center gap-0.5 px-4 py-2 border-b border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] overflow-x-auto shrink-0">
       {tabs.map((tab) => {
         const isActive = tab.id === activeId;
         return (
@@ -34,14 +34,14 @@ export function TabBar({
             onClick={() => onSelect(tab.id)}
             className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs cursor-pointer shrink-0 select-none transition-all
               ${isActive
-                ? "bg-violet-600 text-white font-medium shadow-sm shadow-violet-600/30"
-                : "text-gray-500 dark:text-[#8b949e] hover:bg-gray-100 dark:hover:bg-[#21262d] hover:text-gray-700 dark:hover:text-[#e6edf3]"
+                ? "bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20"
+                : "text-gray-500 dark:text-[#8b949e] hover:bg-gray-100 dark:hover:bg-[#1f2937] hover:text-gray-700 dark:hover:text-[#e6edf3]"
               }`}
           >
             {editingId === tab.id ? (
               <input
                 autoFocus
-                className="text-xs w-24 bg-transparent border-b border-white/60 outline-none text-white placeholder-violet-200"
+                className="text-xs w-24 bg-transparent border-b border-white/60 outline-none text-white placeholder-emerald-200"
                 value={editLabel}
                 onChange={(e) => onEditChange(e.target.value)}
                 onBlur={() => onEditCommit(tab.id)}
@@ -86,13 +86,13 @@ export function TabBar({
             if (e.key === "Enter") onAddCommit();
             if (e.key === "Escape") onAddCancel();
           }}
-          className="text-xs w-24 px-2 py-1.5 rounded-lg border border-violet-400 bg-white dark:bg-[#21262d] text-gray-700 dark:text-[#e6edf3] outline-none"
+          className="text-xs w-24 px-2 py-1.5 rounded-lg border border-emerald-400 bg-white dark:bg-[#1f2937] text-gray-700 dark:text-[#e6edf3] outline-none"
         />
       ) : (
         <button
           onClick={onStartAdd}
           className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 text-base
-            hover:text-violet-600 dark:hover:text-violet-400 hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors"
+            hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-[#1f2937] transition-colors"
           title="Thêm tab"
         >
           +

@@ -37,8 +37,8 @@ function TreeNode({
           flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer select-none
           transition-colors group
           ${active
-            ? "bg-violet-50 dark:bg-[#2d2542] text-violet-700 dark:text-violet-300"
-            : "text-gray-700 dark:text-[#c9d1d9] hover:bg-gray-100 dark:hover:bg-[#21262d]"
+            ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300"
+            : "text-gray-700 dark:text-[#c9d1d9] hover:bg-gray-100 dark:hover:bg-[#1f2937]"
           }
         `}
         style={{ paddingLeft: `${8 + depth * 14}px` }}
@@ -63,7 +63,7 @@ function TreeNode({
           {node.screenCount > 0 && (
             <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold tabular-nums ${
               active
-                ? "bg-violet-200 dark:bg-violet-700/40 text-violet-700 dark:text-violet-300"
+                ? "bg-emerald-200 dark:bg-emerald-700/40 text-emerald-700 dark:text-emerald-300"
                 : "bg-gray-100 dark:bg-[#30363d] text-gray-500 dark:text-[#8b949e]"
             }`}>
               {node.screenCount}
@@ -119,23 +119,23 @@ export function TreeSidebar({
   const renderNodes = filtered ?? roots;
 
   return (
-    <aside className="w-64 shrink-0 border-r border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] flex flex-col h-full">
+    <aside className="w-64 shrink-0 border-r border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] flex flex-col h-full">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 dark:border-[#30363d] shrink-0 space-y-2">
+      <div className="px-4 py-3 border-b border-gray-200 dark:border-[#1f2937] shrink-0 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-semibold text-gray-700 dark:text-[#e6edf3]">
               Menu báo cáo
             </span>
             {menus.length > 0 && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-[#21262d] text-gray-500 dark:text-[#8b949e] font-semibold tabular-nums">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-[#1f2937] text-gray-500 dark:text-[#8b949e] font-semibold tabular-nums">
                 {menus.length}
               </span>
             )}
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="w-6 h-6 flex items-center justify-center rounded-md text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-[#2d2542] transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded-md text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-[#2d2542] transition-colors"
             title="Tạo menu mới"
           >
             <Plus size={13} />

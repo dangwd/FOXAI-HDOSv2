@@ -1,7 +1,7 @@
 "use client";
 
 const BED_COLOR: Record<BedStatus, string> = {
-  occupied: "bg-[#1677ff]",
+  occupied: "bg-[#059669]",
   checkout: "bg-[#faad14]",
   cleaning: "bg-[#722ed1]",
   empty:    "bg-gray-200 dark:bg-[#30363d]",
@@ -38,7 +38,7 @@ export function WardBedGrid({ title, wards, loading }: WardBedGridProps) {
   }
 
   return (
-    <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-[#30363d] rounded-lg p-4">
+    <div className="bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-[#1f2937] rounded-2xl shadow-sm p-4">
       <div className="flex items-center justify-between mb-4">
         {title && (
           <h3 className="text-sm font-semibold text-gray-800 dark:text-[#e6edf3] m-0">{title}</h3>
@@ -53,7 +53,7 @@ export function WardBedGrid({ title, wards, loading }: WardBedGridProps) {
             Cuối lý
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#1677ff] inline-block" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-[#059669] inline-block" />
             Đang dùng
           </span>
           <span className="flex items-center gap-1">

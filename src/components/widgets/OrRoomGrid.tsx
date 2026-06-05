@@ -19,7 +19,7 @@ interface Props {
 }
 
 const STATUS: Record<OrRoomStatus, { label: string; color: string }> = {
-  active:    { label: "ĐANG MỔ",  color: "#1677ff" },
+  active:    { label: "ĐANG MỔ",  color: "#059669" },
   preparing: { label: "CHUẨN BỊ", color: "#d46b08" },
   cleaning:  { label: "VỆ SINH",  color: "#722ed1" },
   available: { label: "SẴN SÀNG", color: "#389e0d" },
@@ -32,7 +32,7 @@ export function OrRoomGrid({ title, rooms, loading }: Props) {
   }
 
   return (
-    <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-[#30363d] rounded-lg p-4">
+    <div className="bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-[#1f2937] rounded-2xl shadow-sm p-4">
       {title && (
         <h3 className="text-sm font-semibold text-gray-800 dark:text-[#e6edf3] m-0 mb-3">{title}</h3>
       )}

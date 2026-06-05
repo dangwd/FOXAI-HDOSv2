@@ -12,7 +12,7 @@ import type { BaseChartProps } from "@/types/chart";
 import { useSSE } from "@/core/sse/useSSE";
 import type { SSEConfig } from "@/core/sse/types";
 
-const DEFAULT_COLORS = ["#1677ff", "#52c41a", "#faad14", "#ff4d4f", "#722ed1", "#13c2c2"];
+const DEFAULT_COLORS = ["#059669", "#52c41a", "#faad14", "#ff4d4f", "#722ed1", "#13c2c2"];
 
 interface ChartPieProps extends Omit<BaseChartProps, "series"> {
   variant?: "pie" | "donut";
@@ -41,7 +41,7 @@ export function ChartPie({
   if (loading) {
     const circleSize = Math.round(height * 0.6);
     return (
-      <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full">
+      <div className="rounded-2xl p-4 border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm h-full">
         {title && <div className={`${SK} h-3 w-32 mb-3`} />}
         <div className="flex justify-center items-center" style={{ height }}>
           <div className={`${SK} rounded-full`} style={{ width: circleSize, height: circleSize }} />
@@ -51,7 +51,7 @@ export function ChartPie({
   }
 
   return (
-    <div className="rounded-lg p-4 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full flex flex-col">
+    <div className="rounded-2xl p-4 border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm h-full flex flex-col">
       {title && (
         <p className="text-[11px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-3 shrink-0">
           {title}

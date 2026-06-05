@@ -48,7 +48,7 @@ function NotificationItem({ item }: { item: NotificationRecord }) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <MailOutlined className="text-blue-500 shrink-0" />
+          <MailOutlined className="text-emerald-500 shrink-0" />
           <span className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
             {item.subject}
           </span>
@@ -150,7 +150,7 @@ export function NotificationCenter({ take = 50 }: Props) {
       label: (
         <span className="flex items-center gap-1.5">
           Tất cả
-          <Badge count={all.length} color="#1677ff" overflowCount={99} />
+          <Badge count={all.length} color="#059669" overflowCount={99} />
         </span>
       ),
       children: <NotificationList items={all} />,

@@ -4,12 +4,69 @@ import type { WidgetCatalogEntry } from "@/infrastructure/http/adminApi";
 import { Input, InputNumber, Switch, Tooltip } from "antd";
 import { ChevronDown, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
+
+// ─── Drag-and-drop hook for field expression drop targets ─────────────────────
+
+function useFieldDrop(onChange: (expr: string) => void) {
+  const [isDragOver, setIsDragOver] = useState(false);
+  return {
+    isDragOver,
+    onDragOver(e: React.DragEvent) {
+      if (e.dataTransfer.types.includes("application/x-field-expr") ||
+          e.dataTransfer.types.includes("text/plain")) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+        setIsDragOver(true);
+      }
+    },
+    onDragLeave() { setIsDragOver(false); },
+    onDrop(e: React.DragEvent) {
+      e.preventDefault();
+      setIsDragOver(false);
+      const expr =
+        e.dataTransfer.getData("application/x-field-expr") ||
+        e.dataTransfer.getData("text/plain");
+      if (expr && expr.includes("{{sources.")) onChange(expr);
+    },
+  };
+}
 import {
   WIDGET_TYPE_DESCRIPTIONS,
   WIDGET_TYPE_LABELS,
 } from "../_lib/constants";
 import type { DesignerWidget } from "../_lib/types";
 import { Field } from "./shared";
+
+// ─── Native input drop target (dùng trong FieldRow) ──────────────────────────
+
+function ExprDropTarget({
+  value,
+  onChange,
+  inputCls,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  inputCls: string;
+  placeholder?: string;
+}) {
+  const drop = useFieldDrop(onChange);
+  return (
+    <div
+      onDragOver={drop.onDragOver}
+      onDragLeave={drop.onDragLeave}
+      onDrop={drop.onDrop}
+      className={`rounded transition-all ${drop.isDragOver ? "ring-2 ring-emerald-400 dark:ring-emerald-500 ring-offset-1" : ""}`}
+    >
+      <input
+        className={`${inputCls} font-mono`}
+        value={value}
+        placeholder={placeholder ?? "{{sources.namespace.field}}"}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -60,15 +117,23 @@ function ExpressionInput({
   onChange: (v: string) => void;
   hint?: string;
 }) {
+  const drop = useFieldDrop(onChange);
   return (
     <Field label={label}>
-      <Input
-        size="small"
-        value={value}
-        placeholder="{{sources.namespace.field}}"
-        onChange={(e) => onChange(e.target.value)}
-        className="font-mono"
-      />
+      <div
+        onDragOver={drop.onDragOver}
+        onDragLeave={drop.onDragLeave}
+        onDrop={drop.onDrop}
+        className={`rounded-lg transition-all ${drop.isDragOver ? "ring-2 ring-emerald-400 dark:ring-emerald-500 ring-offset-1" : ""}`}
+      >
+        <Input
+          size="small"
+          value={value}
+          placeholder="{{sources.namespace.field}}"
+          onChange={(e) => onChange(e.target.value)}
+          className="font-mono"
+        />
+      </div>
       {hint && (
         <p className="text-[10px] text-gray-400 dark:text-[#484f58] mt-0.5 m-0">
           {hint}
@@ -320,7 +385,7 @@ function TableBinding({
           </p>
           <button
             onClick={addCol}
-            className="flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:underline"
+            className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline"
           >
             <Plus size={10} /> Thêm cột
           </button>
@@ -335,7 +400,7 @@ function TableBinding({
             {cols.map((col, i) => (
               <div
                 key={i}
-                className="rounded-lg border border-gray-100 dark:border-[#21262d] bg-gray-50 dark:bg-[#161b22] p-2 space-y-1.5"
+                className="rounded-lg border border-gray-100 dark:border-[#1f2937] bg-gray-50 dark:bg-[#0f172a] p-2 space-y-1.5"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-medium text-gray-400 dark:text-[#484f58]">
@@ -404,14 +469,14 @@ function FieldRow({
   onDelete: () => void;
 }) {
   const inputCls =
-    "w-full rounded border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] " +
+    "w-full rounded border border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] " +
     "text-gray-800 dark:text-[#e6edf3] text-[11px] px-2 py-1 outline-none " +
-    "focus:border-violet-500 placeholder-gray-300 dark:placeholder-[#484f58]";
+    "focus:border-emerald-500 placeholder-gray-300 dark:placeholder-[#484f58]";
 
   return (
-    <div className="rounded-lg border border-gray-100 dark:border-[#21262d] bg-gray-50 dark:bg-[#161b22] p-2.5 space-y-2">
+    <div className="rounded-lg border border-gray-100 dark:border-[#1f2937] bg-gray-50 dark:bg-[#0f172a] p-2.5 space-y-2">
       <div className="flex items-center gap-1.5 justify-between">
-        <code className="text-[10px] text-violet-600 dark:text-violet-400 font-mono truncate">
+        <code className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono truncate">
           {field.key || "key"}
         </code>
         <div className="flex items-center gap-1.5">
@@ -479,19 +544,19 @@ function FieldRow({
                 {"{{sources.ns.field}}"}
               </span>
             </p>
-            <input
-              className={`${inputCls} font-mono`}
+            <ExprDropTarget
               value={field.dataBinding?.expression ?? ""}
-              placeholder="{{sources.record.TenBenhNhan}}"
-              onChange={(e) =>
+              onChange={(expr) =>
                 onChange({
                   ...field,
                   dataBinding: {
-                    expression: e.target.value,
+                    expression: expr,
                     displayFormat: field.dataBinding?.displayFormat ?? null,
                   },
                 })
               }
+              inputCls={inputCls}
+              placeholder="{{sources.record.TenBenhNhan}}"
             />
           </div>
           <div>
@@ -589,7 +654,7 @@ function FormSectionEditor({
         </p>
         <button
           onClick={add}
-          className="flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:underline"
+          className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline"
         >
           <Plus size={10} /> Thêm field
         </button>
@@ -597,7 +662,7 @@ function FormSectionEditor({
       {fields.length === 0 ? (
         <p className="text-[11px] text-gray-400 dark:text-[#484f58] text-center py-3">
           Chưa có field.{" "}
-          <button onClick={add} className="text-violet-600 hover:underline">
+          <button onClick={add} className="text-emerald-600 hover:underline">
             Thêm mới
           </button>
         </p>
@@ -683,7 +748,7 @@ function CommonDisplayConfig({
             type="color"
             value={(cfg.color as string) ?? "#6366f1"}
             onChange={(e) => set("color", e.target.value)}
-            className="w-8 h-7 rounded border border-gray-200 dark:border-[#30363d] cursor-pointer shrink-0 p-0.5 bg-transparent"
+            className="w-8 h-7 rounded border border-gray-200 dark:border-[#1f2937] cursor-pointer shrink-0 p-0.5 bg-transparent"
           />
           <Input
             size="small"
@@ -874,11 +939,11 @@ function FilterDisplayConfig({
 
 function SyntaxHint() {
   return (
-    <div className="rounded-lg bg-gray-50 dark:bg-[#161b22] border border-gray-100 dark:border-[#21262d] px-3 py-2 space-y-1">
+    <div className="rounded-lg bg-gray-50 dark:bg-[#0f172a] border border-gray-100 dark:border-[#1f2937] px-3 py-2 space-y-1">
       <p className="text-[9px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider m-0">
         Cú pháp
       </p>
-      <code className="text-[10px] text-violet-600 dark:text-violet-400 block">
+      <code className="text-[10px] text-emerald-600 dark:text-emerald-400 block">
         {"{{sources.<namespace>.<field>}}"}
       </code>
       <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0">
@@ -946,7 +1011,7 @@ export function WidgetPropertiesPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-200 dark:border-[#30363d] shrink-0">
+      <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-200 dark:border-[#1f2937] shrink-0">
         <div>
           <p className="text-xs font-semibold text-gray-800 dark:text-[#e6edf3] m-0">
             Thuộc tính widget
@@ -957,21 +1022,21 @@ export function WidgetPropertiesPanel({
         </div>
         <button
           onClick={onClose}
-          className="w-6 h-6 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors"
+          className="w-6 h-6 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#1f2937] transition-colors"
         >
           <X size={13} />
         </button>
       </div>
 
       {/* Tab bar */}
-      <div className="flex border-b border-gray-200 dark:border-[#30363d] shrink-0">
+      <div className="flex border-b border-gray-200 dark:border-[#1f2937] shrink-0">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
             className={`flex-1 py-2 text-[11px] font-medium transition-colors ${
               activeTab === t.key
-                ? "text-violet-600 dark:text-violet-400 border-b-2 border-violet-600 dark:border-violet-400"
+                ? "text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400"
                 : "text-gray-400 dark:text-[#484f58] hover:text-gray-700 dark:hover:text-[#e6edf3]"
             }`}
           >
@@ -992,7 +1057,7 @@ export function WidgetPropertiesPanel({
 
             {displayCategory === "text" && (
               <>
-                <div className="border-t border-gray-100 dark:border-[#21262d] pt-3" />
+                <div className="border-t border-gray-100 dark:border-[#1f2937] pt-3" />
                 <TextWidgetConfig
                   configJson={form.configJson}
                   onChange={setConfigJson}
@@ -1002,7 +1067,7 @@ export function WidgetPropertiesPanel({
 
             {displayCategory === "gauge" && (
               <>
-                <div className="border-t border-gray-100 dark:border-[#21262d] pt-3" />
+                <div className="border-t border-gray-100 dark:border-[#1f2937] pt-3" />
                 <GaugeDisplayConfig
                   configJson={form.configJson}
                   onChange={setConfigJson}
@@ -1012,7 +1077,7 @@ export function WidgetPropertiesPanel({
 
             {displayCategory === "table-extra" && (
               <>
-                <div className="border-t border-gray-100 dark:border-[#21262d] pt-3" />
+                <div className="border-t border-gray-100 dark:border-[#1f2937] pt-3" />
                 <TableDisplayConfig
                   configJson={form.configJson}
                   onChange={setConfigJson}
@@ -1022,7 +1087,7 @@ export function WidgetPropertiesPanel({
 
             {displayCategory === "filter" && (
               <>
-                <div className="border-t border-gray-100 dark:border-[#21262d] pt-3" />
+                <div className="border-t border-gray-100 dark:border-[#1f2937] pt-3" />
                 <FilterDisplayConfig
                   configJson={form.configJson}
                   onChange={setConfigJson}
@@ -1060,15 +1125,15 @@ export function WidgetPropertiesPanel({
           <>
             {/* Type + key info */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-[#21262d] border border-gray-100 dark:border-[#30363d]">
+              <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-[#1f2937] border border-gray-100 dark:border-[#1f2937]">
                 <span className="text-[9px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider shrink-0">
                   TYPE
                 </span>
-                <code className="text-[10px] text-violet-600 dark:text-violet-400 flex-1 truncate">
+                <code className="text-[10px] text-emerald-600 dark:text-emerald-400 flex-1 truncate">
                   {typeLabel}
                 </code>
               </div>
-              <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-[#21262d] border border-gray-100 dark:border-[#30363d]">
+              <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-[#1f2937] border border-gray-100 dark:border-[#1f2937]">
                 <span className="text-[9px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider shrink-0">
                   KEY
                 </span>
@@ -1083,12 +1148,12 @@ export function WidgetPropertiesPanel({
               {(["X", "Y", "W", "H"] as const).map((lbl, i) => (
                 <div
                   key={lbl}
-                  className="text-center bg-gray-50 dark:bg-[#21262d] border border-gray-100 dark:border-[#30363d] rounded-lg p-1.5"
+                  className="text-center bg-gray-50 dark:bg-[#1f2937] border border-gray-100 dark:border-[#1f2937] rounded-lg p-1.5"
                 >
                   <div className="text-[9px] font-semibold text-gray-400 dark:text-[#484f58] uppercase">
                     {lbl}
                   </div>
-                  <div className="text-sm font-bold text-violet-600 dark:text-violet-400 font-mono">
+                  <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400 font-mono">
                     {[form.gridX, form.gridY, form.gridW, form.gridH][i]}
                   </div>
                 </div>
@@ -1122,10 +1187,10 @@ export function WidgetPropertiesPanel({
             )}
 
             {/* Collapsible raw JSON */}
-            <div className="rounded-lg border border-gray-200 dark:border-[#30363d] overflow-hidden">
+            <div className="rounded-lg border border-gray-200 dark:border-[#1f2937] overflow-hidden">
               <button
                 onClick={() => setJsonOpen((v) => !v)}
-                className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-[#21262d] hover:bg-gray-100 dark:hover:bg-[#30363d] transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-[#1f2937] hover:bg-gray-100 dark:hover:bg-[#30363d] transition-colors"
               >
                 <span className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider">
                   Config JSON{!jsonValid && " ⚠ lỗi cú pháp"}
@@ -1136,7 +1201,7 @@ export function WidgetPropertiesPanel({
                 }
               </button>
               {jsonOpen && (
-                <div className="p-2 border-t border-gray-200 dark:border-[#30363d]">
+                <div className="p-2 border-t border-gray-200 dark:border-[#1f2937]">
                   {!jsonValid && (
                     <p className="text-[10px] text-orange-500 dark:text-orange-400 mb-1.5 m-0">
                       JSON không hợp lệ — widget có thể không render đúng

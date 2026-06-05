@@ -13,13 +13,13 @@ interface Props {
   sse?: SSEConfig;
 }
 
-export function VoiceEMR({ title, badge, badgeColor = "#1677ff", accuracy, features, description, loading }: Props) {
+export function VoiceEMR({ title, badge, badgeColor = "#059669", accuracy, features, description, loading }: Props) {
   if (loading) {
     return <div className="animate-pulse bg-gray-200 dark:bg-[#30363d] rounded-lg h-48" />;
   }
 
   return (
-    <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-[#30363d] rounded-lg p-4 flex flex-col">
+    <div className="bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-[#1f2937] rounded-2xl shadow-sm p-4 flex flex-col">
       <div className="flex items-center gap-2 mb-4">
         {title && (
           <h3 className="text-sm font-semibold text-gray-800 dark:text-[#e6edf3] m-0 flex-1">{title}</h3>
@@ -42,9 +42,9 @@ export function VoiceEMR({ title, badge, badgeColor = "#1677ff", accuracy, featu
         {/* Mic icon */}
         <div
           className="w-16 h-16 rounded-full flex items-center justify-center"
-          style={{ background: "#1677ff22", border: "2px solid #1677ff55" }}
+          style={{ background: "#05966922", border: "2px solid #05966955" }}
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1677ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
             <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
             <line x1="12" y1="19" x2="12" y2="23" />

@@ -131,7 +131,7 @@ export function WidgetCatalogPanel({
 
   return (
     <>
-      <div className="px-2.5 pt-2.5 pb-2 border-b border-gray-100 dark:border-[#21262d] shrink-0">
+      <div className="px-2.5 pt-2.5 pb-2 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
         <Input
           size="small"
           prefix={<Search size={12} className="text-gray-400" />}
@@ -145,14 +145,14 @@ export function WidgetCatalogPanel({
       <div className="flex-1 overflow-y-auto py-2">
         {catalog.length === 0 ? (
           <div className="flex flex-col items-center gap-2 pt-12 text-gray-400 dark:text-[#484f58]">
-            <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#21262d] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#1f2937] flex items-center justify-center">
               <Layers size={18} className="text-gray-300 dark:text-[#30363d]" />
             </div>
             <p className="text-xs m-0">Đang tải widget...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-2 pt-12 text-gray-400 dark:text-[#484f58]">
-            <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#21262d] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#1f2937] flex items-center justify-center">
               <Search size={16} className="text-gray-300 dark:text-[#30363d]" />
             </div>
             <p className="text-xs m-0">Không tìm thấy widget</p>

@@ -49,8 +49,8 @@ export function ModuleFormDrawer({
       onClose={handleClose}
       title={
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-            <Layers size={14} className="text-blue-500" />
+          <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+            <Layers size={14} className="text-emerald-600" />
           </div>
           <span>Tạo Module mới</span>
         </div>
@@ -99,11 +99,11 @@ export function ModuleFormDrawer({
           <div className="mt-2 flex items-start gap-1.5">
             <span className="text-[11px] text-gray-400 dark:text-[#484f58] mt-px">→</span>
             <p className="text-[11px] text-gray-400 dark:text-[#484f58] m-0 leading-relaxed">
-              Chỉ dùng chữ thường, số và dấu <code className="bg-gray-100 dark:bg-[#21262d] px-1 rounded">-</code>.
+              Chỉ dùng chữ thường, số và dấu <code className="bg-gray-100 dark:bg-[#1f2937] px-1 rounded">-</code>.
               {form.code && (
                 <span className="ml-1">
                   Module sẽ có code{" "}
-                  <code className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-1 rounded">
+                  <code className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-1 rounded">
                     {form.code}
                   </code>
                 </span>

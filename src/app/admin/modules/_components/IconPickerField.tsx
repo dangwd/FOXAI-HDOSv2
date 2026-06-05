@@ -21,7 +21,7 @@ export function IconPickerField({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] hover:border-violet-400 dark:hover:border-violet-500 transition-colors group text-left"
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] hover:border-emerald-400 dark:hover:border-emerald-500 transition-colors group text-left"
       >
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-[11px] font-bold shrink-0"
@@ -48,7 +48,7 @@ export function IconPickerField({
             </p>
           )}
         </div>
-        <span className="text-[11px] text-violet-500 dark:text-violet-400 font-semibold shrink-0 group-hover:underline">
+        <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold shrink-0 group-hover:underline">
           {value ? "Đổi" : "Chọn →"}
         </span>
       </button>

@@ -18,8 +18,8 @@ import type { DesignerWidget } from "@/app/admin/menus/_lib/types";
 type LucideComp = React.ComponentType<LucideProps>;
 
 const WIDGET_META: Record<string, { Icon: LucideComp; color: string; label: string }> = {
-  kpi:   { Icon: TrendingUp, color: "#7c3aed", label: "KPI"        },
-  line:  { Icon: LineChart,  color: "#3b82f6", label: "Line Chart"  },
+  kpi:   { Icon: TrendingUp, color: "#059669", label: "KPI"        },
+  line:  { Icon: LineChart,  color: "#059669", label: "Line Chart"  },
   bar:   { Icon: BarChart2,  color: "#10b981", label: "Bar Chart"   },
   pie:   { Icon: PieChart,   color: "#f59e0b", label: "Pie Chart"   },
   table: { Icon: Table2,     color: "#6b7280", label: "Table"       },
@@ -32,7 +32,7 @@ function toDesignerWidget(wd: WidgetDef): DesignerWidget {
     type:       wd.widgetType as DesignerWidget["type"],
     title:      wd.title,
     span:       wd.colSpan,
-    color:      wd.color ?? "#7c3aed",
+    color:      wd.color ?? "#059669",
     ds:         wd.dataSource,
     xField:     wd.config.xField as string | undefined,
     yField:     wd.config.yField as string | undefined,
@@ -66,7 +66,7 @@ function ViewerWidgetCard({ widget }: { widget: WidgetDef }) {
 
   return (
     <div style={{ gridColumn: `span ${widget.colSpan}` }} className="min-w-0">
-      <div className="flex flex-col rounded-xl border border-gray-100 dark:border-[#21262d] bg-white dark:bg-[#161b22] hover:border-violet-200 dark:hover:border-violet-800 hover:shadow-sm transition-all overflow-hidden">
+      <div className="flex flex-col rounded-xl border border-gray-100 dark:border-[#21262d] bg-white dark:bg-[#161b22] hover:border-emerald-200 dark:hover:border-emerald-800/50 hover:shadow-sm transition-all overflow-hidden">
 
         {/* Preview area — fixed height, clipped */}
         <div className="relative h-36 overflow-hidden shrink-0">
@@ -294,7 +294,7 @@ export default function ReportViewerPage() {
                 onClick={() => setActiveId(s.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
                   active
-                    ? "border-violet-500 text-violet-600 dark:text-violet-400"
+                    ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
                     : "border-transparent text-gray-500 dark:text-[#8b949e] hover:text-gray-800 dark:hover:text-[#e6edf3] hover:border-gray-300 dark:hover:border-[#484f58]"
                 }`}
               >

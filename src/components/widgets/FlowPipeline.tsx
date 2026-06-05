@@ -30,7 +30,7 @@ export function FlowPipeline({ title, footer, stages, className, realtimeBadge, 
   return (
     <div
       className={cn(
-        "rounded-lg px-5 py-3 border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22]",
+        "rounded-2xl px-5 py-3 border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm",
         className,
       )}
     >
@@ -65,7 +65,7 @@ export function FlowPipeline({ title, footer, stages, className, realtimeBadge, 
             <div className="flex flex-col items-center px-3 min-w-[72px]">
               <span
                 className="text-xl font-bold tabular-nums leading-tight"
-                style={{ color: stage.color ?? (stage.warn ? "#ff4d4f" : "#1677ff") }}
+                style={{ color: stage.color ?? (stage.warn ? "#ff4d4f" : "#059669") }}
               >
                 {stage.value}
               </span>

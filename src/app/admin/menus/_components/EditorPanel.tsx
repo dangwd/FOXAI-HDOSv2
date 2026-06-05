@@ -42,7 +42,7 @@ export function EditorPanel({
   function countBadge(n: number) {
     if (n === 0) return null;
     return (
-      <span className="ml-0.5 px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-gray-100 dark:bg-[#21262d] text-gray-500 dark:text-[#8b949e] tabular-nums">
+      <span className="ml-0.5 px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-gray-100 dark:bg-[#1f2937] text-gray-500 dark:text-[#8b949e] tabular-nums">
         {n}
       </span>
     );
@@ -92,8 +92,8 @@ export function EditorPanel({
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-gray-50/40 dark:bg-[#010409]/40">
 
       {/* Header */}
-      <div className="px-5 py-3.5 border-b border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] flex items-center gap-3.5 shrink-0">
-        <span className="text-2xl w-11 h-11 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-[#21262d] border border-gray-100 dark:border-[#30363d] shrink-0">
+      <div className="px-5 py-3.5 border-b border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] flex items-center gap-3.5 shrink-0">
+        <span className="text-2xl w-11 h-11 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-[#1f2937] border border-gray-100 dark:border-[#1f2937] shrink-0">
           {menu.icon || "📊"}
         </span>
         <div className="flex-1 min-w-0">
@@ -101,7 +101,7 @@ export function EditorPanel({
             {menu.name}
           </h2>
           <p className="text-[11px] text-gray-400 dark:text-[#484f58] m-0 mt-0.5 flex items-center gap-1.5 flex-wrap">
-            <code className="text-violet-600 dark:text-violet-400">/reports/{menu.slug}</code>
+            <code className="text-emerald-600 dark:text-emerald-400">/reports/{menu.slug}</code>
             {!menu.isVisible && (
               <span className="px-1.5 py-0.5 rounded text-[9px] bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-semibold">
                 Ẩn
@@ -114,7 +114,7 @@ export function EditorPanel({
             <p className="text-base font-bold text-gray-800 dark:text-[#e6edf3] m-0 leading-none tabular-nums">{screens.length}</p>
             <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0 mt-0.5">screen</p>
           </div>
-          <div className="w-px h-7 bg-gray-100 dark:bg-[#21262d]" />
+          <div className="w-px h-7 bg-gray-100 dark:bg-[#1f2937]" />
           <div className="text-right">
             <p className="text-base font-bold text-gray-800 dark:text-[#e6edf3] m-0 leading-none tabular-nums">{perms.length}</p>
             <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0 mt-0.5">quyền</p>

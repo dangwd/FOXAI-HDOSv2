@@ -204,14 +204,14 @@ function ProvidersTab({
         />
 
         {/* Status filter */}
-        <div className="flex items-center gap-1 bg-gray-100 dark:bg-[#21262d] rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-gray-100 dark:bg-[#1f2937] rounded-xl p-1">
           {statusOptions.map((opt) => (
             <button
               key={opt.key}
               onClick={() => manager.setStatusFilter(opt.key)}
               className={`px-3 py-1 text-[11px] font-semibold rounded-lg transition-colors whitespace-nowrap ${
                 manager.statusFilter === opt.key
-                  ? "bg-white dark:bg-[#161b22] text-gray-800 dark:text-[#e6edf3] shadow-sm"
+                  ? "bg-white dark:bg-[#0f172a] text-gray-800 dark:text-[#e6edf3] shadow-sm"
                   : "text-gray-500 dark:text-[#8b949e] hover:text-gray-700 dark:hover:text-[#e6edf3]"
               }`}
             >
