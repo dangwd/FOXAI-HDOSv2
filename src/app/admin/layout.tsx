@@ -2,7 +2,7 @@
 
 import { ocrApi, type OcrSchemaListItem } from "@/infrastructure/http/ocrApi";
 import { useThemeStore } from "@/store/themeStore";
-import { App, ConfigProvider, theme as antTheme } from "antd";
+import { App, ConfigProvider, Input, theme as antTheme } from "antd";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -152,6 +152,25 @@ function IconBoxes() {
   );
 }
 
+function IconDatabase() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+      <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" />
+    </svg>
+  );
+}
+
 function IconBack() {
   return (
     <svg
@@ -293,10 +312,11 @@ function IconMoon() {
 
 const MENU_ITEMS = [
   { href: "/admin/modules", label: "Quản lý Module", Icon: IconBoxes },
-  { href: "/admin", label: "Thiết kế Báo cáo", Icon: IconPencil },
+  { href: "/admin/reports-design", label: "Thiết kế Báo cáo", Icon: IconPencil },
   { href: "/admin/menus", label: "Quản lý Menu BC", Icon: IconMenu },
   { href: "/admin/provider", label: "Quản trị Provider", Icon: IconSettings },
   { href: "/admin/operations", label: "Quản lý Operations", Icon: IconList },
+  { href: "/admin/datasources", label: "Data Matching Sources", Icon: IconDatabase },
   { href: "/admin/console", label: "Test Console", Icon: IconTerminal },
   { href: "/admin/sync", label: "Theo dõi đồng bộ", Icon: IconWifi },
 ];
@@ -521,32 +541,25 @@ function AdminSidebar({
 
 // ─── Topbar ───────────────────────────────────────────────────────────────────
 
+function SearchIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
+}
+
 function AdminTopBar() {
   return (
     <header className="h-14 shrink-0 bg-white dark:bg-[#0a0f1a] border-b border-gray-100 dark:border-[#1f2937] flex items-center px-5 gap-4">
       <div className="flex-1 max-w-lg">
-        <div className="relative">
-          <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400 dark:text-[#8b949e]">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </span>
-          <input
-            type="text"
-            placeholder="Tìm module, widget, config..."
-            className="w-full pl-9 pr-4 py-2 text-sm rounded-xl bg-gray-50 dark:bg-[#1f2937] border border-gray-100 dark:border-[#1f2937] focus:border-emerald-400 dark:focus:border-emerald-600 focus:bg-white dark:focus:bg-[#0f172a] outline-none text-gray-700 dark:text-[#e6edf3] placeholder-gray-400 dark:placeholder-[#8b949e] transition-colors"
-          />
-        </div>
+        <Input
+          prefix={<SearchIcon />}
+          placeholder="Tìm module, widget, config..."
+          variant="filled"
+          style={{ borderRadius: 12 }}
+        />
       </div>
 
       <div className="flex items-center gap-2 ml-auto">
@@ -581,99 +594,108 @@ export default function AdminLayout({
   return (
     <ConfigProvider
       theme={{
-        // Fix: include algorithm so dark mode tokens apply correctly
         algorithm: dk ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
         token: {
           // ── Primary → emerald-600 ─────────────────────────────────────────
-          colorPrimary: "#059669",
-          colorPrimaryHover: "#047857",
+          colorPrimary:       "#059669",
+          colorPrimaryHover:  "#047857",
           colorPrimaryActive: "#065f46",
 
-          // ── Background tokens ─────────────────────────────────────────────
-          colorBgContainer: dk ? "#0f172a" : "#ffffff",
-          colorBgElevated: dk ? "#0f172a" : "#ffffff",
-          colorBgSpotlight: dk ? "#1f2937" : "#f3f4f6",
-          colorFillAlter: dk ? "#0a0f1a" : "#f9fafb",
+          // ── Background ────────────────────────────────────────────────────
+          colorBgContainer:   dk ? "#0f172a" : "#ffffff",
+          colorBgElevated:    dk ? "#0f172a" : "#ffffff",
+          colorBgSpotlight:   dk ? "#1f2937" : "#f3f4f6",
+          colorFillAlter:     dk ? "#0a0f1a" : "#f9fafb",
           colorFillSecondary: dk ? "#1f2937" : "#f5f5f5",
-          colorFillTertiary: dk ? "#0f172a" : "#f9fafb",
+          colorFillTertiary:  dk ? "#0f172a" : "#f9fafb",
 
-          // ── Border tokens ─────────────────────────────────────────────────
-          colorBorder: dk ? "#1f2937" : "#e5e7eb",
+          // ── Border ────────────────────────────────────────────────────────
+          colorBorder:          dk ? "#1f2937" : "#e5e7eb",
           colorBorderSecondary: dk ? "#1f2937" : "#f0f0f0",
-          colorSplit: dk ? "#1f2937" : "#f0f0f0",
+          colorSplit:           dk ? "#1f2937" : "#f0f0f0",
 
-          // ── Text tokens ───────────────────────────────────────────────────
-          colorText: dk ? "#f1f5f9" : "#111827",
-          colorTextSecondary: dk ? "#94a3b8" : "#6b7280",
-          colorTextTertiary: dk ? "#64748b" : "#9ca3af",
+          // ── Text ──────────────────────────────────────────────────────────
+          colorText:           dk ? "#f1f5f9" : "#111827",
+          colorTextSecondary:  dk ? "#94a3b8" : "#6b7280",
+          colorTextTertiary:   dk ? "#64748b" : "#9ca3af",
           colorTextQuaternary: dk ? "#374151" : "#d1d5db",
 
           // ── Shape & type ──────────────────────────────────────────────────
-          borderRadius: 10,
+          borderRadius:   10,
           borderRadiusLG: 14,
           borderRadiusSM: 8,
           borderRadiusXS: 6,
-          fontSize: 13,
+          fontSize:   13,
           fontSizeSM: 11,
           fontSizeLG: 14,
         },
         components: {
           Table: {
-            headerBg: dk ? "#1f2937" : "#f8fafc",
-            headerColor: dk ? "#cbd5e1" : "#374151",
+            headerBg:         dk ? "#1f2937" : "#f8fafc",
+            headerColor:      dk ? "#cbd5e1" : "#374151",
             headerSplitColor: dk ? "#1f2937" : "#e2e8f0",
-            rowHoverBg: dk ? "#1f2937" : "rgba(5,150,105,0.04)",
-            borderColor: dk ? "#1f2937" : "#e2e8f0",
-            cellPaddingBlock: 8,
+            rowHoverBg:       dk ? "#1f2937" : "rgba(5,150,105,0.04)",
+            borderColor:      dk ? "#1f2937" : "#e2e8f0",
+            cellPaddingBlock:  8,
             cellPaddingInline: 12,
           },
           Drawer: {
             colorBgElevated: dk ? "#0f172a" : "#ffffff",
-            colorSplit: dk ? "#1f2937" : "#f0f0f0",
+            colorSplit:      dk ? "#1f2937" : "#f0f0f0",
           },
           Modal: {
             contentBg: dk ? "#0f172a" : "#ffffff",
-            headerBg: dk ? "#0f172a" : "#ffffff",
+            headerBg:  dk ? "#0f172a" : "#ffffff",
             colorSplit: dk ? "#1f2937" : "#f0f0f0",
           },
           Tabs: {
-            itemActiveColor: "#059669",
-            itemSelectedColor: "#059669",
-            inkBarColor: "#059669",
-            itemColor: dk ? "#94a3b8" : "#6b7280",
-            itemHoverColor: dk ? "#f1f5f9" : "#111827",
+            itemActiveColor:      "#059669",
+            itemSelectedColor:    "#059669",
+            inkBarColor:          "#059669",
+            itemColor:            dk ? "#94a3b8" : "#6b7280",
+            itemHoverColor:       dk ? "#f1f5f9" : "#111827",
             colorBorderSecondary: dk ? "#1f2937" : "#f0f0f0",
           },
           Input: {
-            colorBgContainer: dk ? "#0a0f1a" : "#ffffff",
+            colorBgContainer:  dk ? "#0a0f1a" : "#ffffff",
             activeBorderColor: "#059669",
-            hoverBorderColor: "#34d399",
+            hoverBorderColor:  "#34d399",
           },
           Select: {
             colorBgContainer: dk ? "#0a0f1a" : "#ffffff",
             optionSelectedBg: dk ? "#064e3b" : "#ecfdf5",
-            optionActiveBg: dk ? "#1f2937" : "#f0fdf4",
+            optionActiveBg:   dk ? "#1f2937" : "#f0fdf4",
           },
           InputNumber: {
-            colorBgContainer: dk ? "#0a0f1a" : "#ffffff",
+            colorBgContainer:  dk ? "#0a0f1a" : "#ffffff",
             activeBorderColor: "#059669",
-            hoverBorderColor: "#34d399",
+            hoverBorderColor:  "#34d399",
           },
           Button: {
             colorPrimaryBg: "#059669",
           },
           Alert: {
-            colorInfoBg: dk ? "rgba(5,150,105,.1)" : "rgba(5,150,105,.06)",
+            colorInfoBg:    dk ? "rgba(5,150,105,.1)" : "rgba(5,150,105,.06)",
             colorWarningBg: dk ? "rgba(250,140,22,.1)" : "rgba(250,140,22,.08)",
-            colorErrorBg: dk ? "rgba(255,77,79,.1)" : "rgba(255,77,79,.08)",
+            colorErrorBg:   dk ? "rgba(255,77,79,.1)"  : "rgba(255,77,79,.08)",
           },
           Tag: {
             borderRadiusSM: 8,
           },
+          Tooltip: {
+            colorBgSpotlight:    "#1e293b",
+            colorTextLightSolid: "#f1f5f9",
+          },
         },
       }}
     >
-      <div className="flex h-screen overflow-hidden bg-[#060c18]">
+      {/*
+       * class="dark" động theo theme:
+       *  - dark mode  → class "dark" có mặt → Tailwind dark: variants apply
+       *  - light mode → không có class "dark" → Tailwind mặc định (light)
+       * Background cũng adaptive theo theme.
+       */}
+      <div className={`${dk ? "dark" : ""} flex h-screen overflow-hidden ${dk ? "bg-[#060c18]" : "bg-[#f0f2f5]"}`}>
         <Suspense fallback={null}>
           <AdminSidebar
             collapsed={sidebarCollapsed}
