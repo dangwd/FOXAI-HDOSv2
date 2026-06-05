@@ -144,7 +144,7 @@ export function FormScreenRenderer({ layout }: { layout: ScreenLayout }) {
                 onClick={() => setActiveId(tab.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-all select-none ${
                   isActive
-                    ? "bg-violet-600 text-white shadow-sm shadow-violet-600/30"
+                    ? "bg-emerald-600 text-white shadow-sm shadow-emerald-600/20"
                     : "text-gray-500 dark:text-[#8b949e] hover:bg-gray-100 dark:hover:bg-[#21262d] hover:text-gray-700 dark:hover:text-[#e6edf3]"
                 }`}
               >

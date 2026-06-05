@@ -4,12 +4,69 @@ import type { WidgetCatalogEntry } from "@/infrastructure/http/adminApi";
 import { Input, InputNumber, Switch, Tooltip } from "antd";
 import { ChevronDown, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
+
+// ─── Drag-and-drop hook for field expression drop targets ─────────────────────
+
+function useFieldDrop(onChange: (expr: string) => void) {
+  const [isDragOver, setIsDragOver] = useState(false);
+  return {
+    isDragOver,
+    onDragOver(e: React.DragEvent) {
+      if (e.dataTransfer.types.includes("application/x-field-expr") ||
+          e.dataTransfer.types.includes("text/plain")) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+        setIsDragOver(true);
+      }
+    },
+    onDragLeave() { setIsDragOver(false); },
+    onDrop(e: React.DragEvent) {
+      e.preventDefault();
+      setIsDragOver(false);
+      const expr =
+        e.dataTransfer.getData("application/x-field-expr") ||
+        e.dataTransfer.getData("text/plain");
+      if (expr && expr.includes("{{sources.")) onChange(expr);
+    },
+  };
+}
 import {
   WIDGET_TYPE_DESCRIPTIONS,
   WIDGET_TYPE_LABELS,
 } from "../_lib/constants";
 import type { DesignerWidget } from "../_lib/types";
 import { Field } from "./shared";
+
+// ─── Native input drop target (dùng trong FieldRow) ──────────────────────────
+
+function ExprDropTarget({
+  value,
+  onChange,
+  inputCls,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  inputCls: string;
+  placeholder?: string;
+}) {
+  const drop = useFieldDrop(onChange);
+  return (
+    <div
+      onDragOver={drop.onDragOver}
+      onDragLeave={drop.onDragLeave}
+      onDrop={drop.onDrop}
+      className={`rounded transition-all ${drop.isDragOver ? "ring-2 ring-emerald-400 dark:ring-emerald-500 ring-offset-1" : ""}`}
+    >
+      <input
+        className={`${inputCls} font-mono`}
+        value={value}
+        placeholder={placeholder ?? "{{sources.namespace.field}}"}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -60,15 +117,23 @@ function ExpressionInput({
   onChange: (v: string) => void;
   hint?: string;
 }) {
+  const drop = useFieldDrop(onChange);
   return (
     <Field label={label}>
-      <Input
-        size="small"
-        value={value}
-        placeholder="{{sources.namespace.field}}"
-        onChange={(e) => onChange(e.target.value)}
-        className="font-mono"
-      />
+      <div
+        onDragOver={drop.onDragOver}
+        onDragLeave={drop.onDragLeave}
+        onDrop={drop.onDrop}
+        className={`rounded-lg transition-all ${drop.isDragOver ? "ring-2 ring-emerald-400 dark:ring-emerald-500 ring-offset-1" : ""}`}
+      >
+        <Input
+          size="small"
+          value={value}
+          placeholder="{{sources.namespace.field}}"
+          onChange={(e) => onChange(e.target.value)}
+          className="font-mono"
+        />
+      </div>
       {hint && (
         <p className="text-[10px] text-gray-400 dark:text-[#484f58] mt-0.5 m-0">
           {hint}
@@ -479,19 +544,19 @@ function FieldRow({
                 {"{{sources.ns.field}}"}
               </span>
             </p>
-            <input
-              className={`${inputCls} font-mono`}
+            <ExprDropTarget
               value={field.dataBinding?.expression ?? ""}
-              placeholder="{{sources.record.TenBenhNhan}}"
-              onChange={(e) =>
+              onChange={(expr) =>
                 onChange({
                   ...field,
                   dataBinding: {
-                    expression: e.target.value,
+                    expression: expr,
                     displayFormat: field.dataBinding?.displayFormat ?? null,
                   },
                 })
               }
+              inputCls={inputCls}
+              placeholder="{{sources.record.TenBenhNhan}}"
             />
           </div>
           <div>

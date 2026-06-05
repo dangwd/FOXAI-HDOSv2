@@ -325,22 +325,22 @@ function AdminSidebar({
   }, []);
 
   const iconBtn =
-    "w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#1f2937] transition-colors";
+    "w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/8 transition-colors cursor-pointer";
 
   return (
     <aside
-      className={`${collapsed ? "w-14" : "w-64"} transition-[width] duration-200 ease-in-out h-screen bg-white dark:bg-[#0a0f1a] border-r border-gray-100 dark:border-[#1f2937] flex flex-col shrink-0 overflow-hidden`}
+      className={`${collapsed ? "w-14" : "w-60"} transition-[width] duration-200 ease-in-out h-screen bg-[#0f172a] flex flex-col shrink-0 overflow-hidden`}
     >
       {/* Logo */}
       <div
-        className={`flex items-center gap-2.5 px-3 py-4 border-b border-gray-100 dark:border-[#1f2937] ${collapsed ? "justify-center" : ""}`}
+        className={`flex items-center gap-2.5 px-3 py-3.5 border-b border-white/5 ${collapsed ? "justify-center" : ""}`}
       >
-        <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center text-white shrink-0">
+        <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-sm shadow-emerald-500/30">
           <IconSettings />
         </div>
         {!collapsed && (
           <>
-            <span className="font-bold text-gray-800 dark:text-[#e6edf3] text-sm whitespace-nowrap">
+            <span className="font-bold text-white text-sm whitespace-nowrap">
               HDOS Admin
             </span>
             <div className="ml-auto flex items-center gap-1">
@@ -354,7 +354,7 @@ function AdminSidebar({
               <button
                 onClick={onToggle}
                 title={collapsed ? "Mở rộng menu" : "Thu nhỏ menu"}
-                className={`${collapsed ? "w-8 h-8" : "ml-auto w-7 h-7"} flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#1f2937] transition-colors cursor-pointer`}
+                className={`${collapsed ? "w-8 h-8" : "ml-auto w-7 h-7"} flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/8 transition-colors cursor-pointer`}
               >
                 {collapsed ? <IconChevronsRight /> : <IconChevronsLeft />}
               </button>
@@ -366,7 +366,7 @@ function AdminSidebar({
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3">
         {!collapsed && (
-          <p className="text-[10px] font-semibold text-gray-400 dark:text-[#8b949e] uppercase tracking-wider px-2 mb-2">
+          <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest px-2 mb-2 select-none">
             QUẢN TRỊ
           </p>
         )}
@@ -383,24 +383,18 @@ function AdminSidebar({
                 <Link
                   href={item.href}
                   title={collapsed ? item.label : undefined}
-                  className={`w-full flex items-center gap-2.5 py-2 rounded-xl text-sm transition-colors
-                    ${collapsed ? "justify-center px-0" : "px-3"}
+                  className={`w-full min-w-0 flex items-center gap-2.5 py-1.5 rounded-lg text-[13px] transition-all
+                    ${collapsed ? "justify-center px-0" : "px-2.5"}
                     ${
                       isActive
-                        ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-medium"
-                        : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3]"
+                        ? "bg-white/10 text-white font-medium"
+                        : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
                     }`}
                 >
-                  <span
-                    className={
-                      isActive
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-gray-400 dark:text-[#8b949e]"
-                    }
-                  >
+                  <span className={`shrink-0 transition-colors ${isActive ? "text-emerald-400" : "text-slate-500"}`}>
                     <Icon />
                   </span>
-                  {!collapsed && item.label}
+                  {!collapsed && <span className="truncate min-w-0">{item.label}</span>}
                 </Link>
               </li>
             );
@@ -408,12 +402,12 @@ function AdminSidebar({
         </ul>
 
         {!collapsed && (
-          <p className="text-[10px] font-semibold text-gray-400 dark:text-[#8b949e] uppercase tracking-wider px-2 mt-4 mb-2">
+          <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest px-2 mt-4 mb-2 select-none">
             XỬ LÝ TÀI LIỆU
           </p>
         )}
         {collapsed && (
-          <div className="my-2 border-t border-gray-100 dark:border-[#1f2937]" />
+          <div className="my-2 border-t border-white/5" />
         )}
         <ul className="space-y-0.5">
           {/* Static: config page */}
@@ -421,24 +415,18 @@ function AdminSidebar({
             <Link
               href="/ocr/config"
               title={collapsed ? "Thiết lập Chứng từ OCR" : undefined}
-              className={`w-full flex items-center gap-2.5 py-2 rounded-xl text-sm transition-colors
-                ${collapsed ? "justify-center px-0" : "px-3"}
+              className={`w-full min-w-0 flex items-center gap-2.5 py-1.5 rounded-lg text-[13px] transition-all
+                ${collapsed ? "justify-center px-0" : "px-2.5"}
                 ${
                   pathname === "/ocr/config"
-                    ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-medium"
-                    : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3]"
+                    ? "bg-white/10 text-white font-medium"
+                    : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
                 }`}
             >
-              <span
-                className={
-                  pathname === "/ocr/config"
-                    ? "text-emerald-700 dark:text-emerald-400"
-                    : "text-gray-400 dark:text-[#8b949e]"
-                }
-              >
+              <span className={`shrink-0 transition-colors ${pathname === "/ocr/config" ? "text-emerald-400" : "text-slate-500"}`}>
                 <IconBoxes />
               </span>
-              {!collapsed && "Thiết lập Chứng từ OCR"}
+              {!collapsed && <span className="truncate min-w-0">Thiết lập Chứng từ OCR</span>}
             </Link>
           </li>
 
@@ -447,13 +435,13 @@ function AdminSidebar({
             <li>
               <button
                 onClick={() => setOcrExpanded((v) => !v)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3] cursor-pointer"
+                className="w-full min-w-0 flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] transition-all text-slate-400 hover:bg-white/5 hover:text-slate-100 cursor-pointer"
               >
-                <span className="text-gray-400 dark:text-[#8b949e]">
+                <span className="text-slate-500 shrink-0">
                   <IconScan />
                 </span>
-                <span className="flex-1 text-left">Nhận dạng OCR</span>
-                <span className="text-gray-400 dark:text-[#8b949e]">
+                <span className="flex-1 text-left truncate min-w-0">Nhận dạng OCR</span>
+                <span className="text-slate-500 shrink-0">
                   <IconChevron open={ocrExpanded} />
                 </span>
               </button>
@@ -468,17 +456,17 @@ function AdminSidebar({
                       <li key={schema.id}>
                         <Link
                           href={href}
-                          className={`w-full flex items-center gap-2.5 pl-9 pr-3 py-2 rounded-lg text-sm transition-colors
+                          className={`w-full min-w-0 flex items-center gap-2 pl-8 pr-2.5 py-1.5 rounded-lg text-[13px] transition-all
                             ${
                               isActive
-                                ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-medium"
-                                : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3]"
+                                ? "bg-white/10 text-white font-medium"
+                                : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
                             }`}
                         >
-                          <span className="text-gray-400 dark:text-[#8b949e]">
+                          <span className={`shrink-0 transition-colors ${isActive ? "text-emerald-400" : "text-slate-500"}`}>
                             <IconScan />
                           </span>
-                          <span className="flex-1 truncate">{schema.name}</span>
+                          <span className="flex-1 truncate min-w-0">{schema.name}</span>
                         </Link>
                       </li>
                     );
@@ -494,8 +482,8 @@ function AdminSidebar({
               <Link
                 href={`/ocr/process?schema=${ocrSchemas[0].id}`}
                 title="Nhận dạng OCR"
-                className={`w-full flex items-center justify-center py-2 rounded-lg text-sm transition-colors
-                  ${pathname === "/ocr/process" ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400" : "text-gray-400 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3]"}`}
+                className={`w-full flex items-center justify-center py-2 rounded-lg text-sm transition-all
+                  ${pathname === "/ocr/process" ? "bg-white/10 text-white" : "text-slate-500 hover:bg-white/5 hover:text-slate-100"}`}
               >
                 <IconScan />
               </Link>
@@ -506,7 +494,7 @@ function AdminSidebar({
 
       {/* Footer: collapse toggle + theme/back when collapsed */}
       <div
-        className={`border-t border-gray-100 dark:border-[#1f2937] p-2 flex ${collapsed ? "flex-col items-center gap-1" : "items-center"}`}
+        className={`border-t border-white/5 p-2 flex ${collapsed ? "flex-col items-center gap-1" : "items-center"}`}
       >
         {collapsed && (
           <>
@@ -520,7 +508,7 @@ function AdminSidebar({
             <button
               onClick={onToggle}
               title={collapsed ? "Mở rộng menu" : "Thu nhỏ menu"}
-              className={`${collapsed ? "w-8 h-8" : "ml-auto w-7 h-7"} flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#1f2937] transition-colors cursor-pointer`}
+              className={`${collapsed ? "w-8 h-8" : "ml-auto w-7 h-7"} flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/8 transition-colors cursor-pointer`}
             >
               {collapsed ? <IconChevronsRight /> : <IconChevronsLeft />}
             </button>
@@ -685,7 +673,7 @@ export default function AdminLayout({
         },
       }}
     >
-      <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-[#060c18]">
+      <div className="flex h-screen overflow-hidden bg-[#060c18]">
         <Suspense fallback={null}>
           <AdminSidebar
             collapsed={sidebarCollapsed}

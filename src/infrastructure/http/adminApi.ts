@@ -158,6 +158,7 @@ export interface DataSource {
   serviceId: string;
   resourcePath: string;
   requiredParams: string[];
+  schemaPath?: string | null;
 }
 
 export interface DataBinding {
@@ -372,6 +373,7 @@ function normalizeDataSource(raw: Record<string, unknown>): DataSource {
     serviceId:      (raw.serviceId      ?? raw.ServiceId      ?? "") as string,
     resourcePath:   (raw.resourcePath   ?? raw.ResourcePath   ?? "") as string,
     requiredParams: (raw.requiredParams ?? raw.RequiredParams ?? []) as string[],
+    schemaPath:     (raw.schemaPath     ?? raw.SchemaPath     ?? null) as string | null,
   };
 }
 

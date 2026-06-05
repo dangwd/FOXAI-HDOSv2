@@ -25,15 +25,15 @@ interface ExtFormField extends FormField {
 function ReadOnlyValue({ value }: { value: string }) {
   return (
     <div
-      className={`min-h-7.5 rounded-md border px-3 py-1.5 flex items-center gap-2
+      className={`h-8 rounded-lg border px-3 flex items-center gap-2
         ${value
           ? "bg-white dark:bg-[#0d1117] border-emerald-200 dark:border-emerald-800/50"
           : "bg-gray-50 dark:bg-[#161b22] border-gray-200 dark:border-[#30363d]"
         }`}
     >
-      <span className="flex-1 text-xs text-gray-800 dark:text-[#e6edf3]">
+      <span className="flex-1 text-[13px] text-gray-800 dark:text-[#e6edf3] truncate">
         {value || (
-          <span className="text-gray-300 dark:text-[#484f58] italic">—</span>
+          <span className="text-gray-300 dark:text-[#484f58]">—</span>
         )}
       </span>
       <Lock size={10} className="shrink-0 text-emerald-500 dark:text-emerald-400" />
@@ -64,7 +64,6 @@ function FieldInput({
     );
     return (
       <Select
-        size="small"
         value={value || undefined}
         placeholder="-- Chọn --"
         options={opts}
@@ -78,7 +77,6 @@ function FieldInput({
   if (type === "textarea") {
     return (
       <Input.TextArea
-        size="small"
         value={value}
         placeholder={field.placeholder ?? ""}
         rows={3}
@@ -90,7 +88,6 @@ function FieldInput({
 
   return (
     <Input
-      size="small"
       type={type === "number" ? "number" : type === "date" ? "date" : "text"}
       value={value}
       placeholder={field.placeholder ?? ""}
@@ -136,11 +133,21 @@ export function FormSectionWidget({
   const [submitErr, setSubmitErr] = useState<string | null>(null);
 
   function resolveValue(field: ExtFormField): string {
+    // 1. Explicit binding takes priority
     if (field.dataBinding?.expression) {
       const raw = evaluateExpression(field.dataBinding.expression, sourceData);
       return raw != null
         ? applyDisplayFormat(raw, field.dataBinding.displayFormat ?? null)
         : "";
+    }
+    // 2. Auto-mapping by key: tìm namespace có field trùng key (docs section 7)
+    if (field.isReadOnly) {
+      for (const nsData of Object.values(sourceData)) {
+        const d = nsData as Record<string, unknown>;
+        if (field.key in d && d[field.key] != null) {
+          return applyDisplayFormat(String(d[field.key] ?? ""), field.dataBinding?.displayFormat ?? null);
+        }
+      }
     }
     return values[field.key] ?? "";
   }

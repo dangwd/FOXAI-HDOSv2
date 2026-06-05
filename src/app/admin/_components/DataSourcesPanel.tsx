@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Button, Input, Tag } from "antd";
-import { Plus, Save, Trash2, Database } from "lucide-react";
 import { adminApi, type DataSource } from "@/infrastructure/http/adminApi";
+import { Button, Input, Tag } from "antd";
+import { Database, Plus, Save, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Field } from "./shared";
 
 function splitSlug(slug: string): [string, string] {
@@ -69,7 +69,9 @@ function SourceRow({
           size="small"
           value={local.namespace}
           placeholder="record"
-          onChange={(e) => setLocal((p) => ({ ...p, namespace: e.target.value }))}
+          onChange={(e) =>
+            setLocal((p) => ({ ...p, namespace: e.target.value }))
+          }
           onBlur={() => flush(local)}
         />
       </Field>
@@ -79,7 +81,9 @@ function SourceRow({
           size="small"
           value={local.serviceId}
           placeholder="datamatch"
-          onChange={(e) => setLocal((p) => ({ ...p, serviceId: e.target.value }))}
+          onChange={(e) =>
+            setLocal((p) => ({ ...p, serviceId: e.target.value }))
+          }
           onBlur={() => flush(local)}
         />
       </Field>
@@ -89,7 +93,9 @@ function SourceRow({
           size="small"
           value={local.resourcePath}
           placeholder="/dm/records/{recordId}"
-          onChange={(e) => setLocal((p) => ({ ...p, resourcePath: e.target.value }))}
+          onChange={(e) =>
+            setLocal((p) => ({ ...p, resourcePath: e.target.value }))
+          }
           onBlur={() => flush(local)}
         />
       </Field>
@@ -105,12 +111,28 @@ function SourceRow({
         {local.requiredParams.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1">
             {local.requiredParams.map((p) => (
-              <Tag key={p} color="purple" className="text-[10px] m-0">
+              <Tag key={p} color="green" className="text-[10px] m-0">
                 {`{${p}}`}
               </Tag>
             ))}
           </div>
         )}
+      </Field>
+
+      <Field label="Schema Path">
+        <Input
+          size="small"
+          value={local.schemaPath ?? ""}
+          placeholder="/dm/sources/his-01/benh-nhan/schema"
+          onChange={(e) =>
+            setLocal((p) => ({ ...p, schemaPath: e.target.value || null }))
+          }
+          onBlur={() => flush(local)}
+          className="font-mono"
+        />
+        <p className="text-[10px] text-gray-400 dark:text-[#484f58] mt-0.5 m-0">
+          Endpoint trả schema fields — Field Browser dùng để hiện dropdown thay vì probe raw
+        </p>
       </Field>
     </div>
   );
@@ -120,9 +142,9 @@ function SourceRow({
 
 export function DataSourcesPanel({ selectedSlug }: { selectedSlug: string }) {
   const [sources, setSources] = useState<DataSource[]>([]);
-  const [saving,  setSaving]  = useState(false);
-  const [saved,   setSaved]   = useState(false);
-  const [err,     setErr]     = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     if (!selectedSlug) return;
@@ -220,7 +242,11 @@ export function DataSourcesPanel({ selectedSlug }: { selectedSlug: string }) {
               loading={saving}
               onClick={save}
               block
-              style={saved ? { background: "#22c55e", borderColor: "#22c55e" } : undefined}
+              style={
+                saved
+                  ? { background: "#22c55e", borderColor: "#22c55e" }
+                  : undefined
+              }
             >
               {saved ? "Đã lưu!" : "Lưu Data Sources"}
             </Button>

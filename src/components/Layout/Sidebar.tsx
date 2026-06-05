@@ -21,23 +21,23 @@ function ReportNavItem({
 }) {
   const href = `/client/reports/${node.slug}`;
   const isActive = pathname === href;
-  const indent = depth > 0 ? "pl-7" : "pl-3";
+  const indent = depth > 0 ? "pl-8" : "pl-3";
 
   return (
     <>
       <li>
         <button
           onClick={() => router.push(href)}
-          className={`w-full flex items-center gap-2.5 ${indent} pr-3 py-2 rounded-xl text-sm transition-all cursor-pointer
+          className={`w-full min-w-0 flex items-center gap-2.5 ${indent} pr-3 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer
             ${isActive
-              ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-medium"
-              : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3]"
+              ? "bg-white/10 text-white font-medium"
+              : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
             }`}
         >
-          <span className={isActive ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-[#8b949e]"}>
+          <span className={`shrink-0 ${isActive ? "text-emerald-400" : "text-slate-500"}`}>
             <MenuIcon name={node.icon ?? ""} />
           </span>
-          <span className="flex-1 text-left truncate">{node.name}</span>
+          <span className="flex-1 text-left truncate min-w-0">{node.name}</span>
         </button>
       </li>
       {node.children.map((child) => (
@@ -78,26 +78,25 @@ export default function Sidebar() {
   useEffect(() => { fetchReports(); }, [fetchReports]);
 
   return (
-    <aside className="w-64 h-screen bg-white dark:bg-[#0a0f1a] border-r border-gray-100 dark:border-[#1f2937] flex flex-col shrink-0">
-      {/* Logo + theme toggle */}
-      <div className="flex items-center gap-2.5 px-4 py-4 border-b border-gray-100 dark:border-[#1f2937]">
-        <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <aside className="w-60 h-screen bg-[#0f172a] flex flex-col shrink-0">
+      {/* Logo */}
+      <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-white/5">
+        <div className="w-7 h-7 bg-emerald-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/30">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 2v20M2 12h20" />
-            <rect x="7" y="7" width="10" height="10" rx="2" fill="white" fillOpacity="0.15" stroke="none" />
           </svg>
         </div>
-        <span className="font-bold text-gray-800 dark:text-[#e6edf3] text-base tracking-tight">HDOS</span>
-        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded font-medium">
+        <span className="font-semibold text-white text-sm tracking-tight">HDOS</span>
+        <span className="text-[9px] text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-semibold tracking-wide">
           v2.0
         </span>
         <button
           onClick={toggle}
           title={isDark ? "Chuyển sang Light" : "Chuyển sang Dark"}
-          className="ml-auto w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 dark:text-[#8b949e] dark:hover:text-[#e6edf3] hover:bg-gray-100 dark:hover:bg-[#1f2937] transition-colors cursor-pointer"
+          className="ml-auto w-6 h-6 rounded-md flex items-center justify-center text-slate-500 hover:text-slate-300 hover:bg-white/8 transition-colors cursor-pointer"
         >
           {isDark ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="4" />
               <line x1="12" y1="2" x2="12" y2="6" />
               <line x1="12" y1="18" x2="12" y2="22" />
@@ -109,7 +108,7 @@ export default function Sidebar() {
               <line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
             </svg>
           ) : (
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
             </svg>
           )}
@@ -117,15 +116,15 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3 space-y-4">
         {loading ? (
           <div className="flex justify-center pt-8">
-            <Spin size="small" />
+            <Spin size="small" style={{ filter: "brightness(0) invert(1) opacity(0.3)" }} />
           </div>
         ) : (
           groups.map((group) => (
             <div key={group.id}>
-              <p className="text-[10px] font-semibold text-gray-400 dark:text-[#8b949e] uppercase tracking-widest px-2 mb-2">
+              <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest px-2 mb-1.5 select-none">
                 {group.label}
               </p>
               <ul className="space-y-0.5">
@@ -135,17 +134,17 @@ export default function Sidebar() {
                     <li key={item.id}>
                       <button
                         onClick={() => router.push(item.href ?? `/client?module=${item.id}`)}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all cursor-pointer
+                        className={`w-full min-w-0 flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer
                           ${isActive
-                            ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-medium"
-                            : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-50 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3]"
+                            ? "bg-white/10 text-white font-medium"
+                            : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
                           }`}
                       >
-                        <span className={isActive ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-[#8b949e]"}>
+                        <span className={`shrink-0 transition-colors ${isActive ? "text-emerald-400" : "text-slate-500"}`}>
                           <MenuIcon name={item.icon} />
                         </span>
-                        <span className="flex-1 text-left">{item.label}</span>
-                        {item.badge && <MenuBadgeChip badge={item.badge} />}
+                        <span className="flex-1 text-left truncate min-w-0">{item.label}</span>
+                        {item.badge && <span className="shrink-0"><MenuBadgeChip badge={item.badge} /></span>}
                       </button>
                     </li>
                   );
@@ -157,15 +156,15 @@ export default function Sidebar() {
 
         {/* Reports */}
         <div>
-          <p className="text-[10px] font-semibold text-gray-400 dark:text-[#8b949e] uppercase tracking-widest px-2 mb-2">
+          <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest px-2 mb-1.5 select-none">
             Báo cáo
           </p>
           {reportsLoading ? (
             <div className="flex justify-center py-3">
-              <Spin size="small" />
+              <Spin size="small" style={{ filter: "brightness(0) invert(1) opacity(0.3)" }} />
             </div>
           ) : reportMenus.length === 0 ? (
-            <p className="text-[11px] text-gray-400 dark:text-[#8b949e] px-3 py-1">
+            <p className="text-[11px] text-slate-600 px-2 py-1">
               Chưa có báo cáo
             </p>
           ) : (
@@ -179,19 +178,17 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-3 pb-4 pt-2 border-t border-gray-100 dark:border-[#1f2937]">
-        <div className="bg-gray-50 dark:bg-[#1f2937] rounded-xl px-3 py-3">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-            </div>
-            <span className="text-[11px] font-semibold text-gray-700 dark:text-[#e6edf3]">Healthcare OS</span>
+      <div className="px-3 pb-3 pt-2 border-t border-white/5">
+        <div className="flex items-center gap-2.5 px-1.5 py-2">
+          <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/25 flex items-center justify-center shrink-0">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
           </div>
-          <p className="text-[10px] text-gray-400 dark:text-[#8b949e] m-0 leading-snug">
-            Hệ thống quản lý bệnh viện số
-          </p>
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium text-slate-300 truncate m-0 leading-tight">Healthcare OS</p>
+            <p className="text-[10px] text-slate-600 truncate m-0 leading-tight">Quản lý bệnh viện số</p>
+          </div>
         </div>
       </div>
     </aside>
