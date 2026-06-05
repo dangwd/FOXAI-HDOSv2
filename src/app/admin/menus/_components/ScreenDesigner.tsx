@@ -18,7 +18,7 @@ import { ProviderOperationSelect } from "./ProviderOperationSelect";
 type LucideComp = React.ComponentType<LucideProps>;
 
 const WIDGET_META: Record<WidgetType, { Icon: LucideComp; color: string; label: string }> = {
-  kpi:   { Icon: TrendingUp, color: "#7c3aed", label: "KPI"        },
+  kpi:   { Icon: TrendingUp, color: "#059669", label: "KPI"        },
   line:  { Icon: LineChart,  color: "#3b82f6", label: "Line Chart"  },
   bar:   { Icon: BarChart2,  color: "#10b981", label: "Bar Chart"   },
   pie:   { Icon: PieChart,   color: "#f59e0b", label: "Pie Chart"   },
@@ -84,7 +84,7 @@ function WidgetCard({
         onDragOver={(e) => { e.preventDefault(); onDragOver(e, "before"); }}
         onDrop={(e) => { e.preventDefault(); onDrop("before"); }}
       >
-        {dropBefore && <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-violet-500 rounded-full" />}
+        {dropBefore && <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-emerald-500 rounded-full" />}
       </div>
       {/* Drop zone: right half */}
       <div
@@ -92,19 +92,19 @@ function WidgetCard({
         onDragOver={(e) => { e.preventDefault(); onDragOver(e, "after"); }}
         onDrop={(e) => { e.preventDefault(); onDrop("after"); }}
       >
-        {dropAfter && <div className="absolute right-0 top-1 bottom-1 w-0.5 bg-violet-500 rounded-full" />}
+        {dropAfter && <div className="absolute right-0 top-1 bottom-1 w-0.5 bg-emerald-500 rounded-full" />}
       </div>
 
       <div
         onClick={onSelect}
         className={`relative h-28 rounded-xl border-2 overflow-hidden cursor-pointer transition-all ${
           selected
-            ? "border-violet-500 shadow-[0_0_0_2px_rgba(124,58,237,0.2)]"
-            : "border-gray-100 dark:border-[#30363d] hover:border-violet-300 dark:hover:border-violet-700"
-        } bg-white dark:bg-[#161b22]`}
+            ? "border-emerald-500 shadow-[0_0_0_2px_rgba(124,58,237,0.2)]"
+            : "border-gray-100 dark:border-[#1f2937] hover:border-emerald-300 dark:hover:border-emerald-700"
+        } bg-white dark:bg-[#0f172a]`}
       >
         {/* Card toolbar */}
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-2 py-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 dark:bg-[#161b22]/80 backdrop-blur-sm">
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-2 py-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-sm">
           <div className="flex items-center gap-1">
             <span className="text-gray-300 dark:text-[#484f58] cursor-grab active:cursor-grabbing">
               <GripVertical size={12} />
@@ -137,7 +137,7 @@ function WidgetCard({
 
         {/* Resize handle */}
         <div
-          className="absolute bottom-0.5 right-0.5 w-4 h-4 flex items-end justify-end cursor-se-resize z-20 text-gray-300 dark:text-[#484f58] hover:text-violet-500 transition-colors"
+          className="absolute bottom-0.5 right-0.5 w-4 h-4 flex items-end justify-end cursor-se-resize z-20 text-gray-300 dark:text-[#484f58] hover:text-emerald-600 transition-colors"
           onMouseDown={(e) => { e.stopPropagation(); onResizeStart(e); }}
         >
           <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
@@ -157,7 +157,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       <span className="text-[10px] font-bold text-gray-400 dark:text-[#484f58] uppercase tracking-widest whitespace-nowrap">
         {children}
       </span>
-      <div className="flex-1 h-px bg-gray-100 dark:bg-[#21262d]" />
+      <div className="flex-1 h-px bg-gray-100 dark:bg-[#1f2937]" />
     </div>
   );
 }
@@ -175,7 +175,7 @@ function ConfigPanel({ widget, onChange }: { widget: DesignerWidget; onChange: (
     <div className="h-full flex flex-col">
 
       {/* Panel header */}
-      <div className="px-4 py-3 border-b border-gray-200 dark:border-[#30363d] shrink-0">
+      <div className="px-4 py-3 border-b border-gray-200 dark:border-[#1f2937] shrink-0">
         <div className="flex items-center gap-3">
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
@@ -209,7 +209,7 @@ function ConfigPanel({ widget, onChange }: { widget: DesignerWidget; onChange: (
                   className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl border-2 transition-all ${
                     active
                       ? "border-transparent text-white"
-                      : "border-gray-100 dark:border-[#30363d] text-gray-500 dark:text-[#8b949e] hover:border-gray-300 dark:hover:border-[#484f58]"
+                      : "border-gray-100 dark:border-[#1f2937] text-gray-500 dark:text-[#8b949e] hover:border-gray-300 dark:hover:border-[#484f58]"
                   }`}
                   style={active ? { background: m.color } : undefined}
                 >
@@ -311,18 +311,18 @@ function ConfigPanel({ widget, onChange }: { widget: DesignerWidget; onChange: (
                   onClick={() => set("span", s)}
                   className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg border-2 transition-all ${
                     active
-                      ? "border-violet-500 bg-violet-50 dark:bg-[#2d2542]"
-                      : "border-gray-100 dark:border-[#30363d] hover:border-violet-300 dark:hover:border-violet-700"
+                      ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                      : "border-gray-100 dark:border-[#1f2937] hover:border-emerald-300 dark:hover:border-emerald-700"
                   }`}
                 >
-                  <div className="flex-1 h-2 bg-gray-100 dark:bg-[#21262d] rounded-full overflow-hidden">
+                  <div className="flex-1 h-2 bg-gray-100 dark:bg-[#1f2937] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all"
-                      style={{ width: `${(s / 12) * 100}%`, background: active ? "#7c3aed" : "#9ca3af" }}
+                      style={{ width: `${(s / 12) * 100}%`, background: active ? "#059669" : "#9ca3af" }}
                     />
                   </div>
                   <span className={`text-[11px] font-semibold w-8 text-right shrink-0 ${
-                    active ? "text-violet-600 dark:text-violet-400" : "text-gray-400 dark:text-[#484f58]"
+                    active ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-[#484f58]"
                   }`}>
                     {SPAN_META[s].fraction}
                   </span>
@@ -342,7 +342,7 @@ function ConfigPanel({ widget, onChange }: { widget: DesignerWidget; onChange: (
                 type="button"
                 onClick={() => set("color", col)}
                 className={`aspect-square rounded-lg transition-all hover:scale-105 ${
-                  widget.color === col ? "ring-2 ring-offset-2 ring-violet-500 scale-105" : ""
+                  widget.color === col ? "ring-2 ring-offset-2 ring-emerald-500 scale-105" : ""
                 }`}
                 style={{ background: col }}
               />
@@ -455,7 +455,7 @@ export function ScreenDesigner({
     <div className="flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-[#010409]">
 
       {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
-      <div className="h-12 bg-white dark:bg-[#0d1117] border-b border-gray-200 dark:border-[#30363d] flex items-center px-4 gap-3 shrink-0">
+      <div className="h-12 bg-white dark:bg-[#0a0f1a] border-b border-gray-200 dark:border-[#1f2937] flex items-center px-4 gap-3 shrink-0">
         <Button
           type="text"
           size="small"
@@ -526,9 +526,9 @@ export function ScreenDesigner({
       <div className="flex flex-1 min-h-0">
 
         {/* Palette */}
-        <aside className="w-48 shrink-0 border-r border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] flex flex-col">
+        <aside className="w-48 shrink-0 border-r border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] flex flex-col">
           {/* Palette header */}
-          <div className="px-2.5 pt-2.5 pb-2 border-b border-gray-100 dark:border-[#21262d] shrink-0">
+          <div className="px-2.5 pt-2.5 pb-2 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
             <Input
               size="small"
               placeholder="Tìm widget..."
@@ -576,7 +576,7 @@ export function ScreenDesigner({
           </div>
 
           {/* Default data source */}
-          <div className="p-2 border-t border-gray-100 dark:border-[#30363d] space-y-1.5">
+          <div className="p-2 border-t border-gray-100 dark:border-[#1f2937] space-y-1.5">
             <p className="text-[10px] font-bold text-gray-400 dark:text-[#484f58] uppercase tracking-widest m-0">
               DS mặc định
             </p>
@@ -628,7 +628,7 @@ export function ScreenDesigner({
 
         {/* Config panel */}
         {selWidget && (
-          <aside className="w-72 shrink-0 border-l border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117]">
+          <aside className="w-72 shrink-0 border-l border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a]">
             <ConfigPanel
               widget={selWidget}
               onChange={(updated) => setWidgets(state.widgets.map((w) => w.id === updated.id ? updated : w))}

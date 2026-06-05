@@ -25,7 +25,7 @@ interface BulletListProps {
 const STATUS_COLOR: Record<BulletStatus, string> = {
   active: "#52c41a",
   pending: "#faad14",
-  done: "#1677ff",
+  done: "#059669",
   critical: "#ff4d4f",
 };
 
@@ -33,14 +33,14 @@ const SK = "animate-pulse bg-gray-200 dark:bg-[#30363d] rounded";
 
 export function BulletList({ title, headerAction, items, footerActions, loading = false }: BulletListProps) {
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full flex flex-col">
+    <div className="rounded-2xl border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm h-full flex flex-col">
       {title && (
         <div className="flex items-center justify-between px-4 pt-4 pb-3">
           <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider m-0">
             {title}
           </p>
           {headerAction && (
-            <button className="text-[10px] text-blue-500 hover:text-blue-400 transition-colors cursor-pointer">
+            <button className="text-[10px] text-emerald-500 hover:text-emerald-400 transition-colors cursor-pointer">
               {headerAction}
             </button>
           )}
@@ -76,7 +76,7 @@ export function BulletList({ title, headerAction, items, footerActions, loading 
           {footerActions.map((action, i) => {
             if (action.variant === 'link') {
               return (
-                <button key={i} className="text-xs text-blue-500 hover:text-blue-400 transition-colors cursor-pointer">
+                <button key={i} className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors cursor-pointer">
                   {action.label}
                 </button>
               );

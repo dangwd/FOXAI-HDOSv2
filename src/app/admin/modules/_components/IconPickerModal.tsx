@@ -33,8 +33,8 @@ export function IconPickerModal({
       <div className="flex items-center gap-2 flex-1 min-w-0">
         {CurrentIcon ? (
           <>
-            <div className="w-7 h-7 rounded-lg bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center shrink-0">
-              <CurrentIcon size={14} className="text-violet-600 dark:text-violet-400" />
+            <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
+              <CurrentIcon size={14} className="text-emerald-600 dark:text-emerald-400" />
             </div>
             <span className="text-xs font-medium text-gray-700 dark:text-[#e6edf3] truncate">
               {formatIconName(current)}
@@ -83,8 +83,8 @@ export function IconPickerModal({
               onClick={() => setCatId(cat.id)}
               className={`px-2.5 py-1 text-[11px] font-semibold rounded-md whitespace-nowrap transition-colors ${
                 catId === cat.id
-                  ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300"
-                  : "text-gray-500 dark:text-[#8b949e] hover:bg-gray-100 dark:hover:bg-[#21262d]"
+                  ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+                  : "text-gray-500 dark:text-[#8b949e] hover:bg-gray-100 dark:hover:bg-[#1f2937]"
               }`}
             >
               {cat.label}
@@ -121,22 +121,22 @@ export function IconPickerModal({
                   title={formatIconName(name)}
                   className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all duration-100 group ${
                     isSelected
-                      ? "border-violet-500 bg-violet-50 dark:bg-violet-900/30"
-                      : "border-transparent hover:border-gray-200 dark:hover:border-[#30363d] hover:bg-gray-50 dark:hover:bg-[#21262d]"
+                      ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30"
+                      : "border-transparent hover:border-gray-200 dark:hover:border-[#30363d] hover:bg-gray-50 dark:hover:bg-[#1f2937]"
                   }`}
                 >
                   <Comp
                     size={20}
                     className={
                       isSelected
-                        ? "text-violet-600 dark:text-violet-400"
+                        ? "text-emerald-600 dark:text-emerald-400"
                         : "text-gray-500 dark:text-[#8b949e] group-hover:text-gray-700 dark:group-hover:text-[#e6edf3]"
                     }
                   />
                   <span
                     className={`text-[9px] leading-tight text-center line-clamp-1 w-full ${
                       isSelected
-                        ? "text-violet-600 dark:text-violet-400 font-semibold"
+                        ? "text-emerald-600 dark:text-emerald-400 font-semibold"
                         : "text-gray-400 dark:text-[#484f58]"
                     }`}
                   >

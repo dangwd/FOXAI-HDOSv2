@@ -39,10 +39,10 @@ function StepRow({ step, status, error }: { step: Step; status: StepStatus; erro
       style={{ borderColor: borderColor ?? "#d9d9d9", background: bg }}
     >
       <div className="mt-0.5 shrink-0">
-        {status === "running" && <Loader2 size={16} className="animate-spin text-violet-500" />}
+        {status === "running" && <Loader2 size={16} className="animate-spin text-emerald-600" />}
         {status === "ok"      && <CheckCircle2 size={16} />}
         {status === "error"   && <XCircle size={16} />}
-        {status === "idle"    && <div className="w-4 h-4 rounded-full border-2 border-gray-300 dark:border-[#30363d]" />}
+        {status === "idle"    && <div className="w-4 h-4 rounded-full border-2 border-gray-300 dark:border-[#1f2937]" />}
       </div>
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-semibold m-0 leading-tight ${
@@ -156,7 +156,7 @@ export function ProbeModal({
       </div>
 
       {result && allDone && (
-        <div className="mt-4 px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#0d1117] border border-gray-100 dark:border-[#21262d] space-y-1.5">
+        <div className="mt-4 px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#0a0f1a] border border-gray-100 dark:border-[#1f2937] space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-gray-500">Latency</span>
             <Tag color="success" style={{ fontWeight: 700 }}>{result.latencyMs} ms</Tag>

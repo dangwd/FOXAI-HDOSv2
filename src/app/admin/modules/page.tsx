@@ -137,7 +137,7 @@ function ModuleCard({
       onClick={onClick}
       className={`w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-2.5 ${
         selected
-          ? "bg-blue-50 dark:bg-[#1c2333] ring-1 ring-blue-200 dark:ring-[#1f6feb]"
+          ? "bg-emerald-50 dark:bg-emerald-950/20 ring-1 ring-emerald-200 dark:ring-emerald-800/40"
           : "hover:bg-gray-50 dark:hover:bg-[#161b22]"
       }`}
     >
@@ -168,7 +168,7 @@ function ModuleCard({
           className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-tight ${
             isActive
               ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
-              : "bg-gray-100 dark:bg-[#21262d] text-gray-400 dark:text-[#484f58]"
+              : "bg-gray-100 dark:bg-[#1f2937] text-gray-400 dark:text-[#484f58]"
           }`}
         >
           {isActive ? "Active" : "Inactive"}
@@ -245,7 +245,7 @@ function CreateFormDrawer({
       footer={
         <div className="flex items-center justify-between px-1">
           <span className="text-xs text-gray-400 dark:text-[#484f58]">
-            Module: <code className="bg-gray-100 dark:bg-[#21262d] px-1.5 rounded text-gray-600 dark:text-[#8b949e]">{moduleCode}</code>
+            Module: <code className="bg-gray-100 dark:bg-[#1f2937] px-1.5 rounded text-gray-600 dark:text-[#8b949e]">{moduleCode}</code>
           </span>
           <div className="flex gap-2">
             <Button onClick={handleClose}>Hủy</Button>
@@ -273,12 +273,12 @@ function CreateFormDrawer({
             {key ? (
               <span>
                 Schema URL:{" "}
-                <code className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-1.5 rounded">
+                <code className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-1.5 rounded">
                   /forms/{moduleCode}/{key}/schema
                 </code>
               </span>
             ) : (
-              <span>Chỉ dùng chữ thường, số và dấu <code className="bg-gray-100 dark:bg-[#21262d] px-1 rounded">-</code>. Không thể đổi sau khi tạo.</span>
+              <span>Chỉ dùng chữ thường, số và dấu <code className="bg-gray-100 dark:bg-[#1f2937] px-1 rounded">-</code>. Không thể đổi sau khi tạo.</span>
             )}
           </div>
         </Form.Item>
@@ -354,8 +354,8 @@ function CreatePageDrawer({
       onClose={handleClose}
       title={
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
-            <LayoutDashboard size={14} className="text-violet-500" />
+          <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+            <LayoutDashboard size={14} className="text-emerald-600" />
           </div>
           <span>Tạo Page mới</span>
         </div>
@@ -367,7 +367,7 @@ function CreatePageDrawer({
       footer={
         <div className="flex items-center justify-between px-1">
           <span className="text-xs text-gray-400 dark:text-[#484f58]">
-            Module: <code className="bg-gray-100 dark:bg-[#21262d] px-1.5 rounded text-gray-600 dark:text-[#8b949e]">{moduleCode}</code>
+            Module: <code className="bg-gray-100 dark:bg-[#1f2937] px-1.5 rounded text-gray-600 dark:text-[#8b949e]">{moduleCode}</code>
           </span>
           <div className="flex gap-2">
             <Button onClick={handleClose}>Hủy</Button>
@@ -395,12 +395,12 @@ function CreatePageDrawer({
             {code ? (
               <span>
                 Layout URL:{" "}
-                <code className="bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 px-1.5 rounded">
+                <code className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-1.5 rounded">
                   /forms/screens/{moduleCode}/{code}/layout
                 </code>
               </span>
             ) : (
-              <span>Chỉ dùng chữ thường, số và dấu <code className="bg-gray-100 dark:bg-[#21262d] px-1 rounded">-</code>. Không thể đổi sau khi tạo.</span>
+              <span>Chỉ dùng chữ thường, số và dấu <code className="bg-gray-100 dark:bg-[#1f2937] px-1 rounded">-</code>. Không thể đổi sau khi tạo.</span>
             )}
           </div>
         </Form.Item>
@@ -473,7 +473,7 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-6 py-2.5 border-b border-gray-100 dark:border-[#21262d] shrink-0">
+      <div className="flex items-center justify-between px-6 py-2.5 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
         <span className="text-xs text-gray-500 dark:text-[#8b949e]">
           {forms.length} form
         </span>
@@ -527,7 +527,7 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
                 dataIndex: "key",
                 width:     180,
                 render:    (v: string) => (
-                  <code className="text-[12px] bg-gray-100 dark:bg-[#21262d] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
+                  <code className="text-[12px] bg-gray-100 dark:bg-[#1f2937] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
                     {v}
                   </code>
                 ),
@@ -621,7 +621,7 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-6 py-2.5 border-b border-gray-100 dark:border-[#21262d] shrink-0">
+      <div className="flex items-center justify-between px-6 py-2.5 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
         <span className="text-xs text-gray-500 dark:text-[#8b949e]">
           {pages.length} page
         </span>
@@ -665,7 +665,7 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                 dataIndex: "code",
                 width:     180,
                 render:    (v: string) => (
-                  <code className="text-[12px] bg-gray-100 dark:bg-[#21262d] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
+                  <code className="text-[12px] bg-gray-100 dark:bg-[#1f2937] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
                     {v}
                   </code>
                 ),
@@ -692,8 +692,8 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                 render:    (v: number) => (
                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold ${
                     v > 0
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                      : "bg-gray-100 dark:bg-[#21262d] text-gray-400 dark:text-[#484f58]"
+                      ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
+                      : "bg-gray-100 dark:bg-[#1f2937] text-gray-400 dark:text-[#484f58]"
                   }`}>
                     {v}
                   </span>
@@ -717,7 +717,7 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                         type="text"
                         size="small"
                         icon={<PenLine size={12} />}
-                        className="text-blue-500 dark:text-blue-400 hover:text-blue-600! hover:bg-blue-50! dark:hover:bg-blue-900/20!"
+                        className="text-emerald-600 dark:text-emerald-400 hover:text-blue-600! hover:bg-blue-50! dark:hover:bg-blue-900/20!"
                       >
                         Thiết kế
                       </Button>
@@ -761,7 +761,7 @@ function ModuleDetail({ module }: { module: FormsModule }) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100 dark:border-[#21262d] shrink-0">
+      <div className="px-6 py-4 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
         <div className="flex items-center gap-4">
           <ModuleIcon
             icon={codeAbbr(module.code)}
@@ -819,7 +819,7 @@ function ModuleDetail({ module }: { module: FormsModule }) {
                 <span className="flex items-center gap-1.5">
                   <FileText size={12} />
                   Forms
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-[#21262d] text-gray-500 dark:text-[#8b949e]">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-[#1f2937] text-gray-500 dark:text-[#8b949e]">
                     {module.formCount}
                   </span>
                 </span>
@@ -904,7 +904,7 @@ export default function ModuleManagerPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* ── Top header ─────────────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-[#0d1117] border-b border-gray-200 dark:border-[#30363d] px-6 py-4 shrink-0">
+      <div className="bg-white dark:bg-[#0a0f1a] border-b border-gray-200 dark:border-[#1f2937] px-6 py-4 shrink-0">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-[#e6edf3] m-0">
@@ -942,9 +942,9 @@ export default function ModuleManagerPage() {
       {/* ── Split panel ────────────────────────────────────────────────────── */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left: module list */}
-        <div className="w-64 shrink-0 border-r border-gray-200 dark:border-[#30363d] flex flex-col bg-gray-50 dark:bg-[#010409]">
+        <div className="w-64 shrink-0 border-r border-gray-200 dark:border-[#1f2937] flex flex-col bg-gray-50 dark:bg-[#010409]">
           {/* Search */}
-          <div className="px-3 py-2.5 border-b border-gray-100 dark:border-[#21262d]">
+          <div className="px-3 py-2.5 border-b border-gray-100 dark:border-[#1f2937]">
             <Input
               prefix={<Search size={12} className="text-gray-400" />}
               value={manager.search}
@@ -987,7 +987,7 @@ export default function ModuleManagerPage() {
 
           {/* Footer count */}
           {!manager.loading && manager.filtered.length > 0 && (
-            <div className="px-3 py-2 border-t border-gray-100 dark:border-[#21262d] shrink-0">
+            <div className="px-3 py-2 border-t border-gray-100 dark:border-[#1f2937] shrink-0">
               <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0 text-center">
                 {manager.filtered.length} / {manager.modules.length} module
               </p>
@@ -996,7 +996,7 @@ export default function ModuleManagerPage() {
         </div>
 
         {/* Right: detail */}
-        <div className="flex-1 min-w-0 overflow-hidden bg-white dark:bg-[#0d1117]">
+        <div className="flex-1 min-w-0 overflow-hidden bg-white dark:bg-[#0a0f1a]">
           {selectedModule ? (
             <ModuleDetail module={selectedModule} />
           ) : (

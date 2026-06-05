@@ -157,7 +157,7 @@ const ALERT_ITEMS = [
 
 // Patient flow stages
 const FLOW_OUTPATIENT = [
-  { label: "Chờ tiếp nhận", value: 12, color: "#1677ff" },
+  { label: "Chờ tiếp nhận", value: 12, color: "#059669" },
   { label: "Đang khám", value: 23, color: "#52c41a" },
   { label: "Chờ XN / CĐHA", value: 31, color: "#faad14", warn: true },
   { label: "Chờ kết quả", value: 8, color: "#722ed1" },
@@ -166,7 +166,7 @@ const FLOW_OUTPATIENT = [
 ];
 
 const FLOW_INPATIENT = [
-  { label: "Nhập viện", value: 23, color: "#1677ff" },
+  { label: "Nhập viện", value: 23, color: "#059669" },
   { label: "Đang điều trị", value: 142, color: "#52c41a" },
   { label: "Theo dõi đặc biệt", value: 38, color: "#faad14", warn: true },
   { label: "Chờ xuất viện", value: 18, color: "#722ed1" },
@@ -177,14 +177,14 @@ const RISK_TIERS = [
   { label: "Nguy cơ cao", value: "47", color: "#ff4d4f" },
   { label: "Nguy cơ trung bình", value: "128", color: "#faad14" },
   { label: "Ổn định", value: "289", color: "#52c41a" },
-  { label: "Ngoại trú theo dõi", value: "64", color: "#1677ff" },
+  { label: "Ngoại trú theo dõi", value: "64", color: "#059669" },
 ];
 
 // Daily patient flow summary — matches reference StatsSummary block
 const DAILY_FLOW_STATS = [
   { label: "Tổng lịch", value: "148", color: "#e6edf3" },
   { label: "Chờ khám", value: "46", color: "#faad14" },
-  { label: "Đang nội trú", value: "79", color: "#1677ff" },
+  { label: "Đang nội trú", value: "79", color: "#059669" },
   { label: "Hoàn thành", value: "0", color: "#52c41a" },
 ];
 
@@ -447,13 +447,13 @@ function resolveKpiValue(w: ApiWidget): {
   const title = (w.title ?? "").toLowerCase();
   const cfg = safeJson(w.visualConfig) as { color?: string };
   const COLORS: Record<string, string> = {
-    blue: "#1677ff",
+    blue: "#059669",
     green: "#52c41a",
     red: "#ff4d4f",
     orange: "#fa8c16",
     purple: "#722ed1",
   };
-  const accent = COLORS[cfg?.color ?? "blue"] ?? "#1677ff";
+  const accent = COLORS[cfg?.color ?? "blue"] ?? "#059669";
 
   for (const entry of KPI_MAP) {
     if (entry.match(title)) {
@@ -574,7 +574,7 @@ export function WidgetRenderer({
     const cfg = safeJson(widget.visualConfig);
     const valueExpr  = cfg.valueExpression as string | undefined;
     const unit       = cfg.unit as string | undefined;
-    const accentColor = (cfg.color as string | undefined) ?? "#6366f1";
+    const accentColor = (cfg.color as string | undefined) ?? "#059669";
     // hint: unit from config takes priority, then widget.subtitle
     const hintText = unit ? `${unit}` : (widget.subtitle ?? undefined);
 
@@ -609,7 +609,7 @@ export function WidgetRenderer({
     if (dataExpr && Object.keys(sourceData).length > 0) {
       const raw = evaluateRaw(dataExpr, sourceData);
       const dynData = toChartData(raw, (cfg.labelField as string) ?? "label", (cfg.valueField as string) ?? "value", cfg.rowPath as string | undefined);
-      if (dynData.length > 0) return <ChartLine title={title} data={dynData} color={(cfg.color as string) ?? "#1677ff"} />;
+      if (dynData.length > 0) return <ChartLine title={title} data={dynData} color={(cfg.color as string) ?? "#059669"} />;
     }
     const tl = title?.toLowerCase() ?? "";
     const isVitals = tl.includes("sinh tồn") || tl.includes("vital");
@@ -620,7 +620,7 @@ export function WidgetRenderer({
           data={VITALS_MULTI}
           series={[
             { key: "nhịp_tim", color: "#ff4d4f", name: "Nhịp tim (bpm)" },
-            { key: "huyết_áp", color: "#1677ff", name: "HA tâm thu (mmHg)" },
+            { key: "huyết_áp", color: "#059669", name: "HA tâm thu (mmHg)" },
             { key: "spo2", color: "#52c41a", name: "SpO2 (%)" },
           ]}
           legend
@@ -629,7 +629,7 @@ export function WidgetRenderer({
     }
     const data = tl.includes("tháng") ? MONTH_DATA : TREND_DATA;
     const unit = tl.includes("tháng") ? "B" : undefined;
-    return <ChartLine title={title} data={data} color="#1677ff" unit={unit} />;
+    return <ChartLine title={title} data={data} color="#059669" unit={unit} />;
   }
 
   // ── Bar chart ────────────────────────────────────────────────────────────────
@@ -639,12 +639,12 @@ export function WidgetRenderer({
     if (dataExpr && Object.keys(sourceData).length > 0) {
       const raw = evaluateRaw(dataExpr, sourceData);
       const dynData = toChartData(raw, (cfg.labelField as string) ?? "label", (cfg.valueField as string) ?? "value", cfg.rowPath as string | undefined);
-      if (dynData.length > 0) return <ChartBar title={title} data={dynData} color={(cfg.color as string) ?? "#1677ff"} />;
+      if (dynData.length > 0) return <ChartBar title={title} data={dynData} color={(cfg.color as string) ?? "#059669"} />;
     }
     const tl = title?.toLowerCase() ?? "";
     const data = tl.includes("tháng") ? MONTH_DATA : TREND_DATA;
     const unit = tl.includes("tháng") ? "B" : undefined;
-    return <ChartBar title={title} data={data} color="#1677ff" unit={unit} />;
+    return <ChartBar title={title} data={data} color="#059669" unit={unit} />;
   }
 
   // ── Area chart ───────────────────────────────────────────────────────────────
@@ -703,7 +703,7 @@ export function WidgetRenderer({
     const pct = 78;
     const barColor = pct >= 85 ? "#ff4d4f" : pct >= 70 ? "#faad14" : "#52c41a";
     return (
-      <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] p-4 h-full flex flex-col justify-center items-center gap-2">
+      <div className="rounded-2xl border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm p-4 h-full flex flex-col justify-center items-center gap-2">
         {title && (
           <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider m-0 text-center">
             {title}
@@ -730,7 +730,7 @@ export function WidgetRenderer({
     const cols = 8;
     const rows = DAYS_7;
     return (
-      <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] p-4 h-full flex flex-col overflow-hidden">
+      <div className="rounded-2xl border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm p-4 h-full flex flex-col overflow-hidden">
         {title && (
           <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-3 m-0 shrink-0">
             {title}
@@ -775,7 +775,7 @@ export function WidgetRenderer({
           {
             label: "18 khoa – Xem chi tiết →",
             variant: "link",
-            color: "#1677ff",
+            color: "#059669",
           },
         ]}
       />
@@ -912,11 +912,11 @@ export function WidgetRenderer({
       filter_slider: "Phạm vi giá trị",
     };
     return (
-      <div className="rounded-lg border border-dashed border-violet-300 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/20 p-3 h-full flex items-center gap-2">
-        <span className="text-[10px] text-violet-500 dark:text-violet-400 uppercase tracking-wider font-semibold shrink-0">
+      <div className="rounded-lg border border-dashed border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/10 p-3 h-full flex items-center gap-2">
+        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-wider font-semibold shrink-0">
           {title ?? labels[type] ?? "Filter"}
         </span>
-        <div className="flex-1 h-6 rounded bg-white dark:bg-[#161b22] border border-violet-200 dark:border-violet-800" />
+        <div className="flex-1 h-6 rounded bg-white dark:bg-[#0f172a] border border-emerald-200 dark:border-emerald-900" />
       </div>
     );
   }
@@ -925,7 +925,7 @@ export function WidgetRenderer({
   if (type === "text_widget") {
     const cfg = safeJson(widget.visualConfig) as { content?: string };
     return (
-      <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] p-4 h-full overflow-auto">
+      <div className="rounded-2xl border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm p-4 h-full overflow-auto">
         {title && (
           <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-2 m-0">
             {title}
@@ -941,7 +941,7 @@ export function WidgetRenderer({
   // ── Chat panel ────────────────────────────────────────────────────────────────
   if (type === "chat_panel") {
     return (
-      <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] p-4 h-full flex flex-col gap-2">
+      <div className="rounded-2xl border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm p-4 h-full flex flex-col gap-2">
         {title && (
           <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider m-0 shrink-0">
             {title}

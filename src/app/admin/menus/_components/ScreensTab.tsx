@@ -36,7 +36,7 @@ function ScreenCard({
   const status = STATUS_META[screen.status as keyof typeof STATUS_META] ?? STATUS_META.draft;
 
   return (
-    <div className="group relative flex flex-col rounded-xl border border-gray-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] overflow-hidden hover:border-violet-300 dark:hover:border-violet-700/60 hover:shadow-md transition-all">
+    <div className="group relative flex flex-col rounded-xl border border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] overflow-hidden hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:shadow-md transition-all">
       {/* Gradient accent on hover */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-500 to-fuchsia-400 opacity-0 group-hover:opacity-100 transition-opacity" />
 
@@ -50,7 +50,7 @@ function ScreenCard({
       {/* Body */}
       <div className="p-4 flex-1">
         <div className="flex items-start gap-3 pr-20">
-          <span className="text-xl w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-[#21262d] shrink-0 border border-gray-100 dark:border-[#30363d]">
+          <span className="text-xl w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-[#1f2937] shrink-0 border border-gray-100 dark:border-[#1f2937]">
             {screen.icon || "📊"}
           </span>
           <div className="min-w-0">
@@ -65,7 +65,7 @@ function ScreenCard({
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 border-t border-gray-100 dark:border-[#21262d] bg-gray-50/50 dark:bg-[#0d1117]/50">
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-t border-gray-100 dark:border-[#1f2937] bg-gray-50/50 dark:bg-[#0a0f1a]/50">
         <RefreshBadge mode={screen.refreshMode} intervalS={screen.refreshIntervalS} />
         <Space size={4}>
           <Button
@@ -122,7 +122,7 @@ export function ScreensTab({
       <>
         <button
           onClick={() => setDrawerOpen(true)}
-          className="w-full flex flex-col items-center justify-center gap-3 py-16 rounded-xl border-2 border-dashed border-gray-200 dark:border-[#30363d] text-gray-400 dark:text-[#484f58] hover:border-violet-400 dark:hover:border-violet-600 hover:text-violet-500 dark:hover:text-violet-400 transition-all"
+          className="w-full flex flex-col items-center justify-center gap-3 py-16 rounded-xl border-2 border-dashed border-gray-200 dark:border-[#1f2937] text-gray-400 dark:text-[#484f58] hover:border-emerald-400 dark:hover:border-emerald-600 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all"
         >
           <Layers size={32} className="opacity-50" />
           <div className="text-center">
@@ -156,7 +156,7 @@ export function ScreensTab({
         {/* Add card */}
         <button
           onClick={() => setDrawerOpen(true)}
-          className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 dark:border-[#30363d] min-h-[120px] text-gray-400 dark:text-[#484f58] hover:border-violet-400 dark:hover:border-violet-600 hover:text-violet-500 dark:hover:text-violet-400 transition-all"
+          className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 dark:border-[#1f2937] min-h-[120px] text-gray-400 dark:text-[#484f58] hover:border-emerald-400 dark:hover:border-emerald-600 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all"
         >
           <Plus size={20} />
           <span className="text-xs font-semibold">Thêm màn hình</span>

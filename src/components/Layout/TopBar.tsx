@@ -17,7 +17,7 @@ export default function TopBar() {
     ?? 'U';
 
   return (
-    <header className="h-14 flex-shrink-0 bg-white dark:bg-[#0d1117] border-b border-gray-200 dark:border-[#30363d] flex items-center px-5 gap-4">
+    <header className="h-14 flex-shrink-0 bg-white dark:bg-[#0a0f1a] border-b border-gray-100 dark:border-[#1f2937] flex items-center px-5 gap-4">
       {/* Search input — full width */}
       <div className="flex-1 max-w-xl">
         <div className="relative">
@@ -40,7 +40,7 @@ export default function TopBar() {
         {/* Admin button */}
         <Link
           href="/admin"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-950/70 border border-violet-200 dark:border-violet-800 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-[#1f2937] hover:bg-gray-200 dark:hover:bg-[#2d3748] border border-gray-200 dark:border-[#1f2937] transition-colors"
           title="Quản trị hệ thống"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -62,7 +62,7 @@ export default function TopBar() {
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 bg-orange-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center leading-none px-0.5">
+              <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 bg-emerald-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center leading-none px-0.5">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
@@ -71,12 +71,12 @@ export default function TopBar() {
         </div>
 
         {/* Divider */}
-        <div className="w-px h-6 bg-gray-200 dark:bg-[#30363d]" />
+        <div className="w-px h-6 bg-gray-100 dark:bg-[#1f2937]" />
 
         {/* Avatar + name + role */}
         <div className="relative group">
           <button className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors cursor-pointer select-none">
-            <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
               {avatarLetter}
             </div>
             <div className="text-left hidden sm:block">
@@ -90,7 +90,7 @@ export default function TopBar() {
           </button>
 
           {/* Dropdown */}
-          <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-[#161b22] border border-gray-200 dark:border-[#30363d] rounded-lg shadow-lg py-1 z-50 hidden group-focus-within:block group-hover:block">
+          <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-[#0a0f1a] border border-gray-100 dark:border-[#1f2937] rounded-2xl shadow-lg py-1 z-50 hidden group-focus-within:block group-hover:block">
             {user && (
               <div className="px-3 py-2 border-b border-gray-100 dark:border-[#30363d]">
                 <p className="text-xs font-medium text-gray-800 dark:text-[#e6edf3] truncate m-0">{user.name ?? user.email}</p>

@@ -2,7 +2,7 @@ import type { DesignerWidget } from "../_lib/types";
 
 const LINE_PTS  = [28, 60, 42, 78, 35, 90, 52, 65, 70, 48, 88, 72];
 const BAR_VALS  = [60, 90, 45, 75, 50, 80];
-const PIE_SLICES: [number, string][] = [[35, "#7c3aed"], [25, "#10b981"], [20, "#3b82f6"], [20, "#f59e0b"]];
+const PIE_SLICES: [number, string][] = [[35, "#059669"], [25, "#10b981"], [20, "#3b82f6"], [20, "#f59e0b"]];
 
 function pieSlice(cx: number, cy: number, r: number, start: number, pct: number) {
   const a0 = (start - 90) * (Math.PI / 180);
@@ -23,7 +23,7 @@ const PIE_PATHS = (() => {
 })();
 
 export function WidgetPreview({ widget }: { widget: DesignerWidget }) {
-  const c = widget.color || "#7c3aed";
+  const c = widget.color || "#059669";
 
   if (widget.type === "kpi") {
     return (
@@ -116,12 +116,12 @@ export function WidgetPreview({ widget }: { widget: DesignerWidget }) {
   if (widget.type === "table") {
     return (
       <div className="p-2 h-full overflow-hidden flex flex-col gap-1">
-        <div className="h-[16px] rounded-md bg-gray-100 dark:bg-[#21262d]" />
+        <div className="h-[16px] rounded-md bg-gray-100 dark:bg-[#1f2937]" />
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex gap-1.5">
-            <div className="h-[11px] flex-1 rounded bg-gray-50 dark:bg-[#0d1117]" />
-            <div className="h-[11px] w-10 rounded bg-gray-50 dark:bg-[#0d1117]" />
-            <div className="h-[11px] w-12 rounded bg-gray-50 dark:bg-[#0d1117]" />
+            <div className="h-[11px] flex-1 rounded bg-gray-50 dark:bg-[#0a0f1a]" />
+            <div className="h-[11px] w-10 rounded bg-gray-50 dark:bg-[#0a0f1a]" />
+            <div className="h-[11px] w-12 rounded bg-gray-50 dark:bg-[#0a0f1a]" />
           </div>
         ))}
       </div>
@@ -133,7 +133,7 @@ export function WidgetPreview({ widget }: { widget: DesignerWidget }) {
       {[100, 80, 92, 68, 85].map((w, i) => (
         <div
           key={i}
-          className="h-[7px] rounded-full bg-gray-100 dark:bg-[#21262d]"
+          className="h-[7px] rounded-full bg-gray-100 dark:bg-[#1f2937]"
           style={{ width: `${w}%` }}
         />
       ))}

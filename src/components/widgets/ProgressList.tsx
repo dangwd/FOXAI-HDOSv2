@@ -50,7 +50,7 @@ export function ProgressList({
   const displayItems = live?.items ?? items;
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full flex flex-col">
+    <div className="rounded-2xl border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm h-full flex flex-col">
       {/* Header */}
       {(title || realtimeBadge || headerAction) && (
         <div className="flex items-center justify-between px-4 pt-3 pb-2 shrink-0">
@@ -68,7 +68,7 @@ export function ProgressList({
               </span>
             )}
             {headerAction && (
-              <button className="text-[10px] text-blue-500 dark:text-blue-400 hover:underline transition-colors cursor-pointer">
+              <button className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline transition-colors cursor-pointer">
                 {headerAction}
               </button>
             )}
@@ -131,7 +131,7 @@ export function ProgressList({
               <button
                 key={i}
                 className="text-xs transition-colors cursor-pointer"
-                style={{ color: action.color ?? "#1677ff" }}
+                style={{ color: action.color ?? "#059669" }}
               >
                 {action.label}
               </button>

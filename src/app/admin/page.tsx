@@ -15,6 +15,7 @@ import { DEFAULT_SIZES } from "./_lib/constants";
 
 import { DataSourcesPanel } from "./_components/DataSourcesPanel";
 import { DesignerCard } from "./_components/DesignerCard";
+import { FieldBrowser } from "./_components/FieldBrowser";
 import { ModuleRow } from "./_components/ModuleRow";
 import { PageSkeleton } from "./_components/PageSkeleton";
 import { TabBar } from "./_components/TabBar";
@@ -105,8 +106,8 @@ function DashboardDesignerInner() {
   return (
     <div className="flex h-full overflow-hidden">
       {/* ── Col 1: Module list ─────────────────────────────────────────────── */}
-      <aside className="w-56 shrink-0 border-r border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-[#30363d] shrink-0">
+      <aside className="w-56 shrink-0 border-r border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] flex flex-col h-full">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-[#1f2937] shrink-0">
           <span className="text-xs font-semibold text-gray-700 dark:text-[#e6edf3]">
             Pages
           </span>
@@ -122,7 +123,7 @@ function DashboardDesignerInner() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-[#484f58] truncate">
                   {group.groupLabel}
                 </span>
-                <div className="flex-1 h-px bg-gray-100 dark:bg-[#21262d]" />
+                <div className="flex-1 h-px bg-gray-100 dark:bg-[#1f2937]" />
                 <span className="text-[9px] text-gray-300 dark:text-[#30363d] font-mono shrink-0">
                   {group.items.length}
                 </span>
@@ -148,7 +149,7 @@ function DashboardDesignerInner() {
       {/* ── Col 2: Canvas ──────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Canvas header */}
-        <div className="px-5 py-2.5 border-b border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] flex items-center gap-3 shrink-0">
+        <div className="px-5 py-2.5 border-b border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] flex items-center gap-3 shrink-0">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 mb-0.5">
               {selectedModule?.groupLabel && (
@@ -165,7 +166,7 @@ function DashboardDesignerInner() {
             </div>
             <p className="text-[11px] text-gray-400 dark:text-[#484f58] m-0">
               GET /forms/pages/
-              <code className="text-violet-600 dark:text-violet-400">
+              <code className="text-emerald-600 dark:text-emerald-400">
                 {selectedSlug}
               </code>
               <span className="mx-1">·</span>
@@ -248,7 +249,7 @@ function DashboardDesignerInner() {
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-36 rounded-xl bg-gray-100 dark:bg-[#0d1117]"
+                  className="h-36 rounded-xl bg-gray-100 dark:bg-[#0a0f1a]"
                 />
               ))}
             </div>
@@ -313,59 +314,67 @@ function DashboardDesignerInner() {
       </div>
 
       {/* ── Col 3: Right sidebar ───────────────────────────────────────────── */}
-      <aside className="w-72 shrink-0 border-l border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] flex flex-col h-full">
-        {designer.selectedWidget ? (
-          <WidgetPropertiesPanel
-            key={designer.selectedWidget.widgetKey}
-            widget={designer.selectedWidget}
-            catalog={catalog}
-            onClose={() => designer.setSelectedKey(null)}
-            onChange={designer.handleApplyProperties}
-          />
-        ) : (
-          <>
-            {/* Sidebar tab switcher */}
-            <div className="flex border-b border-gray-200 dark:border-[#30363d] shrink-0">
-              {([
-                { key: "palette",     label: "Palette" },
-                { key: "datasources", label: "DataSources" },
-                { key: "json",        label: "JSON" },
-              ] as const).map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => setRightTab(t.key)}
-                  className={`flex-1 py-2.5 text-[11px] font-medium transition-colors ${
-                    rightTab === t.key
-                      ? "text-violet-600 dark:text-violet-400 border-b-2 border-violet-600 dark:border-violet-400"
-                      : "text-gray-400 dark:text-[#484f58] hover:text-gray-700 dark:hover:text-[#e6edf3]"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-
-            {rightTab === "palette" && (
-              <WidgetCatalogPanel
-                catalog={catalog}
-                search={search}
-                onSearch={setSearch}
-                onAdd={designer.handleAddWidget}
-                onDragStart={designer.setDroppingEntry}
-                onDragEnd={() => designer.setDroppingEntry(null)}
-              />
-            )}
-            {rightTab === "datasources" && (
-              <DataSourcesPanel selectedSlug={selectedSlug} />
-            )}
-            {rightTab === "json" && (
-              <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-[#010409]">
-                <pre className="font-mono text-[10px] text-gray-700 dark:text-[#e6edf3] whitespace-pre-wrap leading-relaxed m-0">
-                  {jsonPreview}
-                </pre>
+      <aside className="w-72 shrink-0 border-l border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] flex flex-col h-full overflow-hidden">
+        {/* Main content area — fills available space */}
+        <div className="flex-1 min-h-0 flex flex-col">
+          {designer.selectedWidget ? (
+            <WidgetPropertiesPanel
+              key={designer.selectedWidget.widgetKey}
+              widget={designer.selectedWidget}
+              catalog={catalog}
+              onClose={() => designer.setSelectedKey(null)}
+              onChange={designer.handleApplyProperties}
+            />
+          ) : (
+            <>
+              {/* Sidebar tab switcher */}
+              <div className="flex border-b border-gray-200 dark:border-[#1f2937] shrink-0">
+                {([
+                  { key: "palette",     label: "Palette" },
+                  { key: "datasources", label: "DataSources" },
+                  { key: "json",        label: "JSON" },
+                ] as const).map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setRightTab(t.key)}
+                    className={`flex-1 py-2.5 text-[11px] font-medium transition-colors ${
+                      rightTab === t.key
+                        ? "text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400"
+                        : "text-gray-400 dark:text-[#484f58] hover:text-gray-700 dark:hover:text-[#e6edf3]"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
-            )}
-          </>
+
+              {rightTab === "palette" && (
+                <WidgetCatalogPanel
+                  catalog={catalog}
+                  search={search}
+                  onSearch={setSearch}
+                  onAdd={designer.handleAddWidget}
+                  onDragStart={designer.setDroppingEntry}
+                  onDragEnd={() => designer.setDroppingEntry(null)}
+                />
+              )}
+              {rightTab === "datasources" && (
+                <DataSourcesPanel selectedSlug={selectedSlug} />
+              )}
+              {rightTab === "json" && (
+                <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-[#010409]">
+                  <pre className="font-mono text-[10px] text-gray-700 dark:text-[#e6edf3] whitespace-pre-wrap leading-relaxed m-0">
+                    {jsonPreview}
+                  </pre>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Field Browser — chỉ hiện khi đang edit widget để kéo field vào expression */}
+        {designer.selectedWidget && (
+          <FieldBrowser selectedSlug={selectedSlug} />
         )}
       </aside>
     </div>

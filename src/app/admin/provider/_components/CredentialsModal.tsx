@@ -60,7 +60,7 @@ function CopyButton({ value }: { value: string }) {
 
 function SecretBox({ value }: { value: string }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-gray-50 dark:bg-[#0d1117] border border-gray-200 dark:border-[#30363d]">
+    <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-gray-50 dark:bg-[#0a0f1a] border border-gray-200 dark:border-[#1f2937]">
       <Text code className="!text-[11px] flex-1 break-all">
         {value}
       </Text>
@@ -107,7 +107,7 @@ function SecretTab({ provider }: { provider: Provider }) {
         <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
           Client ID
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 dark:bg-[#0d1117] border border-gray-200 dark:border-[#30363d]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 dark:bg-[#0a0f1a] border border-gray-200 dark:border-[#1f2937]">
           <Text code className="flex-1">
             {provider.clientId}
           </Text>
@@ -131,7 +131,7 @@ function SecretTab({ provider }: { provider: Provider }) {
           </div>
         ) : (
           <Space.Compact className="w-full">
-            <div className="flex-1 px-3 py-2 rounded-l-lg bg-gray-50 dark:bg-[#0d1117] border border-gray-200 dark:border-[#30363d] border-r-0">
+            <div className="flex-1 px-3 py-2 rounded-l-lg bg-gray-50 dark:bg-[#0a0f1a] border border-gray-200 dark:border-[#1f2937] border-r-0">
               <span className="text-gray-300 dark:text-[#30363d] font-mono">
                 ● ● ● ● ● ● ● ● ● ● ● ●
               </span>
@@ -229,7 +229,7 @@ function BootstrapTab() {
           <SecretBox value={token} />
         </div>
       ) : (
-        <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-dashed border-gray-200 dark:border-[#30363d] bg-gray-50/60 dark:bg-[#0d1117]/60">
+        <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-dashed border-gray-200 dark:border-[#1f2937] bg-gray-50/60 dark:bg-[#0a0f1a]/60">
           <Key size={20} className="text-gray-400 shrink-0" />
           <p className="text-sm text-gray-400 m-0">
             Token chưa được tạo hoặc đã sử dụng

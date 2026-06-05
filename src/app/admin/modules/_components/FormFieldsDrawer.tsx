@@ -172,7 +172,7 @@ function FormFieldFormDrawer({
     <Drawer
       title={
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
             <span className="text-[13px]">⚙</span>
           </div>
           <span>{field ? `Sửa field: ${field.key}` : "Thêm field mới"}</span>
@@ -475,7 +475,7 @@ export function FormFieldsDrawer({ formTemplate, onClose }: FormFieldsDrawerProp
       dataIndex: "key",
       width:     170,
       render:    (v: string) => (
-        <code className="text-[11px] bg-gray-100 dark:bg-[#21262d] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
+        <code className="text-[11px] bg-gray-100 dark:bg-[#1f2937] px-2 py-0.5 rounded text-gray-600 dark:text-[#8b949e]">
           {v}
         </code>
       ),

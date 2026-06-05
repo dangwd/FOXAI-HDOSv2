@@ -17,8 +17,8 @@ export function ModuleRow({
       onClick={onClick}
       className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors
         ${active
-          ? "bg-blue-50 dark:bg-[#1f6feb22] border border-blue-300 dark:border-[#1f6feb66] text-blue-700 dark:text-[#e6edf3] font-medium text-xs"
-          : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-100 dark:hover:bg-[#21262d] hover:text-gray-900 dark:hover:text-[#e6edf3] text-xs"
+          ? "bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300 font-medium text-xs"
+          : "text-gray-600 dark:text-[#8b949e] hover:bg-gray-100 dark:hover:bg-[#1f2937] hover:text-gray-900 dark:hover:text-[#e6edf3] text-xs"
         }`}
     >
       <span className="shrink-0 w-5 h-5 flex items-center justify-center opacity-60">

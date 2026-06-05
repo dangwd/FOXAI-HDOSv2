@@ -19,7 +19,7 @@ export function StatsSummary({ title, subtitle, items, loading = false }: StatsS
   const count = loading ? 4 : items.length;
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] h-full flex flex-col">
+    <div className="rounded-2xl border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm h-full flex flex-col">
       {title && (
         <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider m-0 px-4 pt-3 pb-1 shrink-0">
           {title}

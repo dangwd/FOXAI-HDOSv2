@@ -16,6 +16,10 @@ import { WardBedGrid } from "@/components/widgets/WardBedGrid";
 import { OrRoomGrid } from "@/components/widgets/OrRoomGrid";
 import { VoiceEMR } from "@/components/widgets/VoiceEMR";
 import { BaoCaoKhoaWidget } from "@/components/widgets/BaoCaoKhoaWidget";
+import { ReminderCard } from "@/components/widgets/ReminderCard";
+import { ProjectListCard } from "@/components/widgets/ProjectListCard";
+import { TeamCollaborationCard } from "@/components/widgets/TeamCollaborationCard";
+import { TimeTrackerCard } from "@/components/widgets/TimeTrackerCard";
 
 export const REGISTRY: Record<string, ComponentType<any>> = {
   KpiCard,
@@ -34,6 +38,10 @@ export const REGISTRY: Record<string, ComponentType<any>> = {
   OrRoomGrid,
   VoiceEMR,
   BaoCaoKhoaWidget,
+  ReminderCard,
+  ProjectListCard,
+  TeamCollaborationCard,
+  TimeTrackerCard,
 };
 
 export const MANIFEST = {

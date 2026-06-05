@@ -6,6 +6,7 @@ import { adminApi } from "@/infrastructure/http/adminApi";
 import { FormScreenRenderer } from "@/components/FormScreenRenderer";
 import { ModuleRenderer } from "@/components/ModuleRenderer";
 import useAuthStore from "@/core/auth/authStore";
+import DashboardHome from "@/app/client/DashboardHome";
 import type {
   FormScreen,
   ModuleLayout,
@@ -182,7 +183,7 @@ function HdosContent({
     <div className="flex flex-col h-full overflow-hidden">
       {/* Screen navigation tabs */}
       {screens.length > 1 && (
-        <div className="bg-white dark:bg-[#0d1117] border-b border-gray-200 dark:border-[#30363d] flex items-end px-4 shrink-0 overflow-x-auto">
+        <div className="bg-white dark:bg-[#0a0f1a] border-b border-gray-100 dark:border-[#1f2937] flex items-end px-4 shrink-0 overflow-x-auto">
           {screens.map((s) => {
             const active = s.code === activeScreenCode;
             return (
@@ -191,8 +192,8 @@ function HdosContent({
                 onClick={() => onScreenChange(s.code)}
                 className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
                   active
-                    ? "border-violet-500 text-violet-600 dark:text-violet-400"
-                    : "border-transparent text-gray-500 dark:text-[#8b949e] hover:text-gray-800 dark:hover:text-[#e6edf3] hover:border-gray-300 dark:hover:border-[#484f58]"
+                    ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
+                    : "border-transparent text-gray-500 dark:text-[#8b949e] hover:text-gray-800 dark:hover:text-[#e6edf3] hover:border-gray-200 dark:hover:border-[#374151]"
                 }`}
               >
                 {s.title}
@@ -204,7 +205,7 @@ function HdosContent({
 
       {/* Screen header */}
       {activeScreen && (
-        <div className="px-5 py-3 border-b border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#0d1117] shrink-0">
+        <div className="px-5 py-3 border-b border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] shrink-0">
           <h1 className="text-base font-bold text-gray-900 dark:text-[#e6edf3] m-0 leading-tight">
             {activeScreen.title}
           </h1>
@@ -250,6 +251,10 @@ function HdosPageContent() {
     },
     [router, searchParams],
   );
+
+  if (moduleId === "dashboard") {
+    return <DashboardHome />;
+  }
 
   return (
     <HdosContent

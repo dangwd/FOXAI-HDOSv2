@@ -52,7 +52,7 @@ const STATUS_CONFIG = {
   DRAFT: { label: "Nháp", color: "default" },
   PROCESSED: { label: "Đã xử lý", color: "blue" },
   CONFIRMED: { label: "Đã xác nhận", color: "green" },
-  TRANSFERRED: { label: "Đã chuyển", color: "purple" },
+  TRANSFERRED: { label: "Đã chuyển", color: "green" },
   ERROR: { label: "Lỗi", color: "red" },
 } as const;
 
@@ -193,8 +193,8 @@ function FilePreviewPane({ file }: { file: UploadFile | null }) {
 
   return (
     <div className="flex flex-col items-center justify-center h-full gap-3 p-6">
-      <div className="w-16 h-16 rounded-2xl bg-violet-100 dark:bg-violet-900/20 flex items-center justify-center">
-        <FileText size={28} className="text-violet-500" />
+      <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+        <FileText size={28} className="text-emerald-500" />
       </div>
       <p className="text-sm font-medium text-gray-700 dark:text-[#e6edf3] text-center break-all">
         {file.name}
@@ -464,10 +464,10 @@ function OcrProcessInner() {
         </button>
 
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0">
             <ScanLine
               size={15}
-              className="text-violet-600 dark:text-violet-400"
+              className="text-emerald-600 dark:text-emerald-400"
             />
           </div>
           {loading ? (
@@ -477,7 +477,7 @@ function OcrProcessInner() {
               <h1 className="text-base font-bold text-gray-900 dark:text-[#e6edf3] m-0">
                 {schema.name}
               </h1>
-              <Tag color="purple" className="font-mono text-[11px]">
+              <Tag color="green" className="font-mono text-[11px]">
                 {schema.code}
               </Tag>
               {document && (
@@ -596,12 +596,12 @@ function OcrProcessInner() {
                   setOcrError(null);
                   return false;
                 }}
-                className="border-dashed! border-gray-200! dark:border-[#30363d]! bg-gray-50! dark:bg-[#161b22]! hover:border-violet-400! dark:hover:border-violet-600! rounded-xl!"
+                className="border-dashed! border-gray-200! dark:border-[#30363d]! bg-gray-50! dark:bg-[#161b22]! hover:border-emerald-400! dark:hover:border-emerald-600! rounded-xl!"
               >
                 {fileList.length > 0 ? (
                   <div className="py-4 flex flex-col items-center gap-1.5">
-                    <div className="w-9 h-9 rounded-xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
-                      <FileText size={16} className="text-violet-500" />
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                      <FileText size={16} className="text-emerald-500" />
                     </div>
                     <p className="text-sm font-medium text-gray-700 dark:text-[#e6edf3] max-w-xs truncate">
                       {fileList[0].name}
@@ -612,8 +612,8 @@ function OcrProcessInner() {
                   </div>
                 ) : (
                   <div className="py-5 flex flex-col items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
-                      <UploadCloud size={18} className="text-violet-500" />
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                      <UploadCloud size={18} className="text-emerald-500" />
                     </div>
                     <p className="text-sm font-medium text-gray-700 dark:text-[#e6edf3]">
                       Kéo thả hoặc click để chọn tệp
@@ -680,14 +680,14 @@ function OcrProcessInner() {
                     ? "Đang xếp hàng chờ xử lý..."
                     : "Đang nhận dạng tài liệu..."}
                 </span>
-                <span className="ml-auto text-xs font-semibold text-violet-600 dark:text-violet-400">
+                <span className="ml-auto text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                   {ocrProgress}%
                 </span>
               </div>
               <Progress
                 percent={ocrProgress}
                 showInfo={false}
-                strokeColor="#7c3aed"
+                strokeColor="#059669"
                 trailColor="var(--color-gray-100, #f3f4f6)"
               />
             </div>
@@ -701,7 +701,7 @@ function OcrProcessInner() {
           ) : allFields.length > 0 ? (
             <div className="p-5 border-b border-gray-100 dark:border-[#21262d]">
               <div className="flex items-center gap-2 mb-4">
-                <FileText size={13} className="text-violet-500" />
+                <FileText size={13} className="text-emerald-500" />
                 <span className="text-sm font-semibold text-gray-700 dark:text-[#e6edf3]">
                   Trường dữ liệu
                 </span>
@@ -750,7 +750,7 @@ function OcrProcessInner() {
                           className={`min-h-[30px] rounded-md border px-3 py-1.5 flex items-center
                             ${
                               currentVal
-                                ? "bg-white dark:bg-[#0d1117] border-violet-200 dark:border-violet-800/50"
+                                ? "bg-white dark:bg-[#0d1117] border-emerald-200 dark:border-emerald-800/50"
                                 : "bg-gray-50 dark:bg-[#161b22] border-gray-200 dark:border-[#30363d]"
                             }`}
                         >
@@ -815,7 +815,7 @@ function OcrProcessInner() {
                 className="border-b border-gray-100 dark:border-[#21262d] last:border-0"
               >
                 <div className="flex items-center gap-2 px-5 pt-4 pb-2">
-                  <Table2 size={13} className="text-violet-500" />
+                  <Table2 size={13} className="text-emerald-500" />
                   <span className="text-sm font-semibold text-gray-700 dark:text-[#e6edf3]">
                     {table.name}
                   </span>

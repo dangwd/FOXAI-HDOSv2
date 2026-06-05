@@ -50,7 +50,7 @@ function OperationsCell({ ops }: { ops: string[] }) {
             </div>
           }
         >
-          <span className="text-[10px] text-violet-500 cursor-pointer hover:underline">+{rest} nữa</span>
+          <span className="text-[10px] text-emerald-600 cursor-pointer hover:underline">+{rest} nữa</span>
         </Tooltip>
       )}
     </div>

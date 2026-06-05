@@ -16,10 +16,11 @@ body {
 
 /* Admin tables — card appearance */
 .admin-main .ant-table-wrapper {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border: 1px solid #f1f5f9;
+  border-radius: 14px;
   overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
 }
 .dark .admin-main .ant-table-wrapper {
-  border-color: #30363d;
+  border-color: #1f2937;
 }
