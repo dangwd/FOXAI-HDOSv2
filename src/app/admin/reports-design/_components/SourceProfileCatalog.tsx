@@ -10,12 +10,20 @@ import type { SourceProfile } from "@/app/admin/datasources/_lib/types";
 
 // ─── Conversion ───────────────────────────────────────────────────────────────
 
+/**
+ * Aggregate mode (default): fetch all records for this recordType — no patient filter.
+ * requiredParams = [] so the datasource always fetches regardless of URL params.
+ *
+ * For patient-specific lookup, the admin can manually add
+ *   &field=<businessKeyField>&value={<businessKeyField>}
+ * to the resourcePath and set requiredParams accordingly.
+ */
 export function profileToDataSource(p: SourceProfile): DataSource {
   return {
     namespace:      p.recordType,
     serviceId:      "datamatch",
-    resourcePath:   `/dm/records/{${p.businessKeyField}}`,
-    requiredParams: [p.businessKeyField],
+    resourcePath:   `/dm/records?sourceSystem=${p.sourceSystem}&recordType=${p.recordType}`,
+    requiredParams: [],
     schemaPath:     `/dm/sources/${p.sourceSystem}/${p.recordType}/schema`,
   };
 }
