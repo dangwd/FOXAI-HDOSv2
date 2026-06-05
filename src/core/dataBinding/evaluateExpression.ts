@@ -1,8 +1,9 @@
-// Traverse a dot-notation path (supports array index: items[0])
+// Traverse a dot-notation path (supports array index: items[0], kebab-nams[0])
 function resolvePath(root: unknown, path: string): unknown {
   return path.split(".").reduce((cur: unknown, segment: string) => {
     if (cur == null) return undefined;
-    const arrMatch = segment.match(/^(\w+)\[(\d+)\]$/);
+    // Support hyphenated keys: benh-nhan[0]
+    const arrMatch = segment.match(/^([\w-]+)\[(\d+)\]$/);
     if (arrMatch) {
       const arr = (cur as Record<string, unknown>)[arrMatch[1]];
       return Array.isArray(arr) ? arr[parseInt(arrMatch[2])] : undefined;
@@ -22,7 +23,8 @@ export function evaluateExpression(
   expression: string,
   sources: Record<string, unknown>,
 ): string | null {
-  const re = /\{\{\s*sources\.([\w.[\]]+)\s*\}\}/g;
+  // [\w.\[\]-]+ — supports dots, brackets, and hyphens in namespace/field names
+  const re = /\{\{\s*sources\.([\w.\[\]-]+)\s*\}\}/g;
   let matched = false;
 
   const result = expression.replace(re, (_, path: string) => {
@@ -45,7 +47,7 @@ export function evaluateRaw(
   expression: string,
   sources: Record<string, unknown>,
 ): unknown {
-  const match = expression.match(/^\{\{\s*sources\.([\w.[\]]+)\s*\}\}$/);
+  const match = expression.match(/^\{\{\s*sources\.([\w.\[\]-]+)\s*\}\}$/);
   if (!match) return null;
   return resolvePath(sources, match[1]);
 }

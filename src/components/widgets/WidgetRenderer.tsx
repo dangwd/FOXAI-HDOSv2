@@ -584,7 +584,8 @@ export function WidgetRenderer({
       }
       if (Object.keys(sourceData).length > 0) {
         const raw = evaluateExpression(valueExpr, sourceData);
-        if (raw != null) {
+        // "" means path not found (array/undefined resolved to empty) — treat as no data
+        if (raw != null && raw !== "") {
           const fmt = cfg.displayFormat as string | undefined;
           return (
             <KpiCard
@@ -812,9 +813,11 @@ export function WidgetRenderer({
           return row;
         });
         const dynCols = toTableColumns(cfg.columns);
+        // When no columns configured, auto-generate from row keys but skip DM internal fields
+        const INTERNAL_KEYS = new Set(["id", "sourceSystem", "recordType", "businessKey", "status", "canonicalPayload", "receivedAt", "processedAt", "key"]);
         const cols = dynCols.length > 0
           ? dynCols
-          : Object.keys(rows[0]).map((k) => ({ key: k, title: k }));
+          : Object.keys(rows[0]).filter((k) => !INTERNAL_KEYS.has(k)).map((k) => ({ key: k, title: k }));
         return (
           <DataTable
             title={title}

@@ -249,8 +249,14 @@ function SourceRow({
 
 type InnerTab = "library" | "declared";
 
+type KeyedSource = DataSource & { _rowKey: string };
+
+let _keyCounter = 0;
+function makeKey() { return `ds-${++_keyCounter}`; }
+function withKey(ds: DataSource): KeyedSource { return { ...ds, _rowKey: makeKey() }; }
+
 export function DataSourcesPanel({ selectedSlug }: { selectedSlug: string }) {
-  const [sources,       setSources]       = useState<DataSource[]>([]);
+  const [sources,       setSources]       = useState<KeyedSource[]>([]);
   const [providers,     setProviders]     = useState<FormsProviderDto[]>([]);
   const [allOperations, setAllOperations] = useState<FormsOperationDto[]>([]);
   const [saving,        setSaving]        = useState(false);
@@ -264,7 +270,7 @@ export function DataSourcesPanel({ selectedSlug }: { selectedSlug: string }) {
     const [mc, sc] = splitSlug(selectedSlug);
     adminApi
       .getScreenLayout(mc, sc)
-      .then((layout) => setSources(layout.dataSources ?? []))
+      .then((layout) => setSources((layout.dataSources ?? []).map(withKey)))
       .catch(() => setSources([]));
   }, [selectedSlug]);
 
@@ -279,13 +285,13 @@ export function DataSourcesPanel({ selectedSlug }: { selectedSlug: string }) {
   );
 
   function addSource(ds: DataSource) {
-    setSources((prev) => [...prev, ds]);
+    setSources((prev) => [...prev, withKey(ds)]);
     setSaved(false);
     setInnerTab("declared");
   }
 
   function update(idx: number, s: DataSource) {
-    setSources((prev) => prev.map((x, i) => (i === idx ? s : x)));
+    setSources((prev) => prev.map((x, i) => (i === idx ? { ...s, _rowKey: x._rowKey } : x)));
     setSaved(false);
   }
 
@@ -295,7 +301,7 @@ export function DataSourcesPanel({ selectedSlug }: { selectedSlug: string }) {
   }
 
   function addEmpty() {
-    setSources((prev) => [...prev, { ...EMPTY }]);
+    setSources((prev) => [...prev, withKey({ ...EMPTY })]);
     setSaved(false);
   }
 
@@ -304,7 +310,9 @@ export function DataSourcesPanel({ selectedSlug }: { selectedSlug: string }) {
     setSaving(true);
     setErr(null);
     try {
-      await adminApi.saveDataSources(mc, sc, sources);
+      // Strip internal _rowKey before sending to API
+      const payload = sources.map(({ _rowKey: _, ...ds }) => ds);
+      await adminApi.saveDataSources(mc, sc, payload);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (e) {
@@ -434,10 +442,10 @@ export function DataSourcesPanel({ selectedSlug }: { selectedSlug: string }) {
               </div>
             </div>
           ) : (
-            sources.map((s, i) => (
+            sources.map(({ _rowKey, ...ds }, i) => (
               <SourceRow
-                key={i}
-                source={s}
+                key={_rowKey}
+                source={ds}
                 providers={providers}
                 allOperations={allOperations}
                 onChange={(updated) => update(i, updated)}
