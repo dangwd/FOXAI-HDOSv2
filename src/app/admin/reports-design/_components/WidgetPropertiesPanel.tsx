@@ -37,6 +37,44 @@ import {
 import type { DesignerWidget } from "../_lib/types";
 import { Field } from "./shared";
 
+// ─── Expression parser + visual pills ────────────────────────────────────────
+
+function parseSourceExpr(expr: string): { namespace: string; path: string[] } | null {
+  const m = /^\{\{sources\.([^.}]+)((?:\.[^}]+)*)\}\}$/.exec(expr.trim());
+  if (!m) return null;
+  return { namespace: m[1], path: m[2] ? m[2].slice(1).split(".") : [] };
+}
+
+function ExprPills({
+  parsed,
+  onClear,
+}: {
+  parsed: { namespace: string; path: string[] };
+  onClear: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-1 flex-wrap flex-1 min-w-0">
+      <span className="text-[10px] font-mono text-gray-400 dark:text-[#484f58] shrink-0">sources.</span>
+      <span className="inline-flex items-center px-1.5 py-px text-[10px] font-mono font-semibold rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-700/30">
+        {parsed.namespace}
+      </span>
+      {parsed.path.flatMap((seg, i) => [
+        <span key={`d${i}`} className="text-[9px] text-gray-300 dark:text-[#30363d]">·</span>,
+        <span key={`s${i}`} className="inline-flex items-center px-1.5 py-px text-[10px] font-mono rounded bg-gray-100 dark:bg-[#161b22] text-gray-600 dark:text-[#8b949e] border border-gray-200 dark:border-[#1f2937]">
+          {seg}
+        </span>,
+      ])}
+      <button
+        onClick={onClear}
+        className="ml-auto pl-1 text-gray-300 dark:text-[#484f58] hover:text-red-400 transition-colors shrink-0"
+        title="Xóa biểu thức"
+      >
+        <X size={9} />
+      </button>
+    </div>
+  );
+}
+
 // ─── Native input drop target (dùng trong FieldRow) ──────────────────────────
 
 function ExprDropTarget({
@@ -50,7 +88,15 @@ function ExprDropTarget({
   inputCls: string;
   placeholder?: string;
 }) {
-  const drop = useFieldDrop(onChange);
+  const [mode, setMode] = useState<"visual" | "code">("visual");
+  const parsed = parseSourceExpr(value);
+  const showVisual = mode === "visual" && (value === "" || parsed !== null);
+
+  const drop = useFieldDrop((expr) => {
+    onChange(expr);
+    setMode("visual");
+  });
+
   return (
     <div
       onDragOver={drop.onDragOver}
@@ -58,12 +104,48 @@ function ExprDropTarget({
       onDrop={drop.onDrop}
       className={`rounded transition-all ${drop.isDragOver ? "ring-2 ring-emerald-400 dark:ring-emerald-500 ring-offset-1" : ""}`}
     >
-      <input
-        className={`${inputCls} font-mono`}
-        value={value}
-        placeholder={placeholder ?? "{{sources.namespace.field}}"}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      {showVisual ? (
+        <div className={`flex items-center gap-1 min-h-6.5 px-2 py-1 rounded border ${
+          value
+            ? "border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a]"
+            : "border-dashed border-gray-200 dark:border-[#30363d] bg-gray-50/50 dark:bg-[#0f172a]/50"
+        }`}>
+          {value && parsed ? (
+            <>
+              <ExprPills parsed={parsed} onClear={() => onChange("")} />
+              <button
+                onClick={() => setMode("code")}
+                className="shrink-0 ml-1 text-[9px] font-mono text-gray-300 dark:text-[#484f58] hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                title="Chỉnh mã"
+              >
+                {"</>"}
+              </button>
+            </>
+          ) : (
+            <span className="text-[10px] text-gray-300 dark:text-[#484f58] italic select-none">
+              {placeholder ?? "Kéo field vào đây…"}
+            </span>
+          )}
+        </div>
+      ) : (
+        <div className="relative">
+          <input
+            className={`${inputCls} font-mono pr-8`}
+            value={value}
+            placeholder={placeholder ?? "{{sources.namespace.field}}"}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          {parsed && (
+            <button
+              onClick={() => setMode("visual")}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-semibold text-gray-400 dark:text-[#484f58] hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+              title="Xem trực quan"
+            >
+              UI
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -117,29 +199,204 @@ function ExpressionInput({
   onChange: (v: string) => void;
   hint?: string;
 }) {
-  const drop = useFieldDrop(onChange);
+  const [mode, setMode] = useState<"visual" | "code">("visual");
+  const parsed = parseSourceExpr(value);
+  const showVisual = mode === "visual" && (value === "" || parsed !== null);
+
+  const drop = useFieldDrop((expr) => {
+    onChange(expr);
+    setMode("visual");
+  });
+
   return (
-    <Field label={label}>
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[10px] font-semibold text-gray-500 dark:text-[#484f58] uppercase tracking-wider">
+          {label}
+        </span>
+        <div className="flex items-center rounded overflow-hidden border border-gray-200 dark:border-[#1f2937]">
+          <button
+            onClick={() => setMode("visual")}
+            title="Xem trực quan"
+            className={`px-1.5 py-px text-[9px] font-medium transition-colors leading-snug ${
+              mode === "visual"
+                ? "bg-emerald-600 text-white"
+                : "bg-transparent text-gray-400 dark:text-[#484f58] hover:text-gray-700 dark:hover:text-[#8b949e]"
+            }`}
+          >
+            UI
+          </button>
+          <button
+            onClick={() => setMode("code")}
+            title="Xem mã"
+            className={`px-1.5 py-px text-[9px] font-mono font-medium transition-colors leading-snug ${
+              mode === "code"
+                ? "bg-emerald-600 text-white"
+                : "bg-transparent text-gray-400 dark:text-[#484f58] hover:text-gray-700 dark:hover:text-[#8b949e]"
+            }`}
+          >
+            {"</>"}
+          </button>
+        </div>
+      </div>
+
       <div
         onDragOver={drop.onDragOver}
         onDragLeave={drop.onDragLeave}
         onDrop={drop.onDrop}
         className={`rounded-lg transition-all ${drop.isDragOver ? "ring-2 ring-emerald-400 dark:ring-emerald-500 ring-offset-1" : ""}`}
       >
-        <Input
-          size="small"
-          value={value}
-          placeholder="{{sources.namespace.field}}"
-          onChange={(e) => onChange(e.target.value)}
-          className="font-mono"
-        />
+        {showVisual ? (
+          <div className={`flex items-center min-h-7 px-2.5 py-1 rounded-md border ${
+            value
+              ? "border-gray-200 dark:border-[#1f2937] bg-gray-50 dark:bg-[#0f172a]"
+              : "border-dashed border-gray-200 dark:border-[#30363d] bg-gray-50/50 dark:bg-[#0f172a]/50"
+          }`}>
+            {value && parsed ? (
+              <ExprPills parsed={parsed} onClear={() => onChange("")} />
+            ) : (
+              <span className="text-[10px] text-gray-300 dark:text-[#484f58] italic select-none">
+                Kéo field từ Field Browser hoặc nhập mã bên trên…
+              </span>
+            )}
+          </div>
+        ) : (
+          <Input
+            size="small"
+            value={value}
+            placeholder="{{sources.namespace.field}}"
+            onChange={(e) => onChange(e.target.value)}
+            className="font-mono"
+          />
+        )}
       </div>
+
       {hint && (
-        <p className="text-[10px] text-gray-400 dark:text-[#484f58] mt-0.5 m-0">
-          {hint}
-        </p>
+        <p className="text-[10px] text-gray-400 dark:text-[#484f58] mt-0.5 m-0">{hint}</p>
       )}
-    </Field>
+    </div>
+  );
+}
+
+// ─── Display Format Picker ────────────────────────────────────────────────────
+
+type FormatType = "none" | "date" | "currency";
+
+function parseDisplayFormat(value: string): { type: FormatType; param: string } {
+  if (!value) return { type: "none", param: "" };
+  if (value.startsWith("date:")) return { type: "date", param: value.slice(5) };
+  if (value.startsWith("currency:")) return { type: "currency", param: value.slice(9) };
+  return { type: "none", param: "" };
+}
+
+const DATE_PRESETS: { pattern: string; example: string }[] = [
+  { pattern: "DD/MM/YYYY", example: "31/12/2024" },
+  { pattern: "MM/DD/YYYY", example: "12/31/2024" },
+  { pattern: "YYYY-MM-DD", example: "2024-12-31" },
+  { pattern: "DD/MM/YY",   example: "31/12/24" },
+];
+
+const CURRENCY_PRESETS: { code: string; example: string }[] = [
+  { code: "VND", example: "1.234.567 ₫" },
+  { code: "USD", example: "$1,234.57" },
+  { code: "EUR", example: "€1.234,57" },
+];
+
+function DisplayFormatPicker({
+  value,
+  onChange,
+  compact,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  compact?: boolean;
+}) {
+  const { type, param } = parseDisplayFormat(value);
+
+  function setType(t: FormatType) {
+    if (t === "none") onChange("");
+    else if (t === "date") onChange("date:DD/MM/YYYY");
+    else onChange("currency:VND");
+  }
+
+  const btnBase =
+    "flex-1 py-1 text-[10px] font-medium rounded transition-colors leading-snug";
+  const btnActive = "bg-emerald-600 text-white";
+  const btnIdle =
+    "bg-gray-100 dark:bg-[#1f2937] text-gray-500 dark:text-[#8b949e] hover:bg-gray-200 dark:hover:bg-[#30363d]";
+
+  return (
+    <div className="space-y-1.5">
+      {/* Type row */}
+      <div className="flex gap-1">
+        {(["none", "date", "currency"] as FormatType[]).map((t) => (
+          <button key={t} onClick={() => setType(t)}
+            className={`${btnBase} ${type === t ? btnActive : btnIdle}`}>
+            {t === "none" ? "Không" : t === "date" ? "Ngày" : "Tiền tệ"}
+          </button>
+        ))}
+      </div>
+
+      {/* Date presets */}
+      {type === "date" && (
+        <div className="space-y-1.5">
+          <div className="grid grid-cols-2 gap-1">
+            {DATE_PRESETS.map(({ pattern, example }) => (
+              <button
+                key={pattern}
+                onClick={() => onChange(`date:${pattern}`)}
+                className={`px-2 py-1.5 rounded text-left border transition-colors ${
+                  param === pattern
+                    ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700/50"
+                    : "bg-gray-50 dark:bg-[#0f172a] border-gray-200 dark:border-[#1f2937] hover:border-emerald-300 dark:hover:border-emerald-600/50"
+                }`}
+              >
+                <div className="text-[10px] font-mono font-semibold text-gray-700 dark:text-[#e6edf3]">{pattern}</div>
+                <div className="text-[9px] text-gray-400 dark:text-[#484f58]">{example}</div>
+              </button>
+            ))}
+          </div>
+          <Input
+            size="small"
+            prefix={<span className="text-[10px] text-gray-400 dark:text-[#484f58] font-mono select-none">date:</span>}
+            value={param}
+            placeholder="DD/MM/YYYY"
+            onChange={(e) => onChange(e.target.value ? `date:${e.target.value}` : "")}
+            className="font-mono"
+          />
+        </div>
+      )}
+
+      {/* Currency presets */}
+      {type === "currency" && (
+        <div className="space-y-1.5">
+          <div className="flex gap-1">
+            {CURRENCY_PRESETS.map(({ code, example }) => (
+              <button
+                key={code}
+                onClick={() => onChange(`currency:${code}`)}
+                className={`flex-1 px-1.5 py-1.5 rounded text-center border transition-colors ${
+                  param === code
+                    ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700/50"
+                    : "bg-gray-50 dark:bg-[#0f172a] border-gray-200 dark:border-[#1f2937] hover:border-emerald-300 dark:hover:border-emerald-600/50"
+                }`}
+              >
+                <div className="text-[10px] font-mono font-semibold text-gray-700 dark:text-[#e6edf3]">{code}</div>
+                <div className="text-[9px] text-gray-400 dark:text-[#484f58]">{example}</div>
+              </button>
+            ))}
+          </div>
+          <Input
+            size="small"
+            prefix={<span className="text-[10px] text-gray-400 dark:text-[#484f58] font-mono select-none">currency:</span>}
+            value={param}
+            placeholder="VND"
+            onChange={(e) => onChange(e.target.value ? `currency:${e.target.value}` : "")}
+            className="font-mono"
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -167,11 +424,9 @@ function KpiBinding({
         hint="Ví dụ: {{sources.record.SoBenhNhan}}"
       />
       <Field label="Display Format">
-        <Input
-          size="small"
+        <DisplayFormatPicker
           value={(cfg.displayFormat as string) ?? ""}
-          placeholder="date:DD/MM/YYYY  hoặc  currency:VND"
-          onChange={(e) => set("displayFormat", e.target.value)}
+          onChange={(v) => set("displayFormat", v)}
         />
       </Field>
       <div className="grid grid-cols-2 gap-2">
@@ -563,19 +818,18 @@ function FieldRow({
             <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-0.5">
               Display Format
             </p>
-            <input
-              className={inputCls}
+            <DisplayFormatPicker
               value={field.dataBinding?.displayFormat ?? ""}
-              placeholder="date:DD/MM/YYYY  hoặc  currency:VND"
-              onChange={(e) =>
+              onChange={(v) =>
                 onChange({
                   ...field,
                   dataBinding: {
                     expression: field.dataBinding?.expression ?? "",
-                    displayFormat: e.target.value || null,
+                    displayFormat: v || null,
                   },
                 })
               }
+              compact
             />
           </div>
         </>

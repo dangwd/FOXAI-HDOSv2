@@ -313,17 +313,10 @@ export function useMenuManager() {
 
   async function saveFormPageDesigner(): Promise<void> {
     if (!formPageDesigner) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await adminApi.updatePageLayout(formPageDesigner.pageId, internalToApiLayout(formPageDesigner.rows));
-      message.success("Đã lưu layout thành công");
-    } catch (err: unknown) {
-      setError((err as Error)?.message ?? "Lưu thất bại");
-      throw err;
-    } finally {
-      setSaving(false);
-    }
+    // Layout endpoint removed in doc 42 refactor; screen layout is managed via tabs+widgets.
+    // This function is a no-op until the menus form-page designer is migrated.
+    console.warn("[saveFormPageDesigner] layout endpoint removed — no-op");
+    message.warning("Lưu layout từ đây chưa được hỗ trợ. Dùng màn hình Screen Designer.");
   }
 
   async function publishFormPageDesigner(): Promise<void> {
@@ -331,10 +324,9 @@ export function useMenuManager() {
     setSaving(true);
     setError(null);
     try {
-      await adminApi.updatePageLayout(formPageDesigner.pageId, internalToApiLayout(formPageDesigner.rows));
-      await adminApi.publishPage(formPageDesigner.pageId);
+      await adminApi.publishFormScreen(formPageDesigner.moduleCode, formPageDesigner.pageCode);
       setFormPageDesigner((prev) => prev ? { ...prev, pageStatus: "published" } : null);
-      message.success("Đã xuất bản page thành công");
+      message.success("Đã xuất bản screen thành công");
     } catch (err: unknown) {
       setError((err as Error)?.message ?? "Xuất bản thất bại");
       throw err;

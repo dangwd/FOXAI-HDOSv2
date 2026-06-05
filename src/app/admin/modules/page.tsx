@@ -1,7 +1,7 @@
 "use client";
 
 import type {
-  FormPageListItem,
+  FormScreen,
   FormsModule,
   FormTemplateListItem,
 } from "@/infrastructure/http/adminApi";
@@ -324,13 +324,14 @@ function CreatePageDrawer({
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await adminApi.createPage(moduleCode, {
+      await adminApi.createFormScreen({
+        moduleCode,
         code:        code.trim(),
         title:       title.trim(),
         description: description.trim() || undefined,
         sortOrder:   sortOrder ?? undefined,
       });
-      message.success("Tạo page thành công");
+      message.success("Tạo screen thành công");
       reset();
       onCreated();
       onClose();
@@ -357,7 +358,7 @@ function CreatePageDrawer({
           <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
             <LayoutDashboard size={14} className="text-emerald-600" />
           </div>
-          <span>Tạo Page mới</span>
+          <span>Tạo Screen mới</span>
         </div>
       }
       styles={{
@@ -372,7 +373,7 @@ function CreatePageDrawer({
           <div className="flex gap-2">
             <Button onClick={handleClose}>Hủy</Button>
             <Button type="primary" disabled={!canSubmit || submitting} loading={submitting} onClick={handleSubmit}>
-              Tạo Page
+              Tạo Screen
             </Button>
           </div>
         </div>
@@ -558,11 +559,11 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
   );
 }
 
-// ─── Right panel: pages tab ───────────────────────────────────────────────────
+// ─── Right panel: screens tab ────────────────────────────────────────────────
 
-function PagesTab({ moduleCode }: { moduleCode: string }) {
+function ScreensTab({ moduleCode }: { moduleCode: string }) {
   const { message, modal } = App.useApp();
-  const [pages,      setPages]      = useState<FormPageListItem[]>([]);
+  const [screens,    setScreens]    = useState<FormScreen[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -573,7 +574,7 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
     setLoading(true);
     setError(null);
     try {
-      setPages(await adminApi.listPages(moduleCode));
+      setScreens(await adminApi.listFormScreens(moduleCode));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -584,11 +585,11 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
-  async function handlePublish(p: FormPageListItem) {
-    setPublishing(p.code);
+  async function handlePublish(s: FormScreen) {
+    setPublishing(s.code);
     try {
-      await adminApi.publishFormPage(moduleCode, p.code);
-      message.success(`Đã publish "${p.title}"`);
+      await adminApi.publishFormScreen(moduleCode, s.code);
+      message.success(`Đã publish "${s.title}"`);
       load();
     } catch (err) {
       message.error(err instanceof Error ? err.message : String(err));
@@ -597,18 +598,18 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
     }
   }
 
-  function handleDelete(p: FormPageListItem) {
+  function handleDelete(s: FormScreen) {
     modal.confirm({
-      title:   `Xóa page "${p.title}"?`,
+      title:   `Xóa screen "${s.title}"?`,
       content: "Thao tác này không thể hoàn tác. Tất cả tab và widget sẽ bị xóa.",
       okText:  "Xóa",
       okType:  "danger",
       cancelText: "Hủy",
       onOk: async () => {
-        setDeleting(p.code);
+        setDeleting(s.code);
         try {
-          await adminApi.deletePage(moduleCode, p.code);
-          message.success("Đã xóa page");
+          await adminApi.deleteFormScreen(moduleCode, s.code);
+          message.success("Đã xóa screen");
           load();
         } catch (err) {
           message.error(err instanceof Error ? err.message : String(err));
@@ -623,14 +624,14 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-6 py-2.5 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
         <span className="text-xs text-gray-500 dark:text-[#8b949e]">
-          {pages.length} page
+          {screens.length} screen
         </span>
         <div className="flex items-center gap-2">
           <Button size="small" icon={<RefreshCw size={11} />} onClick={load} loading={loading}>
             Làm mới
           </Button>
           <Button size="small" type="primary" icon={<Plus size={11} />} onClick={() => setDrawerOpen(true)}>
-            Tạo Page
+            Tạo Screen
           </Button>
         </div>
       </div>
@@ -645,8 +646,8 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
         {error ? (
           <Alert type="error" message={error} showIcon />
         ) : (
-          <Table<FormPageListItem>
-            dataSource={pages}
+          <Table<FormScreen>
+            dataSource={screens}
             rowKey="id"
             size="middle"
             loading={loading}
@@ -655,7 +656,7 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
               emptyText: (
                 <div className="flex flex-col items-center gap-2 py-12 text-gray-400 dark:text-[#484f58]">
                   <LayoutDashboard size={32} className="text-gray-200 dark:text-[#30363d]" />
-                  <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">Chưa có page nào</p>
+                  <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">Chưa có screen nào</p>
                 </div>
               ),
             }}
@@ -673,12 +674,12 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
               {
                 title:     "Tiêu đề",
                 dataIndex: "title",
-                render:    (v: string, p: FormPageListItem) => (
+                render:    (v: string, s: FormScreen) => (
                   <div>
                     <span className="font-medium text-gray-800 dark:text-[#e6edf3]">{v}</span>
-                    {p.description && (
+                    {s.description && (
                       <p className="text-[11px] text-gray-400 dark:text-[#484f58] m-0 mt-0.5 truncate max-w-[260px]">
-                        {p.description}
+                        {s.description}
                       </p>
                     )}
                   </div>
@@ -689,13 +690,13 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                 dataIndex: "tabCount",
                 width:     70,
                 align:     "center" as const,
-                render:    (v: number) => (
+                render:    (v: number | undefined) => (
                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold ${
-                    v > 0
+                    (v ?? 0) > 0
                       ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
                       : "bg-gray-100 dark:bg-[#1f2937] text-gray-400 dark:text-[#484f58]"
                   }`}>
-                    {v}
+                    {v ?? 0}
                   </span>
                 ),
               },
@@ -710,9 +711,9 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                 key:    "actions",
                 width:  200,
                 align:  "right" as const,
-                render: (_: unknown, p: FormPageListItem) => (
+                render: (_: unknown, s: FormScreen) => (
                   <Space size={2}>
-                    <Link href={`/admin?slug=${moduleCode}&screen=${p.code}`}>
+                    <Link href={`/admin/reports-design?module=${moduleCode}&screen=${s.code}`}>
                       <Button
                         type="text"
                         size="small"
@@ -722,13 +723,13 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                         Thiết kế
                       </Button>
                     </Link>
-                    {p.status.toLowerCase() === "draft" && (
+                    {s.status.toLowerCase() === "draft" && (
                       <Button
                         type="primary"
                         ghost
                         size="small"
-                        loading={publishing === p.code}
-                        onClick={() => handlePublish(p)}
+                        loading={publishing === s.code}
+                        onClick={() => handlePublish(s)}
                       >
                         Publish
                       </Button>
@@ -737,15 +738,15 @@ function PagesTab({ moduleCode }: { moduleCode: string }) {
                       type="text"
                       size="small"
                       danger
-                      loading={deleting === p.code}
-                      onClick={() => handleDelete(p)}
+                      loading={deleting === s.code}
+                      onClick={() => handleDelete(s)}
                     >
                       Xóa
                     </Button>
                   </Space>
                 ),
               },
-            ] as ColumnsType<FormPageListItem>}
+            ] as ColumnsType<FormScreen>}
           />
         )}
       </div>
@@ -827,14 +828,17 @@ function ModuleDetail({ module }: { module: FormsModule }) {
               children: <FormsTab moduleCode={module.code} />,
             },
             {
-              key: "pages",
+              key: "screens",
               label: (
                 <span className="flex items-center gap-1.5">
                   <LayoutDashboard size={12} />
-                  Pages
+                  Screens
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-[#1f2937] text-gray-500 dark:text-[#8b949e]">
+                    {module.screenCount}
+                  </span>
                 </span>
               ),
-              children: <PagesTab moduleCode={module.code} />,
+              children: <ScreensTab moduleCode={module.code} />,
             },
           ]}
         />
