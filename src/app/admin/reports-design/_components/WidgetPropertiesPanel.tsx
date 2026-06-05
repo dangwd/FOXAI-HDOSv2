@@ -305,11 +305,9 @@ const CURRENCY_PRESETS: { code: string; example: string }[] = [
 function DisplayFormatPicker({
   value,
   onChange,
-  compact,
 }: {
   value: string;
   onChange: (v: string) => void;
-  compact?: boolean;
 }) {
   const { type, param } = parseDisplayFormat(value);
 
@@ -829,7 +827,6 @@ function FieldRow({
                   },
                 })
               }
-              compact
             />
           </div>
         </>

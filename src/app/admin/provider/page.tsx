@@ -1,7 +1,7 @@
 "use client";
 
-import { App, Button, Input, Table, Tabs, Tag } from "antd";
-import { Key, Plus, Search, ShieldOff } from "lucide-react";
+import { App, Button, Input, Table, Tabs, Tag, theme } from "antd";
+import { Key, Layers, Plus, Search, ShieldOff } from "lucide-react";
 import { useState } from "react";
 import { CredentialsModal } from "./_components/CredentialsModal";
 import { OperationsTab } from "./_components/OperationsTab";
@@ -13,7 +13,7 @@ import {
   type StatusFilter,
 } from "./_hooks/useProviderManager";
 import { STATUS_META, STATUS_ORDER, providerColor } from "./_lib/constants";
-import type { Provider, ProviderStatus } from "./_lib/types";
+import type { Provider } from "./_lib/types";
 import { BLANK_FORM, type ProviderForm } from "./_lib/types";
 
 // ─── Drawer state ─────────────────────────────────────────────────────────────
@@ -38,39 +38,6 @@ function toForm(p: Provider): ProviderForm {
   };
 }
 
-// ─── Stats bar ────────────────────────────────────────────────────────────────
-
-function StatsBar({ providers }: { providers: Provider[] }) {
-  const counts = STATUS_ORDER.reduce<Record<ProviderStatus, number>>(
-    (acc, s) => ({
-      ...acc,
-      [s]: providers.filter((p) => p.status === s).length,
-    }),
-    {} as Record<ProviderStatus, number>,
-  );
-  return (
-    <div className="flex items-center gap-3 flex-wrap">
-      {STATUS_ORDER.map((s) => {
-        const meta = STATUS_META[s];
-        const n = counts[s];
-        if (!n) return null;
-        return (
-          <Tag
-            key={s}
-            style={{
-              color: meta.color,
-              background: meta.bg,
-              border: "none",
-              fontWeight: 600,
-            }}
-          >
-            {n} {meta.label}
-          </Tag>
-        );
-      })}
-    </div>
-  );
-}
 
 // ─── Credentials tab (simple list) ───────────────────────────────────────────
 
@@ -244,6 +211,7 @@ function ProvidersTab({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProviderManagerPage() {
+  const { token } = theme.useToken();
   const { message } = App.useApp();
   const manager = useProviderManager();
 
@@ -308,21 +276,100 @@ export default function ProviderManagerPage() {
     },
   ];
 
+  const headerStats = manager.providers.length > 0
+    ? [
+        { label: "Providers",   value: manager.providers.length,                                               accent: false },
+        { label: "Active",      value: manager.providers.filter((p) => p.status === "active").length,          accent: true  },
+        { label: "Issues",      value: manager.providers.filter((p) => p.status !== "active").length,          accent: false },
+        { label: "Operations",  value: manager.providers.reduce((acc, p) => acc + p.operations.length, 0),     accent: false },
+      ]
+    : [];
+
   return (
-    <div className="p-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-[#e6edf3] m-0">
-            Quản trị hệ thống
-          </h1>
-          <div className="flex items-center gap-3 mt-1 flex-wrap">
-            <p className="text-sm text-gray-500 dark:text-[#8b949e] m-0">
-              Quản lý provider, operation registry và credentials.
-            </p>
-            <StatsBar providers={manager.providers} />
-          </div>
+    <div className="p-6" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Page header banner */}
+      <div style={{
+        borderRadius:   token.borderRadiusLG,
+        border:         "1px solid rgba(5,150,105,0.2)",
+        background:     "linear-gradient(135deg, rgba(5,150,105,0.1) 0%, rgba(5,150,105,0.04) 55%, transparent 100%)",
+        padding:        "20px 24px",
+        display:        "flex",
+        alignItems:     "center",
+        gap:            20,
+        position:       "relative",
+        overflow:       "hidden",
+        flexWrap:       "wrap",
+      }}>
+        {/* Decorative orbs */}
+        <div style={{
+          position: "absolute", right: -50, top: -50,
+          width: 180, height: 180, borderRadius: "50%",
+          background: "rgba(5,150,105,0.07)", pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute", right: 80, bottom: -70,
+          width: 130, height: 130, borderRadius: "50%",
+          background: "rgba(5,150,105,0.04)", pointerEvents: "none",
+        }} />
+
+        {/* Icon */}
+        <div style={{
+          width: 52, height: 52,
+          borderRadius:   token.borderRadiusLG,
+          background:     "rgba(5,150,105,0.15)",
+          border:         "1px solid rgba(5,150,105,0.28)",
+          display:        "flex", alignItems: "center", justifyContent: "center",
+          flexShrink:     0,
+          boxShadow:      "0 0 20px rgba(5,150,105,0.15)",
+        }}>
+          <Layers size={24} style={{ color: "#34d399" }} />
         </div>
+
+        {/* Title + desc */}
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+            <h1 style={{ margin: 0, fontSize: token.fontSizeXL, fontWeight: 700, lineHeight: 1, color: token.colorText }}>
+              Quản trị hệ thống
+            </h1>
+            <span style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
+              textTransform: "uppercase", padding: "2px 8px",
+              borderRadius: 6, lineHeight: "18px", userSelect: "none",
+              background: "rgba(5,150,105,0.15)", color: "#34d399",
+              border: "1px solid rgba(5,150,105,0.25)",
+            }}>
+              Admin
+            </span>
+          </div>
+          <p style={{ margin: 0, fontSize: token.fontSize, color: token.colorTextSecondary }}>
+            Quản lý provider, operation registry và credentials.
+          </p>
+        </div>
+
+        {/* Inline stats */}
+        {headerStats.length > 0 && (
+          <div style={{ display: "flex", gap: 10, flexShrink: 0, flexWrap: "wrap" }}>
+            {headerStats.map((stat) => (
+              <div key={stat.label} style={{
+                textAlign: "center", padding: "10px 18px",
+                borderRadius: token.borderRadius,
+                background: "rgba(255,255,255,0.03)",
+                border: `1px solid ${token.colorBorderSecondary}`,
+                backdropFilter: "blur(4px)",
+              }}>
+                <div style={{
+                  fontSize: 22, fontWeight: 700, lineHeight: 1,
+                  color: stat.accent ? "#34d399" : token.colorText,
+                }}>
+                  {stat.value}
+                </div>
+                <div style={{ fontSize: 11, color: token.colorTextTertiary, marginTop: 3 }}>
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Tabs */}

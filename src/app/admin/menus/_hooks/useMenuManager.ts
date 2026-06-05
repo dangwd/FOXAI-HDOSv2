@@ -35,18 +35,6 @@ function apiToInternalRows(rows: unknown[]): FormPageRow[] {
   }));
 }
 
-function internalToApiLayout(rows: FormPageRow[]): object {
-  return {
-    rows: rows.map((row) => ({
-      components: row.components.map((c) => {
-        const base: Record<string, unknown> = { type: c.type, span: c.span };
-        if (c.type === "FormSection") { base.formKey = c.formKey ?? ""; if (c.title) base.title = c.title; }
-        if (c.type === "TextBlock")   { base.content = c.content ?? ""; base.align = c.align ?? "left"; }
-        return base;
-      }),
-    })),
-  };
-}
 
 function apiWidgetToDesigner(w: AdminWidgetDef): DesignerWidget {
   let parsed: Record<string, unknown> = {};

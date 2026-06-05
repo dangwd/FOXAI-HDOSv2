@@ -139,7 +139,8 @@ export function ProfileDrawer({
 }) {
   const [form] = Form.useForm<ProfileFormValues>();
 
-  const mappingRows = (Form.useWatch("mappings", form) ?? []) as MappingRow[];
+  const rawMappingRows = Form.useWatch("mappings", form);
+  const mappingRows = useMemo(() => (rawMappingRows ?? []) as MappingRow[], [rawMappingRows]);
   const canonicalOptions = useMemo(
     () =>
       [...new Set(mappingRows.map((r) => r?.canonicalField?.trim()).filter(Boolean))].map(
