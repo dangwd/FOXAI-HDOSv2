@@ -32,7 +32,19 @@ export function useSourceProfiles() {
     }
   }, [message]);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    let active = true;
+    adminApi.listSourceProfiles()
+      .then((data) => { if (active) { setProfiles(data ?? []); setLoading(false); } })
+      .catch(() => {
+        if (active) {
+          setError("Không thể tải danh sách Source Profiles");
+          message.error("Không thể tải danh sách Source Profiles");
+          setLoading(false);
+        }
+      });
+    return () => { active = false; };
+  }, [message]);
 
   // ── Derived lists ─────────────────────────────────────────────────────────
 

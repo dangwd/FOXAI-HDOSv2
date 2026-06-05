@@ -25,10 +25,16 @@ export function useDataSources(
 
     if (!ds.length) return;
 
-    // Only fetch sources whose required params are all available
-    const active = ds.filter((s) =>
-      s.requiredParams.every((p) => Boolean(params[p])),
-    );
+    // Only gate fetching on params that are actually used as {param} placeholders
+    // in the resourcePath. Declared requiredParams that don't appear in the path
+    // are ignored — they don't need a URL value to build the request.
+    const active = ds.filter((s) => {
+      const pathPlaceholders = new Set(
+        (s.resourcePath ?? "").match(/\{(\w+)\}/g)?.map((m) => m.slice(1, -1)) ?? [],
+      );
+      const effectiveRequired = s.requiredParams.filter((p) => pathPlaceholders.has(p));
+      return effectiveRequired.every((p) => Boolean(params[p]));
+    });
     if (!active.length) return;
 
     let cancelled = false;
