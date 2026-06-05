@@ -313,12 +313,14 @@ export function FieldBrowser({ selectedSlug }: { selectedSlug: string }) {
   const [sources, setSources] = useState<DataSource[]>([]);
 
   useEffect(() => {
-    if (!selectedSlug) { setSources([]); return; }
+    if (!selectedSlug) return;
+    let cancelled = false;
     const [mc, sc] = splitSlug(selectedSlug);
     adminApi
       .getScreenLayout(mc, sc)
-      .then((layout) => setSources(layout.dataSources ?? []))
-      .catch(() => setSources([]));
+      .then((layout) => { if (!cancelled) setSources(layout.dataSources ?? []); })
+      .catch(() => { if (!cancelled) setSources([]); });
+    return () => { cancelled = true; };
   }, [selectedSlug]);
 
   if (sources.length === 0) return null;
