@@ -171,6 +171,25 @@ function IconDatabase() {
   );
 }
 
+// Icon bảng/view dùng cho Lakehouse Views (doc 44)
+function IconTableProperties() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M3 9h18M3 15h18M9 3v18" />
+    </svg>
+  );
+}
+
 function IconBack() {
   return (
     <svg
@@ -316,8 +335,9 @@ const MENU_ITEMS = [
   { href: "/admin/menus", label: "Quản lý Menu BC", Icon: IconMenu },
   { href: "/admin/provider", label: "Quản trị Provider", Icon: IconSettings },
   { href: "/admin/operations", label: "Quản lý Operations", Icon: IconList },
-  { href: "/admin/datasources", label: "Data Matching Sources", Icon: IconDatabase },
-  { href: "/admin/console", label: "Test Console", Icon: IconTerminal },
+  { href: "/admin/datasources",     label: "Data Matching Sources", Icon: IconDatabase },
+  { href: "/admin/lakehouse-views", label: "Lakehouse Views",       Icon: IconTableProperties },
+  { href: "/admin/console",         label: "Test Console",           Icon: IconTerminal },
   { href: "/admin/sync", label: "Theo dõi đồng bộ", Icon: IconWifi },
 ];
 

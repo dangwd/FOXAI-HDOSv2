@@ -6,7 +6,7 @@ import { adminApi } from "@/infrastructure/http/adminApi";
 import { FormScreenRenderer } from "@/components/FormScreenRenderer";
 import { ModuleRenderer } from "@/components/ModuleRenderer";
 import useAuthStore from "@/core/auth/authStore";
-import DashboardHome from "@/app/client/DashboardHome";
+import { useMenuStore } from "@/store/menuStore";
 import type {
   FormScreen,
   ModuleLayout,
@@ -38,6 +38,22 @@ function PageSkeleton() {
       </div>
     </div>
   );
+}
+
+// ─── First-screen redirect ────────────────────────────────────────────────────
+
+function RedirectToFirstScreen() {
+  const router = useRouter();
+  const groups  = useMenuStore((s) => s.groups);
+  const loading = useMenuStore((s) => s.loading);
+
+  useEffect(() => {
+    if (loading) return;
+    const href = groups[0]?.items[0]?.href;
+    if (href) router.replace(href);
+  }, [groups, loading, router]);
+
+  return <PageSkeleton />;
 }
 
 // ─── Module kind detection ────────────────────────────────────────────────────
@@ -252,8 +268,8 @@ function HdosPageContent() {
     [router, searchParams],
   );
 
-  if (moduleId === "dashboard") {
-    return <DashboardHome />;
+  if (!moduleId || moduleId === "dashboard") {
+    return <RedirectToFirstScreen />;
   }
 
   return (
