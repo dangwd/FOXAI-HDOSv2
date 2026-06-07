@@ -114,11 +114,14 @@ export function ViewBindingDrawer({ open, editing, saving, onClose, onSave }: Pr
 
   useEffect(() => {
     if (!open) return;
+    let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPLoading(true);
     adminApi.listSourceProfiles()
-      .then((data) => setProfiles(data ?? []))
-      .catch(() => setProfiles([]))
-      .finally(() => setPLoading(false));
+      .then((data) => { if (active) setProfiles(data ?? []); })
+      .catch(() => { if (active) setProfiles([]); })
+      .finally(() => { if (active) setPLoading(false); });
+    return () => { active = false; };
   }, [open]);
 
   // Options sourceSystem — ưu tiên "lakehouse:*" lên đầu (use-case chính của trang này)

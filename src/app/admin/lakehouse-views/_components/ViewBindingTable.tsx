@@ -169,7 +169,7 @@ export function ViewBindingTable({
         <Text type="secondary" style={{ fontSize: 13 }}>
           Chưa có ViewBinding nào.{" "}
           <Text style={{ color: token.colorSuccess, fontSize: 13 }}>
-            Nhấn "+ Thêm Binding" để bắt đầu.
+            Nhấn &quot;+ Thêm Binding&quot; để bắt đầu.
           </Text>
         </Text>
       </div>
