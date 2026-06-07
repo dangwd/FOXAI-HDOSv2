@@ -65,22 +65,32 @@ export function KpiCard({
   const displayValue     = live?.value     ?? value;
   const displayHint      = live?.hint      ?? hint;
   const displayHintColor = live?.hintColor ?? hintColor;
-  const borderStyle: CSSProperties = accent
-    ? { borderLeftWidth: 3, borderLeftColor: accent }
+
+  const containerStyle: CSSProperties = accent
+    ? { borderLeftWidth: 4, borderLeftColor: accent }
     : {};
 
   return (
     <div
       className={cn(
-        "relative rounded-2xl p-4 border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm",
+        "relative rounded-2xl px-5 py-4 border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm overflow-hidden",
         className,
       )}
-      style={borderStyle}
+      style={containerStyle}
     >
-      {/* Trend icon top-right */}
+      {/* Decorative accent blob — top-right depth */}
+      {accent && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full"
+          style={{ background: accent, opacity: 0.07 }}
+        />
+      )}
+
+      {/* Trend icon — top-right */}
       {trend && !loading && (
         <div className={cn(
-          "absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center",
+          "absolute top-3.5 right-4 w-8 h-8 rounded-xl flex items-center justify-center",
           trend.isUp
             ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
             : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
@@ -89,7 +99,8 @@ export function KpiCard({
         </div>
       )}
 
-      <p className="text-[11px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider m-0 mb-2 flex items-center gap-1.5 pr-8">
+      {/* Title row */}
+      <p className="text-[10px] font-bold text-gray-400 dark:text-[#8b949e] uppercase tracking-widest m-0 mb-3 flex items-center gap-1.5 pr-10 leading-none">
         {accent && (
           <span
             className="w-1.5 h-1.5 rounded-full shrink-0"
@@ -101,18 +112,18 @@ export function KpiCard({
 
       {loading ? (
         <>
-          <div className="animate-pulse bg-gray-200 dark:bg-[#30363d] rounded h-8 w-24 mt-1" />
-          <div className="animate-pulse bg-gray-200 dark:bg-[#30363d] rounded h-2.5 w-32 mt-2" />
+          <div className="animate-pulse bg-gray-200 dark:bg-[#30363d] rounded-lg h-10 w-28 mt-1" />
+          <div className="animate-pulse bg-gray-200 dark:bg-[#30363d] rounded h-3 w-32 mt-3" />
         </>
       ) : (
         <>
-          <p className="text-3xl font-bold tabular-nums text-gray-900 dark:text-[#e6edf3] m-0 leading-tight">
+          <p className="text-4xl font-bold tabular-nums text-gray-900 dark:text-[#e6edf3] m-0 leading-none">
             {displayValue}
           </p>
 
           {trend && (
             <div className={cn(
-              "inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-[11px] font-medium",
+              "inline-flex items-center gap-1 mt-3 px-2.5 py-1 rounded-full text-[11px] font-semibold",
               trend.isUp
                 ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
                 : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400",
@@ -123,7 +134,10 @@ export function KpiCard({
           )}
 
           {displayHint != null && !trend && (
-            <p className="text-xs m-0 mt-1" style={displayHintColor ? { color: displayHintColor } : undefined}>
+            <p
+              className="text-xs m-0 mt-2 text-gray-500 dark:text-[#8b949e]"
+              style={displayHintColor ? { color: displayHintColor } : undefined}
+            >
               {displayHint}
             </p>
           )}

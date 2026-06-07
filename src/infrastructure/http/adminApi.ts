@@ -387,6 +387,28 @@ export interface OperationApiRecord {
   status: string;
 }
 
+// ─── LakehouseService types (doc 44) ────────────────────────────────────────
+
+/**
+ * ViewBinding — đăng ký PostgreSQL view ↔ SourceProfile trong DataMatchingService.
+ * Admin tạo binding → WarehousePollerWorker tự poll và publish RawRecordIngestRequestedIntegrationEvent.
+ */
+export interface ViewBinding {
+  id:                  string;
+  viewName:            string;   // "warehouse.v_lab_results_v1"
+  sourceSystem:        string;   // "lakehouse:v_lab_results_v1" — phải khớp SourceProfile
+  recordType:          string;   // "lab-result" — phải khớp SourceProfile
+  businessKeyColumn:   string;   // tên cột trong PG view dùng làm business key
+  updatedAtColumn:     string;   // tên cột updated_at để incremental poll
+  pollIntervalSeconds: number;   // 300 = 5 phút
+  isActive:            boolean;
+  createdAtUtc:        string;
+  updatedAtUtc?:       string | null;
+}
+
+export type CreateViewBindingRequest = Omit<ViewBinding, "id" | "isActive" | "createdAtUtc" | "updatedAtUtc">;
+export type UpdateViewBindingRequest = Partial<Pick<ViewBinding, "businessKeyColumn" | "updatedAtColumn" | "pollIntervalSeconds" | "isActive">>;
+
 // ─── DataMatchingService types ───────────────────────────────────────────────
 
 export interface DmSourceProfile {
@@ -1195,6 +1217,42 @@ export const adminApi = {
   deleteFormsOperation: (providerCode: string, operationKey: string): Promise<void> =>
     httpClient
       .delete(`/forms/admin/providers/${providerCode}/operations/${operationKey}`)
+      .then(() => undefined),
+
+  // ── LakehouseService — ViewBinding CRUD (doc 44) ────────────────────────
+
+  listViewBindings: (): Promise<ViewBinding[]> =>
+    httpClient
+      .get<{ success?: boolean; data?: ViewBinding[] } | ViewBinding[]>(
+        "/lakehouse/view-bindings",
+      )
+      .then((r) => unwrapForms<ViewBinding[]>(r.data)),
+
+  createViewBinding: (body: CreateViewBindingRequest): Promise<ViewBinding> =>
+    httpClient
+      .post<{ success?: boolean; data?: ViewBinding } | ViewBinding>(
+        "/lakehouse/view-bindings",
+        body,
+      )
+      .then((r) => unwrapForms<ViewBinding>(r.data)),
+
+  updateViewBinding: (id: string, body: UpdateViewBindingRequest): Promise<ViewBinding> =>
+    httpClient
+      .put<{ success?: boolean; data?: ViewBinding } | ViewBinding>(
+        `/lakehouse/view-bindings/${id}`,
+        body,
+      )
+      .then((r) => unwrapForms<ViewBinding>(r.data)),
+
+  deleteViewBinding: (id: string): Promise<void> =>
+    httpClient
+      .delete(`/lakehouse/view-bindings/${id}`)
+      .then(() => undefined),
+
+  // Trigger 1 lần sync thủ công — không chờ response data
+  triggerViewBindingSync: (id: string): Promise<void> =>
+    httpClient
+      .post(`/lakehouse/view-bindings/${id}/sync`)
       .then(() => undefined),
 
   // ── DataMatchingService — Source Profiles ────────────────────────────────
