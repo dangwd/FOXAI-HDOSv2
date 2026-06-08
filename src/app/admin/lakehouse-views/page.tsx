@@ -8,6 +8,7 @@ import { Plus, RefreshCw, Search, TableProperties } from "lucide-react";
 import { useState } from "react";
 import { ViewBindingDrawer } from "./_components/ViewBindingDrawer";
 import { ViewBindingTable } from "./_components/ViewBindingTable";
+import { ViewRecordsDrawer } from "./_components/ViewRecordsDrawer";
 import { useViewBindings } from "./_hooks/useViewBindings";
 import type { ViewBinding, ViewBindingFormValues } from "./_lib/types";
 
@@ -23,6 +24,8 @@ export default function LakehouseViewsPage() {
     ViewBinding | "create" | null
   >(null);
   const isEditing = drawerTarget !== null && drawerTarget !== "create";
+
+  const [recordsTarget, setRecordsTarget] = useState<ViewBinding | null>(null);
 
   async function handleSave(values: ViewBindingFormValues) {
     if (isEditing) {
@@ -251,6 +254,7 @@ export default function LakehouseViewsPage() {
         onEdit={(b) => setDrawerTarget(b)}
         onDelete={(b) => manager.remove(b.id)}
         onSync={(b) => manager.triggerSync(b.id)}
+        onViewRecords={(b) => setRecordsTarget(b)}
       />
 
       {/* Create / Edit Drawer */}
@@ -260,6 +264,13 @@ export default function LakehouseViewsPage() {
         saving={manager.saving}
         onClose={() => setDrawerTarget(null)}
         onSave={handleSave}
+      />
+
+      {/* View Records Drawer */}
+      <ViewRecordsDrawer
+        open={recordsTarget !== null}
+        binding={recordsTarget}
+        onClose={() => setRecordsTarget(null)}
       />
     </div>
   );

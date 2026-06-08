@@ -15,11 +15,13 @@ import {
   Form,
   Input,
   InputNumber,
+  Popconfirm,
   Space,
   Spin,
   Table,
   Tabs,
   Tag,
+  Tooltip,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -31,6 +33,8 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Trash2,
+  Upload,
 } from "lucide-react";
 
 function FieldLabel({ text, required }: { text: string; required?: boolean }) {
@@ -562,7 +566,7 @@ function FormsTab({ moduleCode }: { moduleCode: string }) {
 // ─── Right panel: screens tab ────────────────────────────────────────────────
 
 function ScreensTab({ moduleCode }: { moduleCode: string }) {
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
   const [screens,    setScreens]    = useState<FormScreen[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState<string | null>(null);
@@ -598,26 +602,17 @@ function ScreensTab({ moduleCode }: { moduleCode: string }) {
     }
   }
 
-  function handleDelete(s: FormScreen) {
-    modal.confirm({
-      title:   `Xóa screen "${s.title}"?`,
-      content: "Thao tác này không thể hoàn tác. Tất cả tab và widget sẽ bị xóa.",
-      okText:  "Xóa",
-      okType:  "danger",
-      cancelText: "Hủy",
-      onOk: async () => {
-        setDeleting(s.code);
-        try {
-          await adminApi.deleteFormScreen(moduleCode, s.code);
-          message.success("Đã xóa screen");
-          load();
-        } catch (err) {
-          message.error(err instanceof Error ? err.message : String(err));
-        } finally {
-          setDeleting(null);
-        }
-      },
-    });
+  async function handleDelete(s: FormScreen) {
+    setDeleting(s.code);
+    try {
+      await adminApi.deleteFormScreen(moduleCode, s.code);
+      message.success("Đã xóa screen");
+      load();
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : String(err));
+    } finally {
+      setDeleting(null);
+    }
   }
 
   return (
@@ -709,40 +704,44 @@ function ScreensTab({ moduleCode }: { moduleCode: string }) {
               {
                 title:  "",
                 key:    "actions",
-                width:  200,
+                width:  120,
                 align:  "right" as const,
                 render: (_: unknown, s: FormScreen) => (
-                  <Space size={2}>
-                    <Link href={`/admin/reports-design?module=${moduleCode}&screen=${s.code}`}>
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={<PenLine size={12} />}
-                        className="text-emerald-600 dark:text-emerald-400 hover:text-blue-600! hover:bg-blue-50! dark:hover:bg-blue-900/20!"
-                      >
-                        Thiết kế
-                      </Button>
-                    </Link>
+                  <Space size={4}>
+                    <Tooltip title="Thiết kế screen">
+                      <Link href={`/admin/reports-design?module=${moduleCode}&screen=${s.code}`}>
+                        <Button type="text" size="small" icon={<PenLine size={13} />} />
+                      </Link>
+                    </Tooltip>
                     {s.status.toLowerCase() === "draft" && (
-                      <Button
-                        type="primary"
-                        ghost
-                        size="small"
-                        loading={publishing === s.code}
-                        onClick={() => handlePublish(s)}
-                      >
-                        Publish
-                      </Button>
+                      <Tooltip title="Publish — chuyển sang Published">
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<Upload size={13} />}
+                          loading={publishing === s.code}
+                          onClick={() => handlePublish(s)}
+                        />
+                      </Tooltip>
                     )}
-                    <Button
-                      type="text"
-                      size="small"
-                      danger
-                      loading={deleting === s.code}
-                      onClick={() => handleDelete(s)}
+                    <Popconfirm
+                      title={`Xóa screen "${s.title}"?`}
+                      description="Thao tác này không thể hoàn tác. Tất cả tab và widget sẽ bị xóa."
+                      okText="Xóa"
+                      cancelText="Hủy"
+                      okButtonProps={{ danger: true }}
+                      onConfirm={() => handleDelete(s)}
                     >
-                      Xóa
-                    </Button>
+                      <Tooltip title="Xóa">
+                        <Button
+                          type="text"
+                          size="small"
+                          danger
+                          icon={<Trash2 size={13} />}
+                          loading={deleting === s.code}
+                        />
+                      </Tooltip>
+                    </Popconfirm>
                   </Space>
                 ),
               },

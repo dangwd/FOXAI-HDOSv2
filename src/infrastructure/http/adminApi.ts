@@ -1285,6 +1285,23 @@ export const adminApi = {
 
   // ── DataMatchingService — Source Profiles ────────────────────────────────
 
+  // ── DataMatchingService — SDUI Pages (doc 48) ────────────────────────────
+
+  listDmPages: (): Promise<string[]> =>
+    httpClient
+      .get<{ success: boolean; data: string[] }>("/dm/pages")
+      .then((r) => unwrapForms<string[]>(r.data)),
+
+  fetchDmPage: (code: string, opts?: { sourceSystem?: string; date?: string }): Promise<import("@/types/sdui").SduiPage> =>
+    httpClient
+      .get<{ success: boolean; data: import("@/types/sdui").SduiPage }>(
+        `/dm/pages/${encodeURIComponent(code)}`,
+        { params: opts },
+      )
+      .then((r) => unwrapForms<import("@/types/sdui").SduiPage>(r.data)),
+
+  // ── DataMatchingService — Source Profiles ────────────────────────────────
+
   listSourceProfiles: (sourceSystem?: string): Promise<DmSourceProfile[]> =>
     httpClient
       .get<{ success: boolean; data: DmSourceProfile[] }>(

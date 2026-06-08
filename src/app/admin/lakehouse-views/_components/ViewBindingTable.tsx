@@ -1,8 +1,8 @@
 "use client";
 
-import { App, Badge, Button, Popconfirm, Space, Table, Tag, Typography, theme } from "antd";
+import { App, Badge, Button, Popconfirm, Space, Table, Tag, Tooltip, Typography, theme } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { Pencil, RefreshCw, Trash2 } from "lucide-react";
+import { BarChart2, ExternalLink, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import type { ViewBinding } from "../_lib/types";
 
 const { Text } = Typography;
@@ -46,6 +46,7 @@ interface Props {
   onEdit:      (b: ViewBinding) => void;
   onDelete:    (b: ViewBinding) => void;
   onSync:      (b: ViewBinding) => void;
+  onViewRecords: (b: ViewBinding) => void;
 }
 
 export function ViewBindingTable({
@@ -56,6 +57,7 @@ export function ViewBindingTable({
   onEdit,
   onDelete,
   onSync,
+  onViewRecords,
 }: Props) {
   const { modal } = App.useApp();
   const { token } = theme.useToken();
@@ -120,26 +122,48 @@ export function ViewBindingTable({
     {
       title:  "Thao tác",
       key:    "actions",
-      width:  130,
+      width:  210,
       align:  "right",
       render: (_, b) => (
         <Space size={4}>
           {/* Sync now */}
-          <Button
-            size="small"
-            icon={<RefreshCw size={13} />}
-            loading={syncing === b.id}
-            title="Sync ngay"
-            onClick={() => onSync(b)}
-          />
+          <Tooltip title="Sync ngay — đẩy toàn bộ rows của view vào DataMatchingService">
+            <Button
+              size="small"
+              icon={<RefreshCw size={13} />}
+              loading={syncing === b.id}
+              onClick={() => onSync(b)}
+            />
+          </Tooltip>
+
+          {/* View records */}
+          <Tooltip title="Xem DM Records — verify data đã vào sau khi sync">
+            <Button
+              size="small"
+              icon={<BarChart2 size={13} />}
+              onClick={() => onViewRecords(b)}
+            />
+          </Tooltip>
+
+          {/* View dashboard */}
+          <Tooltip title={`Mở Dashboard /dm/pages/${b.recordType} (cần BE có SduiPageConfig)`}>
+            <Button
+              size="small"
+              icon={<ExternalLink size={13} />}
+              onClick={() =>
+                window.open(`/client/dm-page/${encodeURIComponent(b.recordType)}`, "_blank")
+              }
+            />
+          </Tooltip>
 
           {/* Edit */}
-          <Button
-            size="small"
-            icon={<Pencil size={13} />}
-            title="Chỉnh sửa"
-            onClick={() => onEdit(b)}
-          />
+          <Tooltip title="Chỉnh sửa">
+            <Button
+              size="small"
+              icon={<Pencil size={13} />}
+              onClick={() => onEdit(b)}
+            />
+          </Tooltip>
 
           {/* Delete */}
           <Popconfirm
@@ -154,7 +178,6 @@ export function ViewBindingTable({
               size="small"
               danger
               icon={<Trash2 size={13} />}
-              title="Xóa"
             />
           </Popconfirm>
         </Space>
