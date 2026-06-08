@@ -110,6 +110,7 @@ export function ViewRecordsDrawer({ open, binding, onClose }: Props) {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (open && binding) load();
     else setRecords([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
