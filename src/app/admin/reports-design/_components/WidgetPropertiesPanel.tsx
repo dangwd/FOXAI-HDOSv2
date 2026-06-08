@@ -1,9 +1,37 @@
 "use client";
 
-import type { WidgetCatalogEntry } from "@/infrastructure/http/adminApi";
-import { Input, InputNumber, Switch, Tooltip } from "antd";
-import { ChevronDown, ChevronRight, Plus, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import useAuthStore from "@/core/auth/authStore";
+import type {
+  DataSource,
+  WidgetCatalogEntry,
+} from "@/infrastructure/http/adminApi";
+import { adminApi } from "@/infrastructure/http/adminApi";
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Input, InputNumber, Modal, Switch, Tooltip } from "antd";
+import {
+  ChevronDown,
+  ChevronRight,
+  GripVertical,
+  Plus,
+  Settings2,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   WIDGET_TYPE_DESCRIPTIONS,
   WIDGET_TYPE_LABELS,
@@ -717,6 +745,181 @@ function PieChartBinding({
   );
 }
 
+// ─── Mini field browser (embedded in column editor modal) ─────────────────────
+
+const SCHEMA_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/+$/, "");
+
+interface MiniField {
+  path: string;
+  expr: string;
+  type: string;
+}
+
+const MINI_BADGE: Record<string, { label: string; cls: string }> = {
+  string: {
+    label: "str",
+    cls: "text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30",
+  },
+  number: {
+    label: "num",
+    cls: "text-purple-500 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30",
+  },
+  date: {
+    label: "date",
+    cls: "text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/30",
+  },
+  boolean: {
+    label: "bool",
+    cls: "text-orange-500 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30",
+  },
+};
+
+function MiniFieldChip({ field }: { field: MiniField }) {
+  const badge = MINI_BADGE[field.type];
+  function handleDragStart(e: React.DragEvent) {
+    e.dataTransfer.setData("text/plain", field.expr);
+    e.dataTransfer.setData("application/x-field-expr", field.expr);
+    e.dataTransfer.effectAllowed = "copy";
+  }
+  return (
+    <div
+      draggable
+      onDragStart={handleDragStart}
+      title={field.expr}
+      className="flex items-center gap-1.5 px-2 py-1 rounded border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] hover:border-emerald-300 dark:hover:border-emerald-700/60 cursor-grab active:cursor-grabbing transition-all select-none"
+    >
+      {badge && (
+        <span
+          className={`shrink-0 text-[8px] font-bold font-mono px-1 py-0.5 rounded ${badge.cls}`}
+        >
+          {badge.label}
+        </span>
+      )}
+      <span className="flex-1 text-[10px] font-mono text-gray-700 dark:text-[#c9d1d9] truncate min-w-0">
+        {field.path}
+      </span>
+    </div>
+  );
+}
+
+function MiniFieldBrowser({ selectedSlug }: { selectedSlug: string }) {
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const [groups, setGroups] = useState<
+    { namespace: string; fields: MiniField[] }[]
+  >([]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!selectedSlug) return;
+    let cancelled = false;
+    const idx = selectedSlug.indexOf("/");
+    const [mc, sc] =
+      idx === -1
+        ? [selectedSlug, ""]
+        : [selectedSlug.slice(0, idx), selectedSlug.slice(idx + 1)];
+
+    adminApi
+      .getScreenLayout(mc, sc)
+      .then(async (layout) => {
+        if (cancelled) return;
+        const sources: DataSource[] = layout.dataSources ?? [];
+        const result: { namespace: string; fields: MiniField[] }[] = [];
+        for (const src of sources) {
+          if (!src.schemaPath) continue;
+          try {
+            const url = src.schemaPath.startsWith("http")
+              ? src.schemaPath
+              : `${SCHEMA_BASE}${src.schemaPath}`;
+            const res = await fetch(url, {
+              headers: accessToken
+                ? { Authorization: `Bearer ${accessToken}` }
+                : {},
+            });
+            if (!res.ok) continue;
+            const raw = (await res.json()) as {
+              data?: { fields?: Array<{ key: string; type: string }> };
+            };
+            const schemaFields = raw.data?.fields ?? [];
+            result.push({
+              namespace: src.namespace,
+              fields: schemaFields.map((f) => ({
+                path: f.key,
+                expr: `{{sources.${src.namespace}.${f.key}}}`,
+                type: f.type ?? "string",
+              })),
+            });
+          } catch {
+            // skip unreachable source
+          }
+        }
+        if (!cancelled) {
+          setGroups(result);
+          const exp: Record<string, boolean> = {};
+          result.forEach((g) => {
+            exp[g.namespace] = true;
+          });
+          setExpanded(exp);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSlug, accessToken]);
+
+  if (groups.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full px-3">
+        <p className="text-[10px] text-gray-400 dark:text-[#484f58] text-center m-0 leading-relaxed">
+          Không có schema.
+          <br />
+          Kéo từ Field Browser bên ngoài.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-y-auto h-full space-y-1 py-1 pr-1">
+      {groups.map((g) => (
+        <div key={g.namespace}>
+          <button
+            onClick={() =>
+              setExpanded((e) => ({ ...e, [g.namespace]: !e[g.namespace] }))
+            }
+            className="w-full flex items-center gap-1.5 px-2 py-1 text-left hover:bg-gray-50 dark:hover:bg-[#0f172a] rounded transition-colors"
+          >
+            {expanded[g.namespace] ? (
+              <ChevronDown size={10} className="shrink-0 text-gray-400" />
+            ) : (
+              <ChevronRight size={10} className="shrink-0 text-gray-400" />
+            )}
+            <span className="text-[10px] font-semibold text-gray-600 dark:text-[#8b949e] font-mono flex-1 truncate">
+              {g.namespace}
+            </span>
+            <span className="text-[9px] text-gray-400 dark:text-[#484f58] shrink-0">
+              {g.fields.length}f
+            </span>
+          </button>
+          {expanded[g.namespace] && (
+            <div className="pl-2 space-y-0.5">
+              {g.fields.map((f) => (
+                <MiniFieldChip key={f.path} field={f} />
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function exprToFieldPath(expr: string): string {
+  const m = /^\{\{sources\.[^.}]+\.(.+)\}\}$/.exec(expr.trim());
+  return m ? m[1] : expr;
+}
+
 // ─── Table binding ────────────────────────────────────────────────────────────
 
 interface TableColumn {
@@ -724,36 +927,277 @@ interface TableColumn {
   header: string;
 }
 
+interface SortableColItem extends TableColumn {
+  id: string;
+}
+
+function SortableColumnRow({
+  item,
+  index,
+  onUpdate,
+  onRemove,
+}: {
+  item: SortableColItem;
+  index: number;
+  onUpdate: (col: TableColumn) => void;
+  onRemove: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+  const [fieldOver, setFieldOver] = useState(false);
+
+  function onFieldDragOver(e: React.DragEvent) {
+    if (
+      e.dataTransfer.types.includes("application/x-field-expr") ||
+      e.dataTransfer.types.includes("text/plain")
+    ) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+      setFieldOver(true);
+    }
+  }
+
+  function onFieldDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setFieldOver(false);
+    const expr =
+      e.dataTransfer.getData("application/x-field-expr") ||
+      e.dataTransfer.getData("text/plain");
+    if (expr?.includes("{{sources.")) {
+      onUpdate({ ...item, field: exprToFieldPath(expr) });
+    }
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        zIndex: isDragging ? 10 : undefined,
+      }}
+      className="flex items-center gap-2 py-1"
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="w-4 shrink-0 flex justify-center cursor-grab active:cursor-grabbing text-gray-300 dark:text-[#3d4451] hover:text-gray-500 transition-colors touch-none"
+      >
+        <GripVertical size={13} />
+      </button>
+      <span className="w-5 shrink-0 text-center text-[10px] text-gray-400 dark:text-[#484f58] select-none">
+        {index + 1}
+      </span>
+      <div
+        className={`flex-1 rounded transition-all ${fieldOver ? "ring-2 ring-emerald-400 ring-offset-1" : ""}`}
+        onDragOver={onFieldDragOver}
+        onDragLeave={() => setFieldOver(false)}
+        onDrop={onFieldDrop}
+      >
+        <Input
+          size="small"
+          value={item.field}
+          placeholder="Field name"
+          onChange={(e) =>
+            onUpdate({ field: e.target.value, header: item.header })
+          }
+          className="font-mono w-full"
+        />
+      </div>
+      <div className="flex-1">
+        <Input
+          size="small"
+          value={item.header}
+          placeholder="Tiêu đề cột"
+          onChange={(e) =>
+            onUpdate({ field: item.field, header: e.target.value })
+          }
+          className="w-full"
+        />
+      </div>
+      <button
+        onClick={onRemove}
+        className="w-6 h-6 shrink-0 flex items-center justify-center rounded text-gray-400 hover:text-red-500 transition-colors"
+      >
+        <Trash2 size={12} />
+      </button>
+    </div>
+  );
+}
+
+let _colIdCounter = 0;
+function makeColId() {
+  return `col-${++_colIdCounter}`;
+}
+
+function ColumnEditorModal({
+  open,
+  columns,
+  onClose,
+  onSave,
+  selectedSlug,
+}: {
+  open: boolean;
+  columns: TableColumn[];
+  onClose: () => void;
+  onSave: (cols: TableColumn[]) => void;
+  selectedSlug?: string;
+}) {
+  const [draft, setDraft] = useState<SortableColItem[]>(() =>
+    columns.map((c) => ({ ...c, id: makeColId() })),
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setDraft((d) => {
+        const oldIdx = d.findIndex((c) => c.id === active.id);
+        const newIdx = d.findIndex((c) => c.id === over.id);
+        return arrayMove(d, oldIdx, newIdx);
+      });
+    }
+  }
+
+  function update(id: string, col: TableColumn) {
+    setDraft((d) => d.map((c) => (c.id === id ? { ...col, id: c.id } : c)));
+  }
+
+  function remove(id: string) {
+    setDraft((d) => d.filter((c) => c.id !== id));
+  }
+
+  function add() {
+    setDraft((d) => [...d, { field: "", header: "", id: makeColId() }]);
+  }
+
+  return (
+    <Modal
+      open={open}
+      title={
+        <span className="flex items-center gap-2 text-sm font-semibold">
+          <Settings2 size={14} />
+          Thiết lập cột ({draft.length})
+        </span>
+      }
+      onCancel={onClose}
+      onOk={() => onSave(draft.map(({ field, header }) => ({ field, header })))}
+      okText="Lưu"
+      cancelText="Huỷ"
+      width={900}
+      destroyOnHidden
+    >
+      <div className="flex gap-4 h-105">
+        {/* ── Left: table editor ───────────────────────────────────────────── */}
+        <div className="flex flex-col flex-1 min-w-0">
+          {/* column headers */}
+          <div className="flex items-center gap-2 pb-1.5 mb-0.5 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
+            <span className="w-4 shrink-0" />
+            <span className="w-5 shrink-0 text-center text-[10px] font-semibold text-gray-400 dark:text-[#484f58] uppercase">
+              #
+            </span>
+            <span className="flex-1 text-[10px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider">
+              Field
+            </span>
+            <span className="flex-1 text-[10px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider">
+              Tiêu đề cột
+            </span>
+            <span className="w-6 shrink-0" />
+          </div>
+
+          {/* rows */}
+          <div className="flex-1 overflow-y-auto">
+            {draft.length === 0 ? (
+              <p className="text-sm text-gray-400 dark:text-[#484f58] text-center py-10 m-0">
+                Chưa có cột nào.
+              </p>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={draft.map((c) => c.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {draft.map((col, i) => (
+                    <SortableColumnRow
+                      key={col.id}
+                      item={col}
+                      index={i}
+                      onUpdate={(next) => update(col.id, next)}
+                      onRemove={() => remove(col.id)}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            )}
+          </div>
+
+          <button
+            onClick={add}
+            className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:underline mt-1 pt-2 border-t border-gray-100 dark:border-[#1f2937] shrink-0"
+          >
+            <Plus size={12} /> Thêm cột
+          </button>
+        </div>
+
+        {/* ── Right: field browser ─────────────────────────────────────────── */}
+        <div className="w-52 shrink-0 border-l border-gray-100 dark:border-[#1f2937] pl-3 flex flex-col">
+          <p className="text-[10px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider mb-1 shrink-0 m-0">
+            Field Browser
+          </p>
+          <p className="text-[9px] text-gray-400 dark:text-[#484f58] mb-2 shrink-0 m-0">
+            Kéo field vào cột Field
+          </p>
+          <div className="flex-1 min-h-0">
+            {selectedSlug ? (
+              <MiniFieldBrowser selectedSlug={selectedSlug} />
+            ) : (
+              <p className="text-[10px] text-gray-400 dark:text-[#484f58] text-center m-0 pt-4">
+                —
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 function TableBinding({
   configJson,
   onChange,
+  selectedSlug,
 }: {
   configJson: string;
   onChange: (json: string) => void;
+  selectedSlug?: string;
 }) {
   const cfg = safeJson(configJson);
   const cols: TableColumn[] = Array.isArray(cfg.columns)
     ? (cfg.columns as TableColumn[])
     : [];
+  const [modalOpen, setModalOpen] = useState(false);
 
   function set(key: string, value: unknown) {
     onChange(patchJson(configJson, { [key]: value }));
   }
 
-  function updateCol(idx: number, col: TableColumn) {
-    const next = cols.map((c, i) => (i === idx ? col : c));
+  function saveColumns(next: TableColumn[]) {
     set("columns", next);
-  }
-
-  function removeCol(idx: number) {
-    set(
-      "columns",
-      cols.filter((_, i) => i !== idx),
-    );
-  }
-
-  function addCol() {
-    set("columns", [...cols, { field: "", header: "" }]);
+    setModalOpen(false);
   }
 
   return (
@@ -783,10 +1227,10 @@ function TableBinding({
             Cột ({cols.length})
           </p>
           <button
-            onClick={addCol}
+            onClick={() => setModalOpen(true)}
             className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline"
           >
-            <Plus size={10} /> Thêm cột
+            <Settings2 size={10} /> Thiết lập cột
           </button>
         </div>
 
@@ -795,47 +1239,32 @@ function TableBinding({
             Tự động dùng tất cả field nếu để trống.
           </p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {cols.map((col, i) => (
               <div
                 key={i}
-                className="rounded-lg border border-gray-100 dark:border-[#1f2937] bg-gray-50 dark:bg-[#0f172a] p-2 space-y-1.5"
+                className="flex items-center gap-2 rounded border border-gray-100 dark:border-[#1f2937] bg-gray-50 dark:bg-[#0f172a] px-2 py-1"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-medium text-gray-400 dark:text-[#484f58]">
-                    Cột {i + 1}
-                  </span>
-                  <button
-                    onClick={() => removeCol(i)}
-                    className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 size={10} />
-                  </button>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Input
-                    size="small"
-                    value={col.field}
-                    placeholder="Field name (vd: TenBenhNhan)"
-                    onChange={(e) =>
-                      updateCol(i, { ...col, field: e.target.value })
-                    }
-                    className="font-mono"
-                  />
-                  <Input
-                    size="small"
-                    value={col.header}
-                    placeholder="Tiêu đề cột (vd: Họ tên)"
-                    onChange={(e) =>
-                      updateCol(i, { ...col, header: e.target.value })
-                    }
-                  />
-                </div>
+                <span className="text-[10px] font-mono text-gray-500 dark:text-[#6b7280] flex-1 truncate">
+                  {col.field || <em className="text-gray-300">field?</em>}
+                </span>
+                <span className="text-[10px] text-gray-400 dark:text-[#484f58] truncate max-w-[80px]">
+                  {col.header || "—"}
+                </span>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <ColumnEditorModal
+        key={modalOpen ? "open" : "closed"}
+        open={modalOpen}
+        columns={cols}
+        onClose={() => setModalOpen(false)}
+        onSave={saveColumns}
+        selectedSlug={selectedSlug}
+      />
     </div>
   );
 }
@@ -1352,11 +1781,13 @@ export function WidgetPropertiesPanel({
   catalog,
   onClose,
   onChange,
+  selectedSlug,
 }: {
   widget: DesignerWidget;
   catalog: WidgetCatalogEntry[];
   onClose: () => void;
   onChange: (updated: DesignerWidget) => void;
+  selectedSlug?: string;
 }) {
   const [form, setForm] = useState<DesignerWidget>(widget);
   const [jsonOpen, setJsonOpen] = useState(false);
@@ -1549,6 +1980,7 @@ export function WidgetPropertiesPanel({
               <TableBinding
                 configJson={form.configJson}
                 onChange={setConfigJson}
+                selectedSlug={selectedSlug}
               />
             )}
             {bindingCategory === "form-section" && (
