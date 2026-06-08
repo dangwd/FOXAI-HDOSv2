@@ -6,6 +6,7 @@
 import { Button, Input, Space, Typography, theme } from "antd";
 import { Plus, RefreshCw, Search, TableProperties } from "lucide-react";
 import { useState } from "react";
+import { IngestJsonDrawer } from "./_components/IngestJsonDrawer";
 import { ViewBindingDrawer } from "./_components/ViewBindingDrawer";
 import { ViewBindingTable } from "./_components/ViewBindingTable";
 import { ViewRecordsDrawer } from "./_components/ViewRecordsDrawer";
@@ -26,6 +27,7 @@ export default function LakehouseViewsPage() {
   const isEditing = drawerTarget !== null && drawerTarget !== "create";
 
   const [recordsTarget, setRecordsTarget] = useState<ViewBinding | null>(null);
+  const [ingestTarget,  setIngestTarget]  = useState<ViewBinding | null>(null);
 
   async function handleSave(values: ViewBindingFormValues) {
     if (isEditing) {
@@ -255,6 +257,7 @@ export default function LakehouseViewsPage() {
         onDelete={(b) => manager.remove(b.id)}
         onSync={(b) => manager.triggerSync(b.id)}
         onViewRecords={(b) => setRecordsTarget(b)}
+        onIngest={(b) => setIngestTarget(b)}
       />
 
       {/* Create / Edit Drawer */}
@@ -271,6 +274,13 @@ export default function LakehouseViewsPage() {
         open={recordsTarget !== null}
         binding={recordsTarget}
         onClose={() => setRecordsTarget(null)}
+      />
+
+      {/* Ingest JSON Drawer */}
+      <IngestJsonDrawer
+        open={ingestTarget !== null}
+        binding={ingestTarget}
+        onClose={() => setIngestTarget(null)}
       />
     </div>
   );
