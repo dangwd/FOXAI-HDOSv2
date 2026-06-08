@@ -4,6 +4,12 @@ import type { WidgetCatalogEntry } from "@/infrastructure/http/adminApi";
 import { Input, InputNumber, Switch, Tooltip } from "antd";
 import { ChevronDown, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
+import {
+  WIDGET_TYPE_DESCRIPTIONS,
+  WIDGET_TYPE_LABELS,
+} from "../_lib/constants";
+import type { DesignerWidget } from "../_lib/types";
+import { Field } from "./shared";
 
 // ─── Drag-and-drop hook for field expression drop targets ─────────────────────
 
@@ -12,14 +18,18 @@ function useFieldDrop(onChange: (expr: string) => void) {
   return {
     isDragOver,
     onDragOver(e: React.DragEvent) {
-      if (e.dataTransfer.types.includes("application/x-field-expr") ||
-          e.dataTransfer.types.includes("text/plain")) {
+      if (
+        e.dataTransfer.types.includes("application/x-field-expr") ||
+        e.dataTransfer.types.includes("text/plain")
+      ) {
         e.preventDefault();
         e.dataTransfer.dropEffect = "copy";
         setIsDragOver(true);
       }
     },
-    onDragLeave() { setIsDragOver(false); },
+    onDragLeave() {
+      setIsDragOver(false);
+    },
     onDrop(e: React.DragEvent) {
       e.preventDefault();
       setIsDragOver(false);
@@ -30,16 +40,12 @@ function useFieldDrop(onChange: (expr: string) => void) {
     },
   };
 }
-import {
-  WIDGET_TYPE_DESCRIPTIONS,
-  WIDGET_TYPE_LABELS,
-} from "../_lib/constants";
-import type { DesignerWidget } from "../_lib/types";
-import { Field } from "./shared";
 
 // ─── Expression parser + visual pills ────────────────────────────────────────
 
-function parseSourceExpr(expr: string): { namespace: string; path: string[] } | null {
+function parseSourceExpr(
+  expr: string,
+): { namespace: string; path: string[] } | null {
   const m = /^\{\{sources\.([^.}]+)((?:\.[^}]+)*)\}\}$/.exec(expr.trim());
   if (!m) return null;
   return { namespace: m[1], path: m[2] ? m[2].slice(1).split(".") : [] };
@@ -54,13 +60,23 @@ function ExprPills({
 }) {
   return (
     <div className="flex items-center gap-1 flex-wrap flex-1 min-w-0">
-      <span className="text-[10px] font-mono text-gray-400 dark:text-[#484f58] shrink-0">sources.</span>
+      <span className="text-[10px] font-mono text-gray-400 dark:text-[#484f58] shrink-0">
+        sources.
+      </span>
       <span className="inline-flex items-center px-1.5 py-px text-[10px] font-mono font-semibold rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-700/30">
         {parsed.namespace}
       </span>
       {parsed.path.flatMap((seg, i) => [
-        <span key={`d${i}`} className="text-[9px] text-gray-300 dark:text-[#30363d]">·</span>,
-        <span key={`s${i}`} className="inline-flex items-center px-1.5 py-px text-[10px] font-mono rounded bg-gray-100 dark:bg-[#161b22] text-gray-600 dark:text-[#8b949e] border border-gray-200 dark:border-[#1f2937]">
+        <span
+          key={`d${i}`}
+          className="text-[9px] text-gray-300 dark:text-[#30363d]"
+        >
+          ·
+        </span>,
+        <span
+          key={`s${i}`}
+          className="inline-flex items-center px-1.5 py-px text-[10px] font-mono rounded bg-gray-100 dark:bg-[#161b22] text-gray-600 dark:text-[#8b949e] border border-gray-200 dark:border-[#1f2937]"
+        >
           {seg}
         </span>,
       ])}
@@ -105,11 +121,13 @@ function ExprDropTarget({
       className={`rounded transition-all ${drop.isDragOver ? "ring-2 ring-emerald-400 dark:ring-emerald-500 ring-offset-1" : ""}`}
     >
       {showVisual ? (
-        <div className={`flex items-center gap-1 min-h-6.5 px-2 py-1 rounded border ${
-          value
-            ? "border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a]"
-            : "border-dashed border-gray-200 dark:border-[#30363d] bg-gray-50/50 dark:bg-[#0f172a]/50"
-        }`}>
+        <div
+          className={`flex items-center gap-1 min-h-6.5 px-2 py-1 rounded border ${
+            value
+              ? "border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a]"
+              : "border-dashed border-gray-200 dark:border-[#30363d] bg-gray-50/50 dark:bg-[#0f172a]/50"
+          }`}
+        >
           {value && parsed ? (
             <>
               <ExprPills parsed={parsed} onClear={() => onChange("")} />
@@ -247,11 +265,13 @@ function ExpressionInput({
         className={`rounded-lg transition-all ${drop.isDragOver ? "ring-2 ring-emerald-400 dark:ring-emerald-500 ring-offset-1" : ""}`}
       >
         {showVisual ? (
-          <div className={`flex items-center min-h-7 px-2.5 py-1 rounded-md border ${
-            value
-              ? "border-gray-200 dark:border-[#1f2937] bg-gray-50 dark:bg-[#0f172a]"
-              : "border-dashed border-gray-200 dark:border-[#30363d] bg-gray-50/50 dark:bg-[#0f172a]/50"
-          }`}>
+          <div
+            className={`flex items-center min-h-7 px-2.5 py-1 rounded-md border ${
+              value
+                ? "border-gray-200 dark:border-[#1f2937] bg-gray-50 dark:bg-[#0f172a]"
+                : "border-dashed border-gray-200 dark:border-[#30363d] bg-gray-50/50 dark:bg-[#0f172a]/50"
+            }`}
+          >
             {value && parsed ? (
               <ExprPills parsed={parsed} onClear={() => onChange("")} />
             ) : (
@@ -272,7 +292,9 @@ function ExpressionInput({
       </div>
 
       {hint && (
-        <p className="text-[10px] text-gray-400 dark:text-[#484f58] mt-0.5 m-0">{hint}</p>
+        <p className="text-[10px] text-gray-400 dark:text-[#484f58] mt-0.5 m-0">
+          {hint}
+        </p>
       )}
     </div>
   );
@@ -282,10 +304,14 @@ function ExpressionInput({
 
 type FormatType = "none" | "date" | "currency";
 
-function parseDisplayFormat(value: string): { type: FormatType; param: string } {
+function parseDisplayFormat(value: string): {
+  type: FormatType;
+  param: string;
+} {
   if (!value) return { type: "none", param: "" };
   if (value.startsWith("date:")) return { type: "date", param: value.slice(5) };
-  if (value.startsWith("currency:")) return { type: "currency", param: value.slice(9) };
+  if (value.startsWith("currency:"))
+    return { type: "currency", param: value.slice(9) };
   return { type: "none", param: "" };
 }
 
@@ -293,7 +319,7 @@ const DATE_PRESETS: { pattern: string; example: string }[] = [
   { pattern: "DD/MM/YYYY", example: "31/12/2024" },
   { pattern: "MM/DD/YYYY", example: "12/31/2024" },
   { pattern: "YYYY-MM-DD", example: "2024-12-31" },
-  { pattern: "DD/MM/YY",   example: "31/12/24" },
+  { pattern: "DD/MM/YY", example: "31/12/24" },
 ];
 
 const CURRENCY_PRESETS: { code: string; example: string }[] = [
@@ -328,8 +354,11 @@ function DisplayFormatPicker({
       {/* Type row */}
       <div className="flex gap-1">
         {(["none", "date", "currency"] as FormatType[]).map((t) => (
-          <button key={t} onClick={() => setType(t)}
-            className={`${btnBase} ${type === t ? btnActive : btnIdle}`}>
+          <button
+            key={t}
+            onClick={() => setType(t)}
+            className={`${btnBase} ${type === t ? btnActive : btnIdle}`}
+          >
             {t === "none" ? "Không" : t === "date" ? "Ngày" : "Tiền tệ"}
           </button>
         ))}
@@ -349,17 +378,27 @@ function DisplayFormatPicker({
                     : "bg-gray-50 dark:bg-[#0f172a] border-gray-200 dark:border-[#1f2937] hover:border-emerald-300 dark:hover:border-emerald-600/50"
                 }`}
               >
-                <div className="text-[10px] font-mono font-semibold text-gray-700 dark:text-[#e6edf3]">{pattern}</div>
-                <div className="text-[9px] text-gray-400 dark:text-[#484f58]">{example}</div>
+                <div className="text-[10px] font-mono font-semibold text-gray-700 dark:text-[#e6edf3]">
+                  {pattern}
+                </div>
+                <div className="text-[9px] text-gray-400 dark:text-[#484f58]">
+                  {example}
+                </div>
               </button>
             ))}
           </div>
           <Input
             size="small"
-            prefix={<span className="text-[10px] text-gray-400 dark:text-[#484f58] font-mono select-none">date:</span>}
+            prefix={
+              <span className="text-[10px] text-gray-400 dark:text-[#484f58] font-mono select-none">
+                date:
+              </span>
+            }
             value={param}
             placeholder="DD/MM/YYYY"
-            onChange={(e) => onChange(e.target.value ? `date:${e.target.value}` : "")}
+            onChange={(e) =>
+              onChange(e.target.value ? `date:${e.target.value}` : "")
+            }
             className="font-mono"
           />
         </div>
@@ -379,17 +418,27 @@ function DisplayFormatPicker({
                     : "bg-gray-50 dark:bg-[#0f172a] border-gray-200 dark:border-[#1f2937] hover:border-emerald-300 dark:hover:border-emerald-600/50"
                 }`}
               >
-                <div className="text-[10px] font-mono font-semibold text-gray-700 dark:text-[#e6edf3]">{code}</div>
-                <div className="text-[9px] text-gray-400 dark:text-[#484f58]">{example}</div>
+                <div className="text-[10px] font-mono font-semibold text-gray-700 dark:text-[#e6edf3]">
+                  {code}
+                </div>
+                <div className="text-[9px] text-gray-400 dark:text-[#484f58]">
+                  {example}
+                </div>
               </button>
             ))}
           </div>
           <Input
             size="small"
-            prefix={<span className="text-[10px] text-gray-400 dark:text-[#484f58] font-mono select-none">currency:</span>}
+            prefix={
+              <span className="text-[10px] text-gray-400 dark:text-[#484f58] font-mono select-none">
+                currency:
+              </span>
+            }
             value={param}
             placeholder="VND"
-            onChange={(e) => onChange(e.target.value ? `currency:${e.target.value}` : "")}
+            onChange={(e) =>
+              onChange(e.target.value ? `currency:${e.target.value}` : "")
+            }
             className="font-mono"
           />
         </div>
@@ -956,15 +1005,24 @@ function FormSectionEditor({
 type DisplayCategory = "text" | "gauge" | "table-extra" | "filter" | "common";
 
 function getDisplayCategory(widgetType: string): DisplayCategory {
-  if (["text_widget", "TextBlock", "text-widget"].includes(widgetType)) return "text";
+  if (["text_widget", "TextBlock", "text-widget"].includes(widgetType))
+    return "text";
   if (["gauge", "Gauge"].includes(widgetType)) return "gauge";
-  if (["simple_table", "advanced_table", "Table", "DataTable", "data_table"].includes(widgetType))
+  if (
+    [
+      "simple_table",
+      "advanced_table",
+      "Table",
+      "DataTable",
+      "data_table",
+    ].includes(widgetType)
+  )
     return "table-extra";
   if (widgetType.startsWith("filter_")) return "filter";
   return "common";
 }
 
-// ─── Common display config (mọi widget) ──────────────────────────────────────
+// ─── Common display config (mọi widget) — chỉ còn màu sau khi title kéo lên ──
 
 function CommonDisplayConfig({
   configJson,
@@ -980,37 +1038,23 @@ function CommonDisplayConfig({
   }
 
   return (
-    <div className="space-y-3">
-      <Field label="Tiêu đề widget">
+    <Field label="Màu accent">
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={(cfg.color as string) ?? "#6366f1"}
+          onChange={(e) => set("color", e.target.value)}
+          className="w-8 h-7 rounded border border-gray-200 dark:border-[#1f2937] cursor-pointer shrink-0 p-0.5 bg-transparent"
+        />
         <Input
           size="small"
-          value={(cfg.title as string) ?? ""}
-          placeholder="Tên hiển thị bên trong widget"
-          onChange={(e) => set("title", e.target.value)}
+          value={(cfg.color as string) ?? ""}
+          placeholder="#6366f1"
+          onChange={(e) => set("color", e.target.value)}
+          className="font-mono flex-1"
         />
-        <p className="text-[10px] text-gray-400 dark:text-[#484f58] mt-0.5 m-0">
-          Khác với nhãn canvas — đây là tiêu đề render lên UI
-        </p>
-      </Field>
-
-      <Field label="Màu accent">
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={(cfg.color as string) ?? "#6366f1"}
-            onChange={(e) => set("color", e.target.value)}
-            className="w-8 h-7 rounded border border-gray-200 dark:border-[#1f2937] cursor-pointer shrink-0 p-0.5 bg-transparent"
-          />
-          <Input
-            size="small"
-            value={(cfg.color as string) ?? ""}
-            placeholder="#6366f1"
-            onChange={(e) => set("color", e.target.value)}
-            className="font-mono flex-1"
-          />
-        </div>
-      </Field>
-    </div>
+      </div>
+    </Field>
   );
 }
 
@@ -1032,7 +1076,9 @@ function TextWidgetConfig({
         placeholder="Nội dung văn bản hiển thị trong widget…"
         rows={5}
         onChange={(e) =>
-          onChange(patchJson(configJson, { content: e.target.value || undefined }))
+          onChange(
+            patchJson(configJson, { content: e.target.value || undefined }),
+          )
         }
       />
     </Field>
@@ -1164,9 +1210,7 @@ function FilterDisplayConfig({
             <InputNumber
               size="small"
               value={(cfg.min as number) ?? 0}
-              onChange={(v) =>
-                onChange(patchJson(configJson, { min: v }))
-              }
+              onChange={(v) => onChange(patchJson(configJson, { min: v }))}
               className="w-full"
             />
           </Field>
@@ -1174,9 +1218,7 @@ function FilterDisplayConfig({
             <InputNumber
               size="small"
               value={(cfg.max as number) ?? 100}
-              onChange={(v) =>
-                onChange(patchJson(configJson, { max: v }))
-              }
+              onChange={(v) => onChange(patchJson(configJson, { max: v }))}
               className="w-full"
             />
           </Field>
@@ -1249,15 +1291,26 @@ export function WidgetPropertiesPanel({
   const tabs: { key: PanelTab; label: string }[] = [
     { key: "display", label: "Hiển thị" },
     ...(hasBindingTab
-      ? [{ key: "binding" as PanelTab,
-           label: bindingCategory === "form-section" ? "Fields & Binding" : "Data Binding" }]
+      ? [
+          {
+            key: "binding" as PanelTab,
+            label:
+              bindingCategory === "form-section"
+                ? "Fields & Binding"
+                : "Data Binding",
+          },
+        ]
       : []),
     { key: "advanced", label: "Nâng cao" },
   ];
 
   // Detect invalid JSON for warning
   let jsonValid = true;
-  try { JSON.parse(form.configJson); } catch { jsonValid = false; }
+  try {
+    JSON.parse(form.configJson);
+  } catch {
+    jsonValid = false;
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -1279,6 +1332,25 @@ export function WidgetPropertiesPanel({
         </button>
       </div>
 
+      {/* Tiêu đề widget — cố định trên mọi tab để không phải chuyển tab khi binding */}
+      <div className="px-3 py-2 border-b border-gray-200 dark:border-[#1f2937] bg-gray-50/40 dark:bg-[#0a0f1a] shrink-0">
+        <p className="text-[9px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider mb-1 m-0">
+          Tiêu đề widget
+        </p>
+        <Input
+          size="small"
+          value={(safeJson(form.configJson).title as string) ?? ""}
+          placeholder="Tên hiển thị trong widget"
+          onChange={(e) =>
+            setConfigJson(
+              patchJson(form.configJson, {
+                title: e.target.value || undefined,
+              }),
+            )
+          }
+        />
+      </div>
+
       {/* Tab bar */}
       <div className="flex border-b border-gray-200 dark:border-[#1f2937] shrink-0">
         {tabs.map((t) => (
@@ -1297,7 +1369,6 @@ export function WidgetPropertiesPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
-
         {/* ── Hiển thị tab ── */}
         {activeTab === "display" && (
           <>
@@ -1352,21 +1423,36 @@ export function WidgetPropertiesPanel({
         {/* ── Data Binding tab ── */}
         {activeTab === "binding" && (
           <>
-            <SyntaxHint />
+            {/* <SyntaxHint /> */}
             {bindingCategory === "kpi" && (
-              <KpiBinding configJson={form.configJson} onChange={setConfigJson} />
+              <KpiBinding
+                configJson={form.configJson}
+                onChange={setConfigJson}
+              />
             )}
             {bindingCategory === "series-chart" && (
-              <SeriesChartBinding configJson={form.configJson} onChange={setConfigJson} />
+              <SeriesChartBinding
+                configJson={form.configJson}
+                onChange={setConfigJson}
+              />
             )}
             {bindingCategory === "pie-chart" && (
-              <PieChartBinding configJson={form.configJson} onChange={setConfigJson} />
+              <PieChartBinding
+                configJson={form.configJson}
+                onChange={setConfigJson}
+              />
             )}
             {bindingCategory === "table" && (
-              <TableBinding configJson={form.configJson} onChange={setConfigJson} />
+              <TableBinding
+                configJson={form.configJson}
+                onChange={setConfigJson}
+              />
             )}
             {bindingCategory === "form-section" && (
-              <FormSectionEditor configJson={form.configJson} onChange={setConfigJson} />
+              <FormSectionEditor
+                configJson={form.configJson}
+                onChange={setConfigJson}
+              />
             )}
           </>
         )}
@@ -1446,10 +1532,11 @@ export function WidgetPropertiesPanel({
                 <span className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider">
                   Config JSON{!jsonValid && " ⚠ lỗi cú pháp"}
                 </span>
-                {jsonOpen
-                  ? <ChevronDown size={12} className="text-gray-400" />
-                  : <ChevronRight size={12} className="text-gray-400" />
-                }
+                {jsonOpen ? (
+                  <ChevronDown size={12} className="text-gray-400" />
+                ) : (
+                  <ChevronRight size={12} className="text-gray-400" />
+                )}
               </button>
               {jsonOpen && (
                 <div className="p-2 border-t border-gray-200 dark:border-[#1f2937]">
@@ -1471,7 +1558,6 @@ export function WidgetPropertiesPanel({
             </div>
           </>
         )}
-
       </div>
     </div>
   );
