@@ -2,13 +2,17 @@
 function resolvePath(root: unknown, path: string): unknown {
   return path.split(".").reduce((cur: unknown, segment: string) => {
     if (cur == null) return undefined;
-    // Support hyphenated keys: benh-nhan[0]
+    // Support hyphenated keys with explicit index: benh-nhan[0]
     const arrMatch = segment.match(/^([\w-]+)\[(\d+)\]$/);
     if (arrMatch) {
       const arr = (cur as Record<string, unknown>)[arrMatch[1]];
       return Array.isArray(arr) ? arr[parseInt(arrMatch[2])] : undefined;
     }
-    return (cur as Record<string, unknown>)[segment];
+    // When cur is an array and next segment is a field access (not an index),
+    // auto-unwrap to cur[0]. This makes {{sources.ns.field}} resolve correctly
+    // when the data source returns a list (e.g. GET /dm/records returns []).
+    const obj = Array.isArray(cur) ? (cur as unknown[])[0] : cur;
+    return (obj as Record<string, unknown>)?.[segment];
   }, root);
 }
 
