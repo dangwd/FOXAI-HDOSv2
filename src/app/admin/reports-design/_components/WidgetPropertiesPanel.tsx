@@ -488,7 +488,7 @@ function KpiBinding({
 }) {
   const cfg = safeJson(configJson);
 
-  function set(key: string, value: string) {
+  function set(key: string, value: unknown) {
     onChange(patchJson(configJson, { [key]: value || undefined }));
   }
 
@@ -507,7 +507,7 @@ function KpiBinding({
         />
       </Field>
       <div className="grid grid-cols-2 gap-2">
-        <Field label="Unit">
+        <Field label="Unit (hậu tố)">
           <Input
             size="small"
             value={(cfg.unit as string) ?? ""}
@@ -515,15 +515,21 @@ function KpiBinding({
             onChange={(e) => set("unit", e.target.value)}
           />
         </Field>
-        <Field label="Color">
+        <Field label="Hint tĩnh">
           <Input
             size="small"
-            value={(cfg.color as string) ?? ""}
-            placeholder="#6366f1"
-            onChange={(e) => set("color", e.target.value)}
+            value={(cfg.hint as string) ?? ""}
+            placeholder="Tháng này, Hôm nay…"
+            onChange={(e) => set("hint", e.target.value)}
           />
         </Field>
       </div>
+      <ExpressionInput
+        label="Hint Expression (động)"
+        value={(cfg.hintExpression as string) ?? ""}
+        onChange={(v) => set("hintExpression", v)}
+        hint="Đè lên Hint tĩnh khi có dữ liệu. Vd: {{sources.kpi.HintText}}"
+      />
     </div>
   );
 }
@@ -1528,9 +1534,10 @@ function FormSectionEditor({
 
 // ─── Display category ─────────────────────────────────────────────────────────
 
-type DisplayCategory = "text" | "gauge" | "table-extra" | "filter" | "common";
+type DisplayCategory = "kpi" | "text" | "gauge" | "table-extra" | "filter" | "common";
 
 function getDisplayCategory(widgetType: string): DisplayCategory {
+  if (widgetType === "kpi") return "kpi";
   if (["text_widget", "TextBlock", "text-widget"].includes(widgetType))
     return "text";
   if (["gauge", "Gauge"].includes(widgetType)) return "gauge";
@@ -1546,6 +1553,117 @@ function getDisplayCategory(widgetType: string): DisplayCategory {
     return "table-extra";
   if (widgetType.startsWith("filter_")) return "filter";
   return "common";
+}
+
+// ─── KPI display config ───────────────────────────────────────────────────────
+
+function KpiDisplayConfig({
+  configJson,
+  onChange,
+}: {
+  configJson: string;
+  onChange: (json: string) => void;
+}) {
+  const cfg = safeJson(configJson);
+  const trend = cfg.trend as { isUp?: boolean; label?: string } | undefined;
+
+  function set(key: string, value: unknown) {
+    onChange(patchJson(configJson, { [key]: value === "" ? undefined : value }));
+  }
+
+  function setTrend(patch: Partial<{ isUp: boolean; label: string }>) {
+    onChange(patchJson(configJson, { trend: { ...(trend ?? { isUp: true, label: "" }), ...patch } }));
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Accent color */}
+      <Field label="Màu accent">
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={(cfg.color as string) || "#059669"}
+            onChange={(e) => set("color", e.target.value)}
+            className="w-8 h-7 rounded border border-gray-200 dark:border-[#1f2937] cursor-pointer shrink-0 p-0.5 bg-transparent"
+          />
+          <Input
+            size="small"
+            value={(cfg.color as string) ?? ""}
+            placeholder="#059669"
+            onChange={(e) => set("color", e.target.value)}
+            className="font-mono flex-1"
+          />
+        </div>
+      </Field>
+
+      {/* Hint color */}
+      <Field label="Màu hint">
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={(cfg.hintColor as string) || "#8b949e"}
+            onChange={(e) => set("hintColor", e.target.value)}
+            className="w-8 h-7 rounded border border-gray-200 dark:border-[#1f2937] cursor-pointer shrink-0 p-0.5 bg-transparent"
+          />
+          <Input
+            size="small"
+            value={(cfg.hintColor as string) ?? ""}
+            placeholder="#8b949e"
+            onChange={(e) => set("hintColor", e.target.value)}
+            className="font-mono flex-1"
+          />
+          {!!(cfg.hintColor as string) && (
+            <button
+              onClick={() => onChange(patchJson(configJson, { hintColor: undefined }))}
+              className="shrink-0 text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <X size={12} />
+            </button>
+          )}
+        </div>
+      </Field>
+
+      {/* Trend indicator */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[10px] font-semibold text-gray-500 dark:text-[#484f58] uppercase tracking-wider m-0">
+            Trend
+          </p>
+          <Switch
+            size="small"
+            checked={trend !== undefined}
+            onChange={(on) =>
+              onChange(patchJson(configJson, { trend: on ? { isUp: true, label: "" } : undefined }))
+            }
+          />
+        </div>
+        {trend !== undefined && (
+          <div className="space-y-2 pl-2 border-l-2 border-gray-100 dark:border-[#1f2937]">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-gray-500 dark:text-[#8b949e]">Hướng</span>
+              <div className="flex items-center gap-2">
+                <span className={`text-[11px] font-medium ${!trend.isUp ? "text-red-500" : "text-gray-400 dark:text-[#484f58]"}`}>
+                  ↓ Giảm
+                </span>
+                <Switch size="small" checked={trend.isUp ?? true} onChange={(v) => setTrend({ isUp: v })} />
+                <span className={`text-[11px] font-medium ${trend.isUp ? "text-green-500" : "text-gray-400 dark:text-[#484f58]"}`}>
+                  ↑ Tăng
+                </span>
+              </div>
+            </div>
+            <Field label="Nhãn">
+              <Input
+                size="small"
+                value={trend.label ?? ""}
+                placeholder="+5.2% so với tháng trước"
+                onChange={(e) => setTrend({ label: e.target.value })}
+              />
+            </Field>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // ─── Common display config (mọi widget) — chỉ còn màu sau khi title kéo lên ──
@@ -1900,10 +2018,17 @@ export function WidgetPropertiesPanel({
         {/* ── Hiển thị tab ── */}
         {activeTab === "display" && (
           <>
-            <CommonDisplayConfig
-              configJson={form.configJson}
-              onChange={setConfigJson}
-            />
+            {displayCategory === "kpi" ? (
+              <KpiDisplayConfig
+                configJson={form.configJson}
+                onChange={setConfigJson}
+              />
+            ) : (
+              <CommonDisplayConfig
+                configJson={form.configJson}
+                onChange={setConfigJson}
+              />
+            )}
 
             {displayCategory === "text" && (
               <>

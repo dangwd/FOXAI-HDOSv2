@@ -467,12 +467,19 @@ export function WidgetRenderer({
 
   // ── KPI ──────────────────────────────────────────────────────────────────────
   if (type === "kpi") {
-    const cfg = safeJson(widget.visualConfig);
-    const valueExpr  = cfg.valueExpression as string | undefined;
-    const unit       = cfg.unit as string | undefined;
+    const cfg         = safeJson(widget.visualConfig);
+    const valueExpr   = cfg.valueExpression  as string | undefined;
+    const hintExpr    = cfg.hintExpression   as string | undefined;
+    const unit        = cfg.unit             as string | undefined;
+    const staticHint  = cfg.hint             as string | undefined;
+    const hintColor   = cfg.hintColor        as string | undefined;
     const accentColor = (cfg.color as string | undefined) ?? "#059669";
-    // hint: unit from config takes priority, then widget.subtitle
-    const hintText = unit ? `${unit}` : (widget.subtitle ?? undefined);
+    const trendCfg    = cfg.trend as { isUp?: boolean; label?: string } | undefined;
+    const trend       = trendCfg ? { isUp: trendCfg.isUp ?? true, label: trendCfg.label ?? "" } : undefined;
+
+    // hint priority: hintExpression (dynamic) > hint static > widget.subtitle
+    // unit is a value suffix ("1,234 BN"), independent of hint
+    const baseHint: string | undefined = staticHint ?? (widget.subtitle ?? undefined);
 
     if (valueExpr) {
       if (sourcesLoading) {
@@ -480,14 +487,21 @@ export function WidgetRenderer({
       }
       if (Object.keys(sourceData).length > 0) {
         const raw = evaluateExpression(valueExpr, sourceData);
-        // "" means path not found (array/undefined resolved to empty) — treat as no data
         if (raw != null && raw !== "") {
           const fmt = cfg.displayFormat as string | undefined;
+          const formatted = fmt ? applyDisplayFormat(raw, fmt) : raw;
+          const displayValue = unit
+            ? <>{formatted}<span className="text-xl font-medium text-gray-400 dark:text-[#8b949e] ml-1.5 align-baseline">{unit}</span></>
+            : formatted;
+          const dynHint = hintExpr ? evaluateExpression(hintExpr, sourceData) : undefined;
+          const resolvedHint = (dynHint != null && dynHint !== "") ? String(dynHint) : baseHint;
           return (
             <KpiCard
               title={title ?? ""}
-              value={fmt ? applyDisplayFormat(raw, fmt) : raw}
-              hint={hintText}
+              value={displayValue}
+              hint={resolvedHint}
+              hintColor={hintColor}
+              trend={trend}
               accent={accentColor}
               className="h-full"
             />
@@ -495,8 +509,20 @@ export function WidgetRenderer({
         }
       }
     }
-    const { value, hint, accent } = resolveKpiValue(widget);
-    return <KpiCard title={title ?? ""} value={value} hint={unit ?? hint} accent={accent} className="h-full" />;
+    const { value, hint, accent: fallbackAccent } = resolveKpiValue(widget);
+    return (
+      <KpiCard
+        title={title ?? ""}
+        value={unit
+          ? <>{value}<span className="text-xl font-medium text-gray-400 dark:text-[#8b949e] ml-1.5 align-baseline">{unit}</span></>
+          : value}
+        hint={baseHint ?? hint}
+        hintColor={hintColor}
+        trend={trend}
+        accent={accentColor !== "#059669" ? accentColor : fallbackAccent}
+        className="h-full"
+      />
+    );
   }
 
   // ── Line chart ───────────────────────────────────────────────────────────────
