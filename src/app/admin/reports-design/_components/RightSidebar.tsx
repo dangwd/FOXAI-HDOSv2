@@ -46,6 +46,7 @@ export function RightSidebar({ designer, catalog, selectedSlug }: Props) {
             catalog={catalog}
             onClose={() => designer.setSelectedKey(null)}
             onChange={designer.handleApplyProperties}
+            selectedSlug={selectedSlug}
           />
         ) : (
           <>
