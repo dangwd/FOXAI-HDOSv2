@@ -1,34 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { App } from "antd";
 import { adminApi } from "@/infrastructure/http/adminApi";
-import type { DmRecordDto, DmRecordsQuery } from "@/infrastructure/http/adminApi";
+import type { DmRecordsQuery } from "@/infrastructure/http/adminApi";
 
 export function useRecords() {
   const { message } = App.useApp();
+  const [params, setParams] = useState<DmRecordsQuery | null>(null);
 
-  const [records,  setRecords]  = useState<DmRecordDto[]>([]);
-  const [loading,  setLoading]  = useState(false);
-  const [searched, setSearched] = useState(false);
+  const { data, isFetching, isError } = useQuery({
+    queryKey: ["dm", "records", params],
+    queryFn:  () => adminApi.getDmRecords(params!),
+    enabled:  !!params,
+    staleTime: 0,
+    retry: false,
+  });
 
-  async function search(params: DmRecordsQuery) {
-    setLoading(true);
-    try {
-      const data = await adminApi.getDmRecords(params);
-      setRecords(data ?? []);
-      setSearched(true);
-    } catch {
-      message.error("Không thể tải danh sách records");
-    } finally {
-      setLoading(false);
-    }
-  }
+  useEffect(() => {
+    if (isError) message.error("Không thể tải danh sách records");
+  }, [isError, message]);
 
-  function clear() {
-    setRecords([]);
-    setSearched(false);
-  }
-
-  return { records, loading, searched, search, clear };
+  return {
+    records:  data   ?? [],
+    loading:  isFetching,
+    searched: !!params,
+    search:   (p: DmRecordsQuery) => setParams(p),
+    clear:    () => setParams(null),
+  };
 }

@@ -10,6 +10,7 @@ import { ChartArea } from "./ChartArea";
 import { ChartBar } from "./ChartBar";
 import { ChartLine } from "./ChartLine";
 import { ChartPie } from "./ChartPie";
+import { ChartScatter } from "./ChartScatter";
 import { DataTable } from "./DataTable";
 import { FlowPipeline } from "./FlowPipeline";
 import { KpiCard } from "./KpiCard";
@@ -269,111 +270,6 @@ const BULLET_DRUG_ALLERGY = [
   },
 ];
 
-// Patient list table
-const TABLE_PATIENTS = {
-  columns: [
-    { key: "pid", title: "Mã BN", align: "left" as const },
-    { key: "name", title: "Họ tên", align: "left" as const },
-    { key: "dept", title: "Khoa", align: "left" as const },
-    {
-      key: "status",
-      title: "Trạng thái",
-      render: "tag" as const,
-      tagColors: {
-        "Đang điều trị": "blue",
-        "Chờ xuất viện": "green",
-        Nặng: "red",
-        "Theo dõi": "orange",
-      },
-    },
-    { key: "day", title: "Ngày NV", align: "left" as const },
-  ],
-  data: [
-    {
-      pid: "BN001",
-      name: "Nguyễn Văn A",
-      dept: "Nội TM",
-      status: "Nặng",
-      day: "22/05",
-    },
-    {
-      pid: "BN002",
-      name: "Trần Thị B",
-      dept: "Cấp cứu",
-      status: "Đang điều trị",
-      day: "20/05",
-    },
-    {
-      pid: "BN003",
-      name: "Lê Văn C",
-      dept: "Nội TQ",
-      status: "Chờ xuất viện",
-      day: "23/05",
-    },
-    {
-      pid: "BN004",
-      name: "Phạm Thị D",
-      dept: "Huyết học",
-      status: "Theo dõi",
-      day: "21/05",
-    },
-    {
-      pid: "BN005",
-      name: "Hoàng Văn E",
-      dept: "Gan mật",
-      status: "Nặng",
-      day: "24/05",
-    },
-    {
-      pid: "BN006",
-      name: "Đinh Thị F",
-      dept: "Sản",
-      status: "Đang điều trị",
-      day: "25/05",
-    },
-  ],
-};
-
-const TABLE_MEDS = {
-  columns: [
-    { key: "name", title: "Thuốc", align: "left" as const },
-    { key: "dose", title: "Liều dùng", align: "left" as const },
-    { key: "time", title: "Giờ dùng", align: "left" as const },
-    {
-      key: "status",
-      title: "Trạng thái",
-      render: "tag" as const,
-      tagColors: { "Đã dùng": "green", "Chờ dùng": "orange", "Bỏ qua": "red" },
-    },
-  ],
-  data: [
-    {
-      name: "Amoxicillin 500mg",
-      dose: "1 viên × 3",
-      time: "08:00",
-      status: "Đã dùng",
-    },
-    {
-      name: "Omeprazole 20mg",
-      dose: "1 viên × 2",
-      time: "12:00",
-      status: "Chờ dùng",
-    },
-    {
-      name: "Metformin 850mg",
-      dose: "1 viên × 2",
-      time: "14:00",
-      status: "Chờ dùng",
-    },
-    { name: "Aspirin 81mg", dose: "1 viên", time: "20:00", status: "Chờ dùng" },
-    {
-      name: "Furosemide 40mg",
-      dose: "1 viên",
-      time: "06:00",
-      status: "Đã dùng",
-    },
-  ],
-};
 
 // ─── KPI resolver ─────────────────────────────────────────────────────────────
 
@@ -610,7 +506,7 @@ export function WidgetRenderer({
     if (dataExpr && Object.keys(sourceData).length > 0) {
       const raw = evaluateRaw(dataExpr, sourceData);
       const dynData = toChartData(raw, (cfg.labelField as string) ?? "label", (cfg.valueField as string) ?? "value", cfg.rowPath as string | undefined);
-      if (dynData.length > 0) return <ChartLine title={title} data={dynData} color={(cfg.color as string) ?? "#059669"} />;
+      if (dynData.length > 0) return <ChartLine title={title} data={dynData} color={(cfg.color as string) ?? "#059669"} unit={cfg.unit as string | undefined} />;
     }
     const tl = title?.toLowerCase() ?? "";
     const isVitals = tl.includes("sinh tồn") || tl.includes("vital");
@@ -640,7 +536,7 @@ export function WidgetRenderer({
     if (dataExpr && Object.keys(sourceData).length > 0) {
       const raw = evaluateRaw(dataExpr, sourceData);
       const dynData = toChartData(raw, (cfg.labelField as string) ?? "label", (cfg.valueField as string) ?? "value", cfg.rowPath as string | undefined);
-      if (dynData.length > 0) return <ChartBar title={title} data={dynData} color={(cfg.color as string) ?? "#059669"} />;
+      if (dynData.length > 0) return <ChartBar title={title} data={dynData} color={(cfg.color as string) ?? "#059669"} unit={cfg.unit as string | undefined} />;
     }
     const tl = title?.toLowerCase() ?? "";
     const data = tl.includes("tháng") ? MONTH_DATA : TREND_DATA;
@@ -655,7 +551,7 @@ export function WidgetRenderer({
     if (dataExpr && Object.keys(sourceData).length > 0) {
       const raw = evaluateRaw(dataExpr, sourceData);
       const dynData = toChartData(raw, (cfg.labelField as string) ?? "label", (cfg.valueField as string) ?? "value", cfg.rowPath as string | undefined);
-      if (dynData.length > 0) return <ChartArea title={title} data={dynData} color={(cfg.color as string) ?? "#722ed1"} />;
+      if (dynData.length > 0) return <ChartArea title={title} data={dynData} color={(cfg.color as string) ?? "#722ed1"} unit={cfg.unit as string | undefined} />;
     }
     const tl = title?.toLowerCase() ?? "";
     const data = tl.includes("giờ") ? HOUR_DATA : TREND_DATA;
@@ -697,6 +593,45 @@ export function WidgetRenderer({
         legend
       />
     );
+  }
+
+  // ── Scatter ──────────────────────────────────────────────────────────────────
+  if (type === "scatter") {
+    const cfg = safeJson(widget.visualConfig);
+    const dataExpr = cfg.dataExpression as string | undefined;
+    const xField = (cfg.xField as string | undefined) ?? "x";
+    const yField = (cfg.yField as string | undefined) ?? "y";
+    const zField = cfg.zField as string | undefined;
+    const color   = (cfg.color as string | undefined) ?? "#059669";
+
+    if (dataExpr && Object.keys(sourceData).length > 0) {
+      if (sourcesLoading) {
+        return <ChartScatter title={title} data={[]} color={color} loading />;
+      }
+      const raw = evaluateRaw(dataExpr, sourceData);
+      if (Array.isArray(raw) && raw.length > 0) {
+        return (
+          <ChartScatter
+            title={title}
+            data={raw as Parameters<typeof ChartScatter>[0]["data"]}
+            xField={xField}
+            yField={yField}
+            zField={zField}
+            color={color}
+            xUnit={cfg.xUnit as string | undefined}
+            yUnit={cfg.yUnit as string | undefined}
+          />
+        );
+      }
+    }
+
+    // Static demo data khi chưa có source
+    const DEMO: { x: number; y: number }[] = [
+      { x: 10, y: 30 }, { x: 40, y: 80 }, { x: 60, y: 20 },
+      { x: 80, y: 95 }, { x: 25, y: 55 }, { x: 50, y: 40 },
+      { x: 70, y: 65 }, { x: 90, y: 10 }, { x: 35, y: 75 },
+    ];
+    return <ChartScatter title={title} data={DEMO} color={color} />;
   }
 
   // ── Gauge ────────────────────────────────────────────────────────────────────
@@ -799,10 +734,42 @@ export function WidgetRenderer({
   if (type === "simple_table" || type === "advanced_table") {
     const cfg = safeJson(widget.visualConfig);
     const dataExpr = cfg.dataExpression as string | undefined;
-    if (dataExpr && Object.keys(sourceData).length > 0) {
+
+    if (dataExpr) {
+      // Loading skeleton — animated pulse
+      if (sourcesLoading) {
+        return (
+          <div className="rounded-2xl border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm h-full flex flex-col overflow-hidden">
+            {title && (
+              <div className="px-4 py-3 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
+                <div className="h-3 w-28 rounded bg-gray-200 dark:bg-[#30363d] animate-pulse" />
+              </div>
+            )}
+            <div className="flex gap-6 px-4 py-2.5 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
+              {[44, 88, 64, 56, 44].map((w, i) => (
+                <div key={i} className="h-2.5 rounded bg-gray-200 dark:bg-[#30363d] animate-pulse" style={{ width: w }} />
+              ))}
+            </div>
+            <div className="flex-1 overflow-hidden divide-y divide-gray-50 dark:divide-[#161b22]">
+              {[0, 1, 2, 3, 4].map((r) => (
+                <div key={r} className="flex gap-6 px-4 py-3">
+                  {[44, 88, 64, 56, 44].map((w, i) => (
+                    <div
+                      key={i}
+                      className="h-2 rounded bg-gray-100 dark:bg-[#1f2937] animate-pulse"
+                      style={{ width: w + (r * 9 + i * 13) % 28 }}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      // Data resolved — render real table
       const raw = evaluateRaw(dataExpr, sourceData);
       if (Array.isArray(raw) && raw.length > 0) {
-        // Unwrap canonicalAtKey: each row may have a JSON-string field (e.g. canonicalPayload)
         const canonicalAtKey = cfg.canonicalAtKey as string | undefined;
         const rows = raw.map((item) => {
           const row = item as Record<string, unknown>;
@@ -813,7 +780,6 @@ export function WidgetRenderer({
           return row;
         });
         const dynCols = toTableColumns(cfg.columns);
-        // When no columns configured, auto-generate from row keys but skip DM internal fields
         const INTERNAL_KEYS = new Set(["id", "sourceSystem", "recordType", "businessKey", "status", "canonicalPayload", "receivedAt", "processedAt", "key"]);
         const cols = dynCols.length > 0
           ? dynCols
@@ -828,20 +794,60 @@ export function WidgetRenderer({
           />
         );
       }
+
+      // dataExpression configured but resolved to empty — empty state
+      return (
+        <div className="rounded-2xl border border-gray-100 dark:border-[#1f2937] bg-white dark:bg-[#0f172a] shadow-sm h-full flex flex-col overflow-hidden">
+          {title && (
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
+              <p className="text-[10px] font-semibold text-gray-500 dark:text-[#8b949e] uppercase tracking-wider m-0">{title}</p>
+            </div>
+          )}
+          <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center p-6">
+            <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-[#1f2937] flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-300 dark:text-[#30363d]">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18M3 15h18M9 3v18" />
+              </svg>
+            </div>
+            <p className="text-xs text-gray-400 dark:text-[#484f58] m-0">Không có dữ liệu</p>
+            <p className="text-[10px] text-gray-300 dark:text-[#30363d] m-0 font-mono">{dataExpr}</p>
+          </div>
+        </div>
+      );
     }
-    const tl = title?.toLowerCase() ?? "";
-    const tbl =
-      tl.includes("thuốc") || tl.includes("dùng thuốc")
-        ? TABLE_MEDS
-        : TABLE_PATIENTS;
+
+    // No dataExpression configured — static skeleton placeholder
     return (
-      <DataTable
-        title={title}
-        columns={tbl.columns}
-        data={tbl.data}
-        pageSize={5}
-        exportButton={type === "advanced_table"}
-      />
+      <div className="rounded-2xl border border-dashed border-gray-200 dark:border-[#30363d] bg-gray-50/50 dark:bg-[#0d1117] h-full flex flex-col overflow-hidden">
+        {title && (
+          <div className="px-4 py-3 border-b border-dashed border-gray-200 dark:border-[#30363d] shrink-0">
+            <p className="text-[10px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider m-0">{title}</p>
+          </div>
+        )}
+        <div className="flex gap-6 px-4 py-2.5 border-b border-gray-100 dark:border-[#1f2937] shrink-0">
+          {[44, 88, 64, 56, 44].map((w, i) => (
+            <div key={i} className="h-2.5 rounded bg-gray-200 dark:bg-[#30363d]" style={{ width: w }} />
+          ))}
+        </div>
+        <div className="flex-1 overflow-hidden divide-y divide-gray-50 dark:divide-[#161b22]">
+          {[0, 1, 2, 3, 4].map((r) => (
+            <div key={r} className="flex gap-6 px-4 py-3">
+              {[44, 88, 64, 56, 44].map((w, i) => (
+                <div key={i} className="h-2 rounded bg-gray-100 dark:bg-[#1f2937]" style={{ width: w + (r * 9 + i * 13) % 28 }} />
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="px-4 py-2.5 border-t border-dashed border-gray-200 dark:border-[#30363d] shrink-0 flex items-center gap-1.5">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-300 dark:text-[#484f58] shrink-0">
+            <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+          </svg>
+          <span className="text-[10px] text-gray-400 dark:text-[#484f58]">
+            Chưa cấu hình nguồn dữ liệu · Mở Properties Panel để thiết lập
+          </span>
+        </div>
+      </div>
     );
   }
 
