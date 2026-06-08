@@ -10,6 +10,7 @@ import { ChartArea } from "./ChartArea";
 import { ChartBar } from "./ChartBar";
 import { ChartLine } from "./ChartLine";
 import { ChartPie } from "./ChartPie";
+import { ChartScatter } from "./ChartScatter";
 import { DataTable } from "./DataTable";
 import { FlowPipeline } from "./FlowPipeline";
 import { KpiCard } from "./KpiCard";
@@ -505,7 +506,7 @@ export function WidgetRenderer({
     if (dataExpr && Object.keys(sourceData).length > 0) {
       const raw = evaluateRaw(dataExpr, sourceData);
       const dynData = toChartData(raw, (cfg.labelField as string) ?? "label", (cfg.valueField as string) ?? "value", cfg.rowPath as string | undefined);
-      if (dynData.length > 0) return <ChartLine title={title} data={dynData} color={(cfg.color as string) ?? "#059669"} />;
+      if (dynData.length > 0) return <ChartLine title={title} data={dynData} color={(cfg.color as string) ?? "#059669"} unit={cfg.unit as string | undefined} />;
     }
     const tl = title?.toLowerCase() ?? "";
     const isVitals = tl.includes("sinh tồn") || tl.includes("vital");
@@ -535,7 +536,7 @@ export function WidgetRenderer({
     if (dataExpr && Object.keys(sourceData).length > 0) {
       const raw = evaluateRaw(dataExpr, sourceData);
       const dynData = toChartData(raw, (cfg.labelField as string) ?? "label", (cfg.valueField as string) ?? "value", cfg.rowPath as string | undefined);
-      if (dynData.length > 0) return <ChartBar title={title} data={dynData} color={(cfg.color as string) ?? "#059669"} />;
+      if (dynData.length > 0) return <ChartBar title={title} data={dynData} color={(cfg.color as string) ?? "#059669"} unit={cfg.unit as string | undefined} />;
     }
     const tl = title?.toLowerCase() ?? "";
     const data = tl.includes("tháng") ? MONTH_DATA : TREND_DATA;
@@ -550,7 +551,7 @@ export function WidgetRenderer({
     if (dataExpr && Object.keys(sourceData).length > 0) {
       const raw = evaluateRaw(dataExpr, sourceData);
       const dynData = toChartData(raw, (cfg.labelField as string) ?? "label", (cfg.valueField as string) ?? "value", cfg.rowPath as string | undefined);
-      if (dynData.length > 0) return <ChartArea title={title} data={dynData} color={(cfg.color as string) ?? "#722ed1"} />;
+      if (dynData.length > 0) return <ChartArea title={title} data={dynData} color={(cfg.color as string) ?? "#722ed1"} unit={cfg.unit as string | undefined} />;
     }
     const tl = title?.toLowerCase() ?? "";
     const data = tl.includes("giờ") ? HOUR_DATA : TREND_DATA;
@@ -592,6 +593,45 @@ export function WidgetRenderer({
         legend
       />
     );
+  }
+
+  // ── Scatter ──────────────────────────────────────────────────────────────────
+  if (type === "scatter") {
+    const cfg = safeJson(widget.visualConfig);
+    const dataExpr = cfg.dataExpression as string | undefined;
+    const xField = (cfg.xField as string | undefined) ?? "x";
+    const yField = (cfg.yField as string | undefined) ?? "y";
+    const zField = cfg.zField as string | undefined;
+    const color   = (cfg.color as string | undefined) ?? "#059669";
+
+    if (dataExpr && Object.keys(sourceData).length > 0) {
+      if (sourcesLoading) {
+        return <ChartScatter title={title} data={[]} color={color} loading />;
+      }
+      const raw = evaluateRaw(dataExpr, sourceData);
+      if (Array.isArray(raw) && raw.length > 0) {
+        return (
+          <ChartScatter
+            title={title}
+            data={raw as Parameters<typeof ChartScatter>[0]["data"]}
+            xField={xField}
+            yField={yField}
+            zField={zField}
+            color={color}
+            xUnit={cfg.xUnit as string | undefined}
+            yUnit={cfg.yUnit as string | undefined}
+          />
+        );
+      }
+    }
+
+    // Static demo data khi chưa có source
+    const DEMO: { x: number; y: number }[] = [
+      { x: 10, y: 30 }, { x: 40, y: 80 }, { x: 60, y: 20 },
+      { x: 80, y: 95 }, { x: 25, y: 55 }, { x: 50, y: 40 },
+      { x: 70, y: 65 }, { x: 90, y: 10 }, { x: 35, y: 75 },
+    ];
+    return <ChartScatter title={title} data={DEMO} color={color} />;
   }
 
   // ── Gauge ────────────────────────────────────────────────────────────────────

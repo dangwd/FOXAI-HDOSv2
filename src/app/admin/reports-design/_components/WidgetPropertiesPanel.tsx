@@ -188,6 +188,7 @@ function patchJson(existing: string, patch: Record<string, unknown>): string {
 type BindingCategory =
   | "kpi"
   | "series-chart"
+  | "scatter-chart"
   | "pie-chart"
   | "table"
   | "form-section"
@@ -198,6 +199,7 @@ function getBindingCategory(widgetType: string): BindingCategory {
   if (widgetType === "kpi") return "kpi";
   if (["line_chart", "bar_chart", "area_chart"].includes(widgetType))
     return "series-chart";
+  if (widgetType === "scatter") return "scatter-chart";
   if (["pie_chart", "donut_chart"].includes(widgetType)) return "pie-chart";
   if (["simple_table", "advanced_table", "data_table"].includes(widgetType))
     return "table";
@@ -551,11 +553,106 @@ function SeriesChartBinding({
           />
         </Field>
       </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="Color">
+          <Input
+            size="small"
+            value={(cfg.color as string) ?? ""}
+            placeholder="#1677ff"
+            onChange={(e) => set("color", e.target.value)}
+          />
+        </Field>
+        <Field label="Unit (trục Y)">
+          <Input
+            size="small"
+            value={(cfg.unit as string) ?? ""}
+            placeholder="BN, %, tỷ"
+            onChange={(e) => set("unit", e.target.value)}
+          />
+        </Field>
+      </div>
+    </div>
+  );
+}
+
+// ─── Scatter chart binding ────────────────────────────────────────────────────
+
+function ScatterChartBinding({
+  configJson,
+  onChange,
+}: {
+  configJson: string;
+  onChange: (json: string) => void;
+}) {
+  const cfg = safeJson(configJson);
+
+  function set(key: string, value: string) {
+    onChange(patchJson(configJson, { [key]: value || undefined }));
+  }
+
+  return (
+    <div className="space-y-3">
+      <ExpressionInput
+        label="Data Expression (array)"
+        value={(cfg.dataExpression as string) ?? ""}
+        onChange={(v) => set("dataExpression", v)}
+        hint="Mỗi phần tử phải có ít nhất 2 field số (xField và yField)"
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="X Field">
+          <Input
+            size="small"
+            value={(cfg.xField as string) ?? ""}
+            placeholder="x"
+            onChange={(e) => set("xField", e.target.value)}
+            className="font-mono"
+          />
+        </Field>
+        <Field label="Y Field">
+          <Input
+            size="small"
+            value={(cfg.yField as string) ?? ""}
+            placeholder="y"
+            onChange={(e) => set("yField", e.target.value)}
+            className="font-mono"
+          />
+        </Field>
+      </div>
+      <Field label="Z Field (kích thước điểm — tuỳ chọn)">
+        <Input
+          size="small"
+          value={(cfg.zField as string) ?? ""}
+          placeholder="TrongSo"
+          onChange={(e) => set("zField", e.target.value)}
+          className="font-mono"
+        />
+        <p className="text-[10px] text-gray-400 dark:text-[#484f58] mt-0.5 m-0">
+          Để trống nếu không cần bubble size
+        </p>
+      </Field>
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="X Unit">
+          <Input
+            size="small"
+            value={(cfg.xUnit as string) ?? ""}
+            placeholder="tuổi"
+            onChange={(e) => set("xUnit", e.target.value)}
+          />
+        </Field>
+        <Field label="Y Unit">
+          <Input
+            size="small"
+            value={(cfg.yUnit as string) ?? ""}
+            placeholder="ngày"
+            onChange={(e) => set("yUnit", e.target.value)}
+          />
+        </Field>
+      </div>
       <Field label="Color">
         <Input
           size="small"
           value={(cfg.color as string) ?? ""}
-          placeholder="#1677ff"
+          placeholder="#059669"
           onChange={(e) => set("color", e.target.value)}
         />
       </Field>
@@ -1432,6 +1529,12 @@ export function WidgetPropertiesPanel({
             )}
             {bindingCategory === "series-chart" && (
               <SeriesChartBinding
+                configJson={form.configJson}
+                onChange={setConfigJson}
+              />
+            )}
+            {bindingCategory === "scatter-chart" && (
+              <ScatterChartBinding
                 configJson={form.configJson}
                 onChange={setConfigJson}
               />

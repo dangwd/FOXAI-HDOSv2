@@ -709,7 +709,7 @@ function ScreensTab({ moduleCode }: { moduleCode: string }) {
                 render: (_: unknown, s: FormScreen) => (
                   <Space size={4}>
                     <Tooltip title="Thiết kế screen">
-                      <Link href={`/admin/reports-design?module=${moduleCode}&screen=${s.code}`}>
+                      <Link href={`/admin/reports-design?slug=${moduleCode}&screen=${s.code}`}>
                         <Button type="text" size="small" icon={<PenLine size={13} />} />
                       </Link>
                     </Tooltip>
