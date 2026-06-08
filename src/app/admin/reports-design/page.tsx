@@ -3,6 +3,8 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 
+import { Splitter } from "antd";
+
 import { useAdminData } from "./_hooks/useAdminData";
 import { useDesignerState } from "./_hooks/useDesignerState";
 
@@ -44,17 +46,23 @@ function DashboardDesignerInner() {
         selectedSlug={selectedSlug}
         onSelect={setSelectedSlug}
       />
-      <CanvasArea
-        selectedSlug={selectedSlug}
-        selectedModule={selectedModule}
-        designer={designer}
-        catalog={catalog}
-      />
-      <RightSidebar
-        designer={designer}
-        catalog={catalog}
-        selectedSlug={selectedSlug}
-      />
+      <Splitter style={{ flex: 1, minWidth: 0, height: "100%", overflow: "hidden" }}>
+        <Splitter.Panel min={320} style={{ overflow: "hidden" }}>
+          <CanvasArea
+            selectedSlug={selectedSlug}
+            selectedModule={selectedModule}
+            designer={designer}
+            catalog={catalog}
+          />
+        </Splitter.Panel>
+        <Splitter.Panel defaultSize={288} min={220} max={560} style={{ overflow: "hidden" }}>
+          <RightSidebar
+            designer={designer}
+            catalog={catalog}
+            selectedSlug={selectedSlug}
+          />
+        </Splitter.Panel>
+      </Splitter>
     </div>
   );
 }

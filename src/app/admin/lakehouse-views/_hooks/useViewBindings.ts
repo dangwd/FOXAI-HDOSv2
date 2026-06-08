@@ -67,14 +67,24 @@ export function useViewBindings() {
     setSaving(true);
     setError(null);
     try {
-      const created = await adminApi.createViewBinding(values);
-      setBindings((prev) => [created, ...prev]);
-      message.success(`Đã tạo binding cho "${values.viewName}"`);
+      const result = await adminApi.createViewBindingWithAutoProfile({
+        viewName:            values.viewName,
+        sourceSystem:        values.sourceSystem,
+        recordType:          values.recordType,
+        businessKeyColumn:   values.businessKeyColumn,
+        updatedAtColumn:     values.updatedAtColumn || null,
+        pollIntervalSeconds: values.pollIntervalSeconds,
+        displayName:         values.displayName || values.sourceSystem,
+      });
+      setBindings((prev) => [result.binding, ...prev]);
+      const mapCount = Object.keys(result.mappings).length;
+      const enrolled = result.profileEnrolled ? ` · auto-sinh ${mapCount} mappings` : "";
+      message.success(`Đã tạo binding "${values.viewName}"${enrolled}`);
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       const msg =
         status === 409
-          ? "ViewBinding với view này đã tồn tại"
+          ? "ViewBinding với view này đã tồn tại (409)"
           : "Không thể tạo ViewBinding";
       setError(msg);
       throw new Error(msg);

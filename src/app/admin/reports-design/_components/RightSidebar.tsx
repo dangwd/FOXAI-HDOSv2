@@ -33,7 +33,7 @@ export function RightSidebar({ designer, catalog, selectedSlug }: Props) {
   );
 
   return (
-    <aside className="w-72 shrink-0 border-l border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] flex flex-col h-full overflow-hidden">
+    <aside className="w-full border-l border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] flex flex-col h-full overflow-hidden">
 
       {/* ── Main content ──────────────────────────────────────────────────────── */}
       <div className="flex-1 min-h-0 flex flex-col">
