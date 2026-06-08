@@ -3,6 +3,7 @@
 import { Button, Input, Space, Tabs, Typography, theme } from "antd";
 import { Database, FileSearch, Plus, RefreshCw, Search } from "lucide-react";
 import { useState } from "react";
+import { IngestJsonDrawer } from "./_components/IngestJsonDrawer";
 import { ProfileDrawer } from "./_components/ProfileDrawer";
 import { RecordsPanel } from "./_components/RecordsPanel";
 import { SourceProfileTable } from "./_components/SourceProfileTable";
@@ -88,7 +89,8 @@ export default function DataMatchingSourcesPage() {
   const { token } = theme.useToken();
   const manager = useSourceProfiles();
 
-  const [drawerTarget, setDrawerTarget] = useState<SourceProfile | "create" | null>(null);
+  const [drawerTarget,  setDrawerTarget]  = useState<SourceProfile | "create" | null>(null);
+  const [ingestTarget,  setIngestTarget]  = useState<SourceProfile | null>(null);
   const isEditing = drawerTarget !== null && drawerTarget !== "create";
 
   async function handleSave(values: ProfileFormValues) {
@@ -262,6 +264,7 @@ export default function DataMatchingSourcesPage() {
                   loading={manager.loading}
                   onEdit={(p) => setDrawerTarget(p)}
                   onDelete={(p) => manager.remove(p.id)}
+                  onIngest={(p) => setIngestTarget(p)}
                 />
               </div>
             ),
@@ -277,6 +280,13 @@ export default function DataMatchingSourcesPage() {
             children: <RecordsPanel profiles={manager.profiles} />,
           },
         ]}
+      />
+
+      {/* Ingest JSON Drawer */}
+      <IngestJsonDrawer
+        open={ingestTarget !== null}
+        profile={ingestTarget}
+        onClose={() => setIngestTarget(null)}
       />
 
       {/* Create / Edit Drawer */}
