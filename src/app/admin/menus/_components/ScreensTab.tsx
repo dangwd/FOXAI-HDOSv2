@@ -107,13 +107,13 @@ export function ScreensTab({
 }: {
   screens:  AdminScreen[];
   onDesign: (s: AdminScreen) => void;
-  onAdd:    (name: string, icon: string, refreshMode: string, refreshIntervalS: number) => Promise<void>;
+  onAdd:    (data: ScreenFormData) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   async function handleAdd(data: ScreenFormData) {
-    await onAdd(data.name, data.icon, data.refreshMode, data.refreshIntervalS);
+    await onAdd(data);
     setDrawerOpen(false);
   }
 

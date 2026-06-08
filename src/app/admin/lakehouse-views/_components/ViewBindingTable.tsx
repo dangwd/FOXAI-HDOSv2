@@ -2,7 +2,7 @@
 
 import { App, Badge, Button, Popconfirm, Space, Table, Tag, Tooltip, Typography, theme } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { BarChart2, ExternalLink, Pencil, RefreshCw, Trash2, Upload } from "lucide-react";
+import { BarChart2, ExternalLink, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import type { ViewBinding } from "../_lib/types";
 
 const { Text } = Typography;
@@ -42,12 +42,11 @@ interface Props {
   bindings:    ViewBinding[];
   hasFilter:   boolean;
   loading:     boolean;
-  syncing:      string | null; // id đang sync
-  onEdit:       (b: ViewBinding) => void;
-  onDelete:     (b: ViewBinding) => void;
-  onSync:       (b: ViewBinding) => void;
-  onViewRecords:(b: ViewBinding) => void;
-  onIngest:     (b: ViewBinding) => void;
+  syncing:     string | null; // id đang sync
+  onEdit:      (b: ViewBinding) => void;
+  onDelete:    (b: ViewBinding) => void;
+  onSync:      (b: ViewBinding) => void;
+  onViewRecords: (b: ViewBinding) => void;
 }
 
 export function ViewBindingTable({
@@ -59,7 +58,6 @@ export function ViewBindingTable({
   onDelete,
   onSync,
   onViewRecords,
-  onIngest,
 }: Props) {
   const { modal } = App.useApp();
   const { token } = theme.useToken();
@@ -124,19 +122,10 @@ export function ViewBindingTable({
     {
       title:  "Thao tác",
       key:    "actions",
-      width:  250,
+      width:  210,
       align:  "right",
       render: (_, b) => (
         <Space size={4}>
-          {/* Ingest JSON thủ công */}
-          <Tooltip title="Ingest JSON thủ công — gọi trực tiếp POST /dm/ingest/json">
-            <Button
-              size="small"
-              icon={<Upload size={13} />}
-              onClick={() => onIngest(b)}
-            />
-          </Tooltip>
-
           {/* Sync now */}
           <Tooltip title="Sync ngay — đẩy toàn bộ rows của view vào DataMatchingService">
             <Button

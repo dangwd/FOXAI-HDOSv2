@@ -8,6 +8,7 @@ import type {
   DesignerState, DesignerWidget, MenuUpsertForm,
   FormPageDesignerState, FormPageCompType, FormPageRow, FormPageComponent,
 } from "../_lib/types";
+import type { ScreenFormData } from "../_components/ScreenFormDrawer";
 
 // ─── FormPage layout helpers ──────────────────────────────────────────────────
 
@@ -165,15 +166,17 @@ export function useMenuManager() {
   }
 
   // ── Screen CRUD ────────────────────────────────────────────────────────────
-  async function createScreen(
-    name: string,
-    icon: string,
-    refreshMode = "none",
-    refreshIntervalS = 60,
-  ): Promise<void> {
+  async function createScreen(data: ScreenFormData): Promise<void> {
     if (!selId) return;
+    const { name, icon, refreshMode, refreshIntervalS, title, subtitle, badge, badgeColor, live, actions } = data;
     const created = await adminApi.createScreen(selId, {
       name, icon, status: "draft", sortOrder: screens.length, refreshMode, refreshIntervalS,
+      ...(title        && { title }),
+      ...(subtitle     && { subtitle }),
+      ...(badge        && { badge }),
+      ...(badgeColor   && { badgeColor }),
+      live,
+      ...(actions.length > 0 && { actions }),
     });
     setScreens((prev) => [...prev, created]);
     setMenus((prev) => prev.map((m) => m.id === selId ? { ...m, screenCount: m.screenCount + 1 } : m));

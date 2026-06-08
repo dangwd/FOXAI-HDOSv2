@@ -34,8 +34,12 @@ function StatusBadge({ status }: { status: string }) {
 
 // ─── Canonical payload preview ────────────────────────────────────────────────
 
+const PREVIEW_LIMIT = 6;
+
 function PayloadPreview({ raw }: { raw: string }) {
   const { token } = theme.useToken();
+  const [expanded, setExpanded] = useState(false);
+
   let parsed: Record<string, unknown> = {};
   try {
     parsed = JSON.parse(raw) as Record<string, unknown>;
@@ -43,34 +47,65 @@ function PayloadPreview({ raw }: { raw: string }) {
     /* ignore */
   }
 
-  const entries = Object.entries(parsed).slice(0, 6);
+  const allEntries  = Object.entries(parsed);
+  const hiddenCount = allEntries.length - PREVIEW_LIMIT;
+  const visible     = expanded ? allEntries : allEntries.slice(0, PREVIEW_LIMIT);
 
   return (
     <div
       style={{
-        background: token.colorFillAlter,
-        border: `1px solid ${token.colorBorderSecondary}`,
+        background:   token.colorFillAlter,
+        border:       `1px solid ${token.colorBorderSecondary}`,
         borderRadius: token.borderRadius,
-        padding: "8px 10px",
-        fontSize: 11,
-        fontFamily: "monospace",
-        maxWidth: 340,
+        padding:      "8px 10px",
+        fontSize:     11,
+        fontFamily:   "monospace",
+        maxWidth:     340,
       }}
     >
-      {entries.map(([k, v]) => (
+      {visible.map(([k, v]) => (
         <div key={k} style={{ display: "flex", gap: 6, marginBottom: 2 }}>
-          <Text type="secondary" style={{ fontSize: 11, flexShrink: 0 }}>
-            {k}:
-          </Text>
-          <Text style={{ fontSize: 11 }} ellipsis>
+          <Text type="secondary" style={{ fontSize: 11, flexShrink: 0 }}>{k}:</Text>
+          <Text style={{ fontSize: 11 }} ellipsis={{ tooltip: String(v) }}>
             {String(v)}
           </Text>
         </div>
       ))}
-      {Object.keys(parsed).length > 6 && (
-        <Text type="secondary" style={{ fontSize: 10 }}>
-          + {Object.keys(parsed).length - 6} fields khác…
-        </Text>
+
+      {hiddenCount > 0 && !expanded && (
+        <button
+          onClick={() => setExpanded(true)}
+          style={{
+            marginTop:   4,
+            padding:     0,
+            background:  "transparent",
+            border:      "none",
+            cursor:      "pointer",
+            color:       token.colorPrimary,
+            fontSize:    10,
+            fontFamily:  "inherit",
+          }}
+        >
+          + {hiddenCount} fields khác…
+        </button>
+      )}
+
+      {expanded && (
+        <button
+          onClick={() => setExpanded(false)}
+          style={{
+            marginTop:   4,
+            padding:     0,
+            background:  "transparent",
+            border:      "none",
+            cursor:      "pointer",
+            color:       token.colorTextTertiary,
+            fontSize:    10,
+            fontFamily:  "inherit",
+          }}
+        >
+          Thu gọn ↑
+        </button>
       )}
     </div>
   );

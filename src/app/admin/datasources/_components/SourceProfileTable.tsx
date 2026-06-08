@@ -2,7 +2,7 @@
 
 import { Button, Popconfirm, Space, Table, Tag, Tooltip, Typography, theme } from "antd";
 import type { TableColumnsType } from "antd";
-import { Database, Edit2, Trash2 } from "lucide-react";
+import { Database, Edit2, Trash2, Upload } from "lucide-react";
 import type { SourceProfile } from "../_lib/types";
 
 const { Text } = Typography;
@@ -12,22 +12,34 @@ const { Text } = Typography;
 function MappingsCell({ mappings }: { mappings: Record<string, string> }) {
   const { token } = theme.useToken();
   const entries = Object.entries(mappings);
-  const preview = entries.slice(0, 6);
-  const rest    = entries.length - 6;
+  const preview = entries.slice(0, 8);
+  const rest    = entries.length - 8;
 
   const tooltipContent = (
-    <div style={{ padding: "4px 0" }}>
+    <div style={{ padding: "2px 0", minWidth: 200 }}>
       {preview.map(([src, can]) => (
-        <div key={src} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          <Text code style={{ fontSize: 11 }}>{src}</Text>
-          <Text type="secondary" style={{ fontSize: 12 }}>→</Text>
-          <Text style={{ fontSize: 11, color: token.colorSuccess, fontFamily: "monospace", fontWeight: 600 }}>
+        <div key={src} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
+          <span style={{
+            fontFamily:   "monospace",
+            fontSize:     11,
+            background:   "rgba(255,255,255,0.12)",
+            padding:      "1px 5px",
+            borderRadius: 4,
+            color:        "#e6edf3",
+            flexShrink:   0,
+          }}>
+            {src}
+          </span>
+          <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, flexShrink: 0 }}>→</span>
+          <span style={{ fontFamily: "monospace", fontSize: 11, color: "#34d399", fontWeight: 600 }}>
             {can}
-          </Text>
+          </span>
         </div>
       ))}
       {rest > 0 && (
-        <Text type="secondary" style={{ fontSize: 11 }}>+{rest} mapping nữa…</Text>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
+          +{rest} mapping nữa…
+        </div>
       )}
     </div>
   );
@@ -42,7 +54,7 @@ function MappingsCell({ mappings }: { mappings: Record<string, string> }) {
         height:         24,
         borderRadius:   "50%",
         background:     "rgba(5,150,105,.15)",
-        color:          token.colorPrimary,
+        color:          token.colorSuccess,
         fontSize:       11,
         fontWeight:     700,
         cursor:         "default",
@@ -61,12 +73,14 @@ export function SourceProfileTable({
   loading,
   onEdit,
   onDelete,
+  onIngest,
 }: {
   profiles:  SourceProfile[];
   hasFilter: boolean;
   loading?:  boolean;
   onEdit:    (p: SourceProfile) => void;
   onDelete:  (p: SourceProfile) => void;
+  onIngest:  (p: SourceProfile) => void;
 }) {
   const { token } = theme.useToken();
 
@@ -131,10 +145,13 @@ export function SourceProfileTable({
     {
       title: "",
       key: "actions",
-      width: 84,
+      width: 114,
       align: "right" as const,
       render: (_: unknown, record: SourceProfile) => (
         <Space size={4}>
+          <Tooltip title="Ingest JSON thủ công">
+            <Button type="text" size="small" icon={<Upload size={13} />} onClick={() => onIngest(record)} />
+          </Tooltip>
           <Tooltip title="Chỉnh sửa">
             <Button type="text" size="small" icon={<Edit2 size={13} />} onClick={() => onEdit(record)} />
           </Tooltip>
