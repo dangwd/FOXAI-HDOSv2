@@ -433,28 +433,27 @@ export function ViewBindingDrawer({
             />
           </Form.Item>
         </div>
-
         <Form.Item
-          name="pollIntervalSeconds"
           label="Poll Interval"
           tooltip="Tần suất poll — mặc định 300s (5 phút). Tối thiểu 30s (doc 47)."
-          rules={[
-            { required: true, message: "Bắt buộc" },
-            { type: "number", min: 30, message: "Tối thiểu 30 giây" },
-            {
-              type: "number",
-              max: 86400,
-              message: "Tối đa 86400 giây (1 ngày)",
-            },
-          ]}
         >
           <Space.Compact style={{ width: "100%" }}>
-            <InputNumber
-              min={30}
-              max={86400}
-              step={60}
-              style={{ width: "100%" }}
-            />
+            <Form.Item
+              name="pollIntervalSeconds"
+              noStyle
+              rules={[
+                { required: true, message: "Bắt buộc" },
+                { type: "number", min: 30, message: "Tối thiểu 30 giây" },
+                { type: "number", max: 86400, message: "Tối đa 86400 giây (1 ngày)" },
+              ]}
+            >
+              <InputNumber
+                min={30}
+                max={86400}
+                step={60}
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
             <Input
               readOnly
               value="giây"
