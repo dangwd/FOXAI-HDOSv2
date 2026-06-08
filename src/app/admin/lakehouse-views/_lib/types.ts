@@ -1,9 +1,8 @@
-// Domain types cho LakehouseService — ViewBinding CRUD (doc 44)
+// Domain types cho LakehouseService — ViewBinding CRUD (doc 44, 47)
 
-import type { ViewBinding } from "@/infrastructure/http/adminApi";
+import type { ViewBinding, ViewBindingAutoProfileResult } from "@/infrastructure/http/adminApi";
 
-// Re-export để các component trong module này không phải import từ adminApi trực tiếp
-export type { ViewBinding };
+export type { ViewBinding, ViewBindingAutoProfileResult };
 
 /** Giá trị form khi create / edit một ViewBinding */
 export interface ViewBindingFormValues {
@@ -11,8 +10,9 @@ export interface ViewBindingFormValues {
   sourceSystem:        string;
   recordType:          string;
   businessKeyColumn:   string;
-  updatedAtColumn:     string;
+  updatedAtColumn?:    string;   // optional — backend accepts null (doc 47)
   pollIntervalSeconds: number;
+  displayName?:        string;   // dùng cho with-auto-profile (tên hiển thị SourceProfile)
 }
 
 /** Chuyển ViewBinding → initial form values */
@@ -22,7 +22,7 @@ export function bindingToFormValues(b: ViewBinding): ViewBindingFormValues {
     sourceSystem:        b.sourceSystem,
     recordType:          b.recordType,
     businessKeyColumn:   b.businessKeyColumn,
-    updatedAtColumn:     b.updatedAtColumn,
+    updatedAtColumn:     b.updatedAtColumn || undefined,
     pollIntervalSeconds: b.pollIntervalSeconds,
   };
 }

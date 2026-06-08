@@ -18,7 +18,7 @@ export function SchemaToolbar({
   onSearch, onFilterType, onFilterActive, onCreate,
 }: SchemaToolbarProps) {
   return (
-    <div className="bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-[#30363d] rounded-xl px-4 py-3 mb-4 flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-3">
       <Input
         prefix={<Search size={13} className="text-gray-400 dark:text-[#8b949e]" />}
         placeholder="Tìm kiếm schema..."

@@ -1,66 +1,105 @@
-import { CheckCircle, FileText, Layers, Table2 } from "lucide-react";
-import { cn } from "@/shared/utils/cn";
-import type { OcrSchemaStats } from "@/infrastructure/http/ocrApi";
+"use client";
 
-const CARDS = [
-  {
-    key:    "totalSchemas" as const,
-    label:  "Tổng schema",
-    icon:   <Layers size={15} />,
-    color:  "text-blue-600 dark:text-blue-400",
-    bg:     "bg-blue-50 dark:bg-blue-900/20",
-    accent: "bg-blue-500",
-  },
-  {
-    key:    "activeSchemas" as const,
-    label:  "Đang hoạt động",
-    icon:   <CheckCircle size={15} />,
-    color:  "text-emerald-600 dark:text-emerald-400",
-    bg:     "bg-emerald-50 dark:bg-emerald-900/20",
-    accent: "bg-emerald-500",
-  },
-  {
-    key:    "totalFields" as const,
-    label:  "Tổng trường dữ liệu",
-    icon:   <FileText size={15} />,
-    color:  "text-violet-600 dark:text-violet-400",
-    bg:     "bg-violet-50 dark:bg-violet-900/20",
-    accent: "bg-violet-500",
-  },
-  {
-    key:    "totalTables" as const,
-    label:  "Tổng bảng dữ liệu",
-    icon:   <Table2 size={15} />,
-    color:  "text-orange-600 dark:text-orange-400",
-    bg:     "bg-orange-50 dark:bg-orange-900/20",
-    accent: "bg-orange-500",
-  },
-] as const;
+import { Typography, theme } from "antd";
+import { CheckCircle, FileText, Layers, Table2 } from "lucide-react";
+import type { OcrSchemaStats } from "@/infrastructure/http/ocrApi";
+import type { LucideIcon } from "lucide-react";
+
+const { Text } = Typography;
+
+interface CardDef {
+  key:   keyof OcrSchemaStats;
+  label: string;
+  Icon:  LucideIcon;
+  hex:   string;   // accent color hex
+  rgb:   string;   // accent color as "r,g,b" for rgba()
+}
+
+const CARDS: CardDef[] = [
+  { key: "totalSchemas",  label: "Tổng schema",          Icon: Layers,       hex: "#3b82f6", rgb: "59,130,246"  },
+  { key: "activeSchemas", label: "Đang hoạt động",       Icon: CheckCircle,  hex: "#10b981", rgb: "16,185,129"  },
+  { key: "totalFields",   label: "Tổng trường dữ liệu",  Icon: FileText,     hex: "#8b5cf6", rgb: "139,92,246"  },
+  { key: "totalTables",   label: "Tổng bảng dữ liệu",    Icon: Table2,       hex: "#f97316", rgb: "249,115,22"  },
+];
 
 export function StatsCards({ stats, loading }: { stats: OcrSchemaStats | null; loading: boolean }) {
+  const { token } = theme.useToken();
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-      {CARDS.map((c) => (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {CARDS.map(({ key, label, Icon, hex, rgb }) => (
         <div
-          key={c.key}
-          className="relative bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-[#30363d] rounded-xl px-5 py-4 overflow-hidden"
+          key={key}
+          style={{
+            position:     "relative",
+            borderRadius: token.borderRadiusLG,
+            border:       `1px solid rgba(${rgb},0.22)`,
+            background:   `linear-gradient(135deg, rgba(${rgb},0.08) 0%, rgba(${rgb},0.03) 60%, transparent 100%)`,
+            padding:      "18px 20px",
+            overflow:     "hidden",
+          }}
         >
-          <div className={cn("absolute inset-x-0 top-0 h-[2px] rounded-t-xl", c.accent)} />
-          <div className="flex items-start justify-between">
+          {/* Decorative orb */}
+          <div style={{
+            position:     "absolute",
+            right:        -20,
+            bottom:       -20,
+            width:        80,
+            height:       80,
+            borderRadius: "50%",
+            background:   `rgba(${rgb},0.07)`,
+            pointerEvents: "none",
+          }} />
+
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", position: "relative" }}>
+            {/* Left: label + value */}
             <div>
-              <p className="text-[11px] font-medium text-gray-500 dark:text-[#8b949e] m-0 uppercase tracking-wider mb-2">
-                {c.label}
-              </p>
+              <Text style={{
+                fontSize:      11,
+                fontWeight:    600,
+                textTransform: "uppercase",
+                letterSpacing: "0.07em",
+                color:         token.colorTextTertiary,
+                display:       "block",
+                marginBottom:  10,
+              }}>
+                {label}
+              </Text>
+
               {loading ? (
-                <div className="h-8 w-14 animate-pulse bg-gray-200 dark:bg-[#30363d] rounded" />
+                <div style={{
+                  height:       32,
+                  width:        56,
+                  borderRadius: token.borderRadius,
+                  background:   token.colorFillSecondary,
+                }} />
               ) : (
-                <p className="text-3xl font-bold tabular-nums text-gray-900 dark:text-[#e6edf3] m-0 leading-none">
-                  {stats?.[c.key] ?? 0}
-                </p>
+                <div style={{
+                  fontSize:           30,
+                  fontWeight:         700,
+                  lineHeight:         1,
+                  color:              token.colorText,
+                  fontVariantNumeric: "tabular-nums",
+                }}>
+                  {stats?.[key] ?? 0}
+                </div>
               )}
             </div>
-            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ml-3 mt-0.5", c.bg, c.color)}>
-              {c.icon}
+
+            {/* Right: icon */}
+            <div style={{
+              width:          36,
+              height:         36,
+              borderRadius:   token.borderRadius,
+              background:     `rgba(${rgb},0.12)`,
+              border:         `1px solid rgba(${rgb},0.2)`,
+              display:        "flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              flexShrink:     0,
+              marginLeft:     12,
+            }}>
+              <Icon size={16} style={{ color: hex }} />
             </div>
           </div>
         </div>

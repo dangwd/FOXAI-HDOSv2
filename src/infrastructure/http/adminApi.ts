@@ -409,6 +409,25 @@ export interface ViewBinding {
 export type CreateViewBindingRequest = Omit<ViewBinding, "id" | "isActive" | "createdAtUtc" | "updatedAtUtc">;
 export type UpdateViewBindingRequest = Partial<Pick<ViewBinding, "businessKeyColumn" | "updatedAtColumn" | "pollIntervalSeconds" | "isActive">>;
 
+/** Payload cho POST /lakehouse/view-bindings/with-auto-profile (MVP B) */
+export interface CreateWithAutoProfileRequest {
+  viewName:            string;
+  sourceSystem:        string;
+  recordType:          string;
+  businessKeyColumn:   string;
+  updatedAtColumn?:    string | null;
+  pollIntervalSeconds: number;
+  displayName:         string;
+}
+
+/** Response của with-auto-profile — binding đã tạo + SourceProfile auto-sinh */
+export interface ViewBindingAutoProfileResult {
+  binding:          ViewBinding;
+  profileEnrolled:  boolean;
+  businessKeyField: string;
+  mappings:         Record<string, string>;
+}
+
 // ─── DataMatchingService types ───────────────────────────────────────────────
 
 export interface DmSourceProfile {
@@ -1248,6 +1267,15 @@ export const adminApi = {
     httpClient
       .delete(`/lakehouse/view-bindings/${id}`)
       .then(() => undefined),
+
+  // MVP B — tạo ViewBinding + auto-enroll SourceProfile trong 1 call (doc 47)
+  createViewBindingWithAutoProfile: (body: CreateWithAutoProfileRequest): Promise<ViewBindingAutoProfileResult> =>
+    httpClient
+      .post<{ success?: boolean; data?: ViewBindingAutoProfileResult } | ViewBindingAutoProfileResult>(
+        "/lakehouse/view-bindings/with-auto-profile",
+        body,
+      )
+      .then((r) => unwrapForms<ViewBindingAutoProfileResult>(r.data)),
 
   // Trigger 1 lần sync thủ công — không chờ response data
   triggerViewBindingSync: (id: string): Promise<void> =>
