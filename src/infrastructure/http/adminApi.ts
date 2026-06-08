@@ -27,6 +27,12 @@ export interface AdminScreen {
   widgetCount: number;
   refreshMode: "none" | "timer" | "sse";
   refreshIntervalS: number;
+  title?: string;
+  subtitle?: string;
+  badge?: string;
+  badgeColor?: string;
+  live?: boolean;
+  actions?: import("@/types/screen").ScreenAction[];
 }
 
 export interface AdminPermission {

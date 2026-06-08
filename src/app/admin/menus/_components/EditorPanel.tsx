@@ -4,6 +4,7 @@ import { Tabs } from "antd";
 import { FileText, Lock, Info } from "lucide-react";
 import type { AdminMenuNode, AdminPermission, AdminScreen } from "@/infrastructure/http/adminApi";
 import type { MenuUpsertForm } from "../_lib/types";
+import type { ScreenFormData } from "./ScreenFormDrawer";
 import { ScreensTab } from "./ScreensTab";
 import { PermsTab }   from "./PermsTab";
 import { InfoTab }    from "./InfoTab";
@@ -31,7 +32,7 @@ export function EditorPanel({
   saving:         boolean;
   onTabChange:    (t: "screens" | "perms" | "info") => void;
   onDesign:       (s: AdminScreen) => void;
-  onAddScreen:    (name: string, icon: string, refreshMode: string, refreshIntervalS: number) => Promise<void>;
+  onAddScreen:    (data: ScreenFormData) => Promise<void>;
   onDeleteScreen: (id: string) => Promise<void>;
   onAddPerm:      (type: "role" | "user", value: string) => Promise<void>;
   onTogglePerm:   (id: string, field: "canView" | "canExport") => Promise<void>;
