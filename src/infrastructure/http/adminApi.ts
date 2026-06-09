@@ -512,6 +512,34 @@ export interface DmReportQuery {
   to?:           string;
 }
 
+// ─── LakehouseService — DataContract Engine types (doc 53/56) ────────────────
+
+/** Metadata cho 1 DataContract đã đăng ký trong LakehouseService */
+export interface DataContractMeta {
+  code:           string;   // "finance.daily.row"
+  displayName:    string;
+  schemaTypeName: string;   // "FinanceDailyRow"
+}
+
+/** Query params chung cho DataContract endpoints */
+export interface DataContractQueryParams {
+  source?:     string;   // "demo" | "sql" | "staging" | ...
+  date?:       string;   // "yyyy-MM-dd"
+  department?: number;
+  limit?:      number;
+  [key: string]: string | number | undefined;
+}
+
+/** 1 row kết quả form pre-fill — dict dạng field → value */
+export type FormPrefillRow = Record<string, unknown>;
+
+/** Response shape của /lakehouse/contracts/{code}/prefill */
+export interface FormPrefillResult {
+  contractCode: string;
+  rowCount:     number;
+  rows:         FormPrefillRow[];
+}
+
 // ─── API ──────────────────────────────────────────────────────────────────────
 // baseURL is NEXT_PUBLIC_API_URL (no /api/v1 suffix).
 // DynamicFormService paths start with /forms/...
@@ -1290,6 +1318,58 @@ export const adminApi = {
       .then(() => undefined),
 
   // ── DataMatchingService — Source Profiles ────────────────────────────────
+
+  // ── LakehouseService — Path B: Lakehouse Charts (doc 51) ────────────────
+
+  /** List chart code đã đăng ký qua ILakehouseChartConfig */
+  listLakehouseCharts: (): Promise<string[]> =>
+    httpClient
+      .get<{ success: boolean; data: string[] }>("/lakehouse/charts")
+      .then((r) => unwrapForms<string[]>(r.data)),
+
+  /** Fetch 1 chart từ raw SQL (Path B) — trả SduiPage shape */
+  fetchLakehouseChart: (
+    code: string,
+    opts?: { date?: string; department?: number; demo?: boolean },
+  ): Promise<import("@/types/sdui").SduiPage> =>
+    httpClient
+      .get<{ success: boolean; data: import("@/types/sdui").SduiPage }>(
+        `/lakehouse/charts/${encodeURIComponent(code)}`,
+        { params: opts },
+      )
+      .then((r) => unwrapForms<import("@/types/sdui").SduiPage>(r.data)),
+
+  // ── LakehouseService — DataContract Engine (doc 53) ──────────────────────
+
+  /** List tất cả DataContract đã đăng ký */
+  listDataContracts: (): Promise<DataContractMeta[]> =>
+    httpClient
+      .get<{ success: boolean; data: DataContractMeta[] }>("/lakehouse/contracts")
+      .then((r) => unwrapForms<DataContractMeta[]>(r.data)),
+
+  /** Fetch chart output từ DataContract gateway — trả SduiPage shape */
+  fetchContractChart: (
+    contractCode: string,
+    opts?: DataContractQueryParams,
+  ): Promise<import("@/types/sdui").SduiPage> =>
+    httpClient
+      .get<{ success: boolean; data: import("@/types/sdui").SduiPage }>(
+        `/lakehouse/contracts/${encodeURIComponent(contractCode)}/chart`,
+        { params: opts },
+      )
+      .then((r) => unwrapForms<import("@/types/sdui").SduiPage>(r.data)),
+
+  /** Fetch form pre-fill rows từ DataContract gateway */
+  fetchContractPrefill: (
+    contractCode: string,
+    opts?: DataContractQueryParams,
+  ): Promise<FormPrefillResult> =>
+    httpClient
+      .get<{ success: boolean; data: FormPrefillResult }>(
+        `/lakehouse/contracts/${encodeURIComponent(contractCode)}/prefill`,
+        { params: opts },
+      )
+      .then((r) => unwrapForms<FormPrefillResult>(r.data)),
 
   // ── DataMatchingService — SDUI Pages (doc 48) ────────────────────────────
 

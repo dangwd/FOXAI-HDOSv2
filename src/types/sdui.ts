@@ -1,6 +1,6 @@
 // SDUI types cho GET /dm/pages/{code} — DataMatchingService (doc 48)
 
-export type SduiActionVariant = "primary" | "default" | "danger";
+export type SduiActionVariant = "primary" | "default" | "dashed" | "danger";
 
 export interface SduiAction {
   label:   string;
@@ -25,12 +25,22 @@ export interface SduiPage {
 
 // ─── Component union (discriminator: "type") ──────────────────────────────────
 
+// Catch-all cho bất kỳ widget nào có trong REGISTRY mà chưa có typed interface ở trên.
+// BE có thể gửi ChartBar, DataTable, BulletList, ... → renderer dùng REGISTRY lookup.
+export interface GenericSduiComponent {
+  type:  string;
+  span:  number | null;
+  props: Record<string, unknown>;
+}
+
 export type SduiComponent =
   | KpiCardComponent
   | ProgressListComponent
   | AlertListComponent
   | FlowPipelineComponent
-  | ChartPieComponent;
+  | ChartPieComponent
+  | EmbedSduiPageComponent
+  | GenericSduiComponent;
 
 interface BaseComponent {
   span: number | null;   // 1..24, null = full width (24)
@@ -126,6 +136,19 @@ export interface ChartPieProps {
 export interface ChartPieComponent extends BaseComponent {
   type:  "ChartPie";
   props: ChartPieProps;
+}
+
+// EmbedSduiPage — nhúng chart từ DataContract hoặc Path B qua Provider catalog (doc 52)
+export interface EmbedSduiPageProps {
+  providerCode: string;
+  operationKey: string;
+  params:       Record<string, string>;
+  queryParams?: Record<string, string>;
+  height?:      number;
+}
+export interface EmbedSduiPageComponent extends BaseComponent {
+  type:  "embed_sdui_page";
+  props: EmbedSduiPageProps;
 }
 
 // API envelope
