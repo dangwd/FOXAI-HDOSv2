@@ -15,7 +15,6 @@ import {
   Typography,
   theme,
 } from "antd";
-import { Info } from "lucide-react";
 import { useEffect } from "react";
 import {
   bindingToFormValues,
@@ -120,52 +119,6 @@ function BindingPreviewStrip({ form }: { form: ViewBindingFormValues }) {
           </Text>
         </Space>
       </div>
-    </div>
-  );
-}
-
-// ─── Auto-profile info banner ─────────────────────────────────────────────────
-
-function AutoProfileBanner() {
-  const { token } = theme.useToken();
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 8,
-        padding: "10px 12px",
-        borderRadius: token.borderRadius,
-        background: "rgba(56,189,248,0.06)",
-        border: "1px solid rgba(56,189,248,0.2)",
-        marginBottom: 16,
-      }}
-    >
-      <Info
-        size={13}
-        style={{ color: "#38bdf8", marginTop: 1, flexShrink: 0 }}
-      />
-      <Text
-        style={{
-          fontSize: 11,
-          color: token.colorTextSecondary,
-          lineHeight: 1.5,
-        }}
-      >
-        Backend sẽ tự tạo{" "}
-        <Text code style={{ fontSize: 11 }}>
-          SourceProfile
-        </Text>{" "}
-        cho cặp{" "}
-        <Text code style={{ fontSize: 11 }}>
-          sourceSystem / recordType
-        </Text>{" "}
-        này qua endpoint{" "}
-        <Text code style={{ fontSize: 11 }}>
-          with-auto-profile
-        </Text>
-        . Nếu profile đã tồn tại, backend dùng lại (idempotent).
-      </Text>
     </div>
   );
 }
