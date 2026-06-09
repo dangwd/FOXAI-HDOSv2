@@ -85,6 +85,7 @@ export function EmbedSduiPageWidget({
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
     return () => { cancelRef.current = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps

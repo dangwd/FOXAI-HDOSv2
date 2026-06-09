@@ -93,6 +93,7 @@ export default function DashboardPage() {
     }
   }, [code, search, source, consumer]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void load(); }, [load]);
 
   // Auto-refresh khi live = true

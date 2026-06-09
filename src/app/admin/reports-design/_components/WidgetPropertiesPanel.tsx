@@ -1872,24 +1872,6 @@ function FilterDisplayConfig({
   );
 }
 
-// ─── Expression syntax hint box ───────────────────────────────────────────────
-
-function SyntaxHint() {
-  return (
-    <div className="rounded-lg bg-gray-50 dark:bg-[#0f172a] border border-gray-100 dark:border-[#1f2937] px-3 py-2 space-y-1">
-      <p className="text-[9px] font-semibold text-gray-400 dark:text-[#484f58] uppercase tracking-wider m-0">
-        Cú pháp
-      </p>
-      <code className="text-[10px] text-emerald-600 dark:text-emerald-400 block">
-        {"{{sources.<namespace>.<field>}}"}
-      </code>
-      <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0">
-        Namespace được khai báo tại tab DataSources
-      </p>
-    </div>
-  );
-}
-
 // ─── Main panel ───────────────────────────────────────────────────────────────
 
 type PanelTab = "display" | "binding" | "advanced";
