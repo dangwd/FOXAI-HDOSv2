@@ -45,17 +45,39 @@ export function useDataSources(
       active.map(async (source) => {
         const rawPath = source.resourcePath ?? "";
         if (!rawPath) return [source.namespace, null] as const;
+
+        // 1. Substitute {name} placeholders in path
         const path = rawPath.replace(
           /\{(\w+)\}/g,
           (_, key) => encodeURIComponent(params[key] ?? ""),
         );
-        // doc 41: layout response carries baseUrl resolved from Provider Catalog
+
+        // 2. Only add requiredParams that are NOT path-placeholders → query string (doc 60 §3).
+        // Do NOT blindly forward all routeParams — routing params like `module` and `screen`
+        // must not leak into backend data calls.
+        const pathPlaceholders = new Set(
+          (rawPath.match(/\{(\w+)\}/g) ?? []).map((m) => m.slice(1, -1)),
+        );
+        const qs = new URLSearchParams();
+        for (const name of source.requiredParams) {
+          if (!pathPlaceholders.has(name)) {
+            const v = params[name];
+            if (v !== undefined && v !== "") qs.append(name, v);
+          }
+        }
+        // 3. kind=Single → append ?mode=single (doc 58/60)
+        if (source.kind === "Single") qs.append("mode", "single");
+
+        // doc 41: layout response carries baseUrl resolved from Provider Catalog.
+        // resourcePath may already contain '?' (baked-in query params) — use '&' to extend.
         const baseUrl = source.baseUrl?.replace(/\/+$/, "") ?? "";
-        const url = baseUrl
-          ? `${baseUrl}${path}`
-          : path.startsWith("http") ? path : `${BASE}${path}`;
+        const base = baseUrl || (path.startsWith("http") ? "" : BASE);
+        const hasQuery = path.includes("?");
+        const sep = hasQuery ? "&" : "?";
+        const fullUrl = `${base}${path}${qs.toString() ? `${sep}${qs}` : ""}`;
+
         try {
-          const res = await fetch(url, {
+          const res = await fetch(fullUrl, {
             headers: accessToken
               ? { Authorization: `Bearer ${accessToken}` }
               : {},
@@ -65,6 +87,15 @@ export function useDataSources(
 
           // Unwrap DynamicFormService / DataMatchingService envelope: { success, data: {...|[...]} }
           const responseData = raw?.data ?? raw;
+
+          // kind=Single: prefer `single` object if BE returned it (doc 58/60 §4)
+          // `single` is a flat dict — expressions resolve directly without array unwrapping.
+          if (source.kind === "Single") {
+            const prefillSingle = (responseData as Record<string, unknown>)?.single;
+            if (prefillSingle != null && typeof prefillSingle === "object" && !Array.isArray(prefillSingle)) {
+              return [source.namespace, prefillSingle] as const;
+            }
+          }
 
           // DataMatchingService stores canonicalPayload as a JSON *string* in each record.
           // Parse and spread it so expressions like {{sources.ns.HoTen}} (single) or

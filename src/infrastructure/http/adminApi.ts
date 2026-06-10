@@ -239,6 +239,8 @@ export interface ScreenLayout {
   moduleCode: string;
   code: string;
   title: string;
+  description:  string | null;   // doc 60 §2
+  generatedAt?: string;          // doc 60 §2 — ISO 8601
   dataSources: DataSource[];
   tabs: ScreenTabApi[];
 }
@@ -533,11 +535,15 @@ export interface DataContractQueryParams {
 /** 1 row kết quả form pre-fill — dict dạng field → value */
 export type FormPrefillRow = Record<string, unknown>;
 
-/** Response shape của /lakehouse/contracts/{code}/prefill */
+/** Response shape của /lakehouse/contracts/{code}/prefill
+ *  Khi gọi với ?mode=single BE trả thêm `single` — object phẳng dùng cho expression binding.
+ *  Backward-compat: caller cũ nhận rows:[...]; caller mới (form) dùng single:{...} (doc 58/60).
+ */
 export interface FormPrefillResult {
   contractCode: string;
   rowCount:     number;
   rows:         FormPrefillRow[];
+  single:       Record<string, unknown> | null;  // null nếu không có ?mode=single hoặc 0 rows
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
