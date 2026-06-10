@@ -106,6 +106,7 @@ function ContractCodeSelect({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     fetch(`${BASE}/lakehouse/contracts`, {
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
