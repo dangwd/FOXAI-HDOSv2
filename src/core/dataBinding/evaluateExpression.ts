@@ -83,5 +83,18 @@ export function applyDisplayFormat(value: string, format: string | null): string
     } catch { /* ignore */ }
   }
 
+  if (format === "number") {
+    try {
+      return new Intl.NumberFormat("vi-VN").format(Number(value));
+    } catch { /* ignore */ }
+  }
+
+  if (format.startsWith("percent")) {
+    try {
+      const decimals = format.includes(":") ? Number(format.split(":")[1]) : 1;
+      return `${Number(value).toFixed(decimals)}%`;
+    } catch { /* ignore */ }
+  }
+
   return value;
 }
