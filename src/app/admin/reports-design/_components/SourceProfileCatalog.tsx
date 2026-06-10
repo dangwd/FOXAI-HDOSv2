@@ -3,10 +3,29 @@
 import httpClient from "@/infrastructure/http/httpClient";
 import type { DataSource } from "@/infrastructure/http/adminApi";
 import { Input } from "antd";
-import { Database, GripVertical, Loader2, Search } from "lucide-react";
+import { Database, GripVertical, Layers, Loader2, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "@/app/admin/datasources/_lib/types";
 import type { SourceProfile } from "@/app/admin/datasources/_lib/types";
+
+// ─── Lakehouse DataContract types ─────────────────────────────────────────────
+
+interface LakehouseContract {
+  code:           string;
+  displayName:    string;
+  schemaTypeName: string;
+}
+
+function contractToDataSource(c: LakehouseContract): DataSource {
+  return {
+    namespace:      c.code.split(".")[0],           // "patient" from "patient.daily.new"
+    operationId:    "lakehouse::prefill",
+    serviceId:      null,
+    resourcePath:   null,
+    requiredParams: ["contractCode"],
+    schemaPath:     "/lakehouse/contracts/{contractCode}/schema",
+  };
+}
 
 // ─── Conversion ───────────────────────────────────────────────────────────────
 
@@ -112,6 +131,85 @@ function CatalogCard({
   );
 }
 
+// ─── LakehouseContractCard ────────────────────────────────────────────────────
+
+function LakehouseContractCard({
+  contract,
+  added,
+  onAdd,
+  onDragStart,
+  onDragEnd,
+}: {
+  contract:    LakehouseContract;
+  added:       boolean;
+  onAdd:       () => void;
+  onDragStart: () => void;
+  onDragEnd:   () => void;
+}) {
+  return (
+    <div
+      draggable
+      unselectable="on"
+      onDragStart={(e) => {
+        e.dataTransfer.setData(
+          "application/datasource+json",
+          JSON.stringify(contractToDataSource(contract)),
+        );
+        e.dataTransfer.effectAllowed = "copy";
+        onDragStart();
+      }}
+      onDragEnd={onDragEnd}
+      className={`group relative flex items-center gap-2 px-2.5 py-2 rounded-lg
+        cursor-grab active:cursor-grabbing transition-all select-none
+        hover:bg-gray-50 dark:hover:bg-[#161b22]
+        ${added ? "bg-purple-50/60 dark:bg-purple-950/20" : ""}`}
+    >
+      <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-purple-500
+        opacity-0 group-hover:opacity-100 transition-opacity" />
+
+      <div className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center
+        bg-purple-50 dark:bg-purple-950/30">
+        <Layers size={13} className="text-purple-600 dark:text-purple-400" />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-gray-700 dark:text-[#e6edf3] m-0 truncate leading-tight">
+          {contract.displayName || contract.code}
+        </p>
+        <p className="text-[10px] text-gray-400 dark:text-[#484f58] m-0 font-mono truncate mt-0.5">
+          {contract.code}
+        </p>
+      </div>
+
+      {added && (
+        <span className="shrink-0 text-[9px] font-bold text-purple-600 dark:text-purple-400
+          bg-purple-100 dark:bg-purple-950/50 px-1.5 py-0.5 rounded-full">
+          ✓
+        </span>
+      )}
+
+      <button
+        onClick={(e) => { e.stopPropagation(); onAdd(); }}
+        title="Thêm vào màn hình"
+        className="shrink-0 w-5 h-5 flex items-center justify-center rounded text-base
+          text-gray-300 dark:text-[#30363d]
+          opacity-0 group-hover:opacity-100
+          hover:text-purple-600 dark:hover:text-purple-400
+          hover:bg-purple-50 dark:hover:bg-purple-950/30
+          transition-all leading-none"
+      >
+        +
+      </button>
+
+      <GripVertical
+        size={11}
+        className="shrink-0 text-gray-300 dark:text-[#30363d]
+          opacity-0 group-hover:opacity-50 transition-opacity"
+      />
+    </div>
+  );
+}
+
 // ─── Catalog ──────────────────────────────────────────────────────────────────
 
 export function SourceProfileCatalog({
@@ -125,16 +223,23 @@ export function SourceProfileCatalog({
   onDragStart:     () => void;
   onDragEnd:       () => void;
 }) {
-  const [profiles, setProfiles] = useState<SourceProfile[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [search,  setSearch]    = useState("");
+  const [profiles,   setProfiles]   = useState<SourceProfile[]>([]);
+  const [contracts,  setContracts]  = useState<LakehouseContract[]>([]);
+  const [loading,    setLoading]    = useState(true);
+  const [search,     setSearch]     = useState("");
 
   useEffect(() => {
-    httpClient
+    const dmReq = httpClient
       .get<{ success: boolean; data: SourceProfile[] }>(`${API_BASE}/dm/sources`)
       .then((res) => setProfiles(res.data.data ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch(() => {});
+
+    const lhReq = httpClient
+      .get<{ success: boolean; data: LakehouseContract[] }>(`${API_BASE}/lakehouse/contracts`)
+      .then((res) => setContracts(res.data.data ?? []))
+      .catch(() => {});
+
+    void Promise.all([dmReq, lhReq]).finally(() => setLoading(false));
   }, []);
 
   const filtered = useMemo(() => {
@@ -147,6 +252,16 @@ export function SourceProfileCatalog({
         p.sourceSystem.toLowerCase().includes(q),
     );
   }, [profiles, search]);
+
+  const filteredContracts = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return contracts;
+    return contracts.filter(
+      (c) =>
+        c.code.toLowerCase().includes(q) ||
+        c.displayName.toLowerCase().includes(q),
+    );
+  }, [contracts, search]);
 
   const groups = useMemo(() => {
     const map = new Map<string, SourceProfile[]>();
@@ -170,26 +285,8 @@ export function SourceProfileCatalog({
     );
   }
 
-  // ── Empty catalog ─────────────────────────────────────────────────────────────
-
-  if (profiles.length === 0) {
-    return (
-      <div className="flex flex-col items-center gap-2 py-10 text-center px-4">
-        <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#1f2937] flex items-center justify-center">
-          <Database size={18} className="text-gray-300 dark:text-[#30363d]" />
-        </div>
-        <p className="text-xs text-gray-500 dark:text-[#8b949e] m-0">
-          Chưa có Source Profile nào
-        </p>
-        <a
-          href="/admin/datasources"
-          className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline"
-        >
-          Tạo trong Data Matching Sources →
-        </a>
-      </div>
-    );
-  }
+  const hasAny = profiles.length > 0 || contracts.length > 0;
+  const noMatch = filtered.length === 0 && filteredContracts.length === 0;
 
   // ── Catalog ────────────────────────────────────────────────────────────────────
 
@@ -208,18 +305,46 @@ export function SourceProfileCatalog({
       </div>
 
       {/* No match */}
-      {filtered.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-10
-          text-gray-400 dark:text-[#484f58]">
+      {noMatch ? (
+        <div className="flex flex-col items-center gap-2 py-10 text-gray-400 dark:text-[#484f58]">
           <Search size={16} className="text-gray-200 dark:text-[#30363d]" />
           <p className="text-xs m-0">Không tìm thấy</p>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto py-1.5">
           <div className="px-1.5 space-y-3 pt-1">
-            {groups.map(([system, items]) => (
+
+            {/* ── Lakehouse DataContract section ── */}
+            {filteredContracts.length > 0 && (
+              <div>
+                <div className="px-2 pb-1 flex items-center gap-1.5">
+                  <Layers size={9} className="text-purple-400 shrink-0" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider
+                    text-purple-500 dark:text-purple-400 font-mono">
+                    Lakehouse DataContract
+                  </span>
+                  <span className="text-[10px] text-gray-300 dark:text-[#30363d]">
+                    {filteredContracts.length}
+                  </span>
+                </div>
+                <div className="space-y-0.5">
+                  {filteredContracts.map((c) => (
+                    <LakehouseContractCard
+                      key={c.code}
+                      contract={c}
+                      added={addedNamespaces.has(c.code.split(".")[0])}
+                      onAdd={() => onAdd(contractToDataSource(c))}
+                      onDragStart={onDragStart}
+                      onDragEnd={onDragEnd}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── DataMatching SourceProfile section ── */}
+            {filtered.length > 0 && groups.map(([system, items]) => (
               <div key={system}>
-                {/* Group header */}
                 <div className="px-2 pb-1 flex items-center gap-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider
                     text-gray-400 dark:text-[#484f58] font-mono">
@@ -229,8 +354,6 @@ export function SourceProfileCatalog({
                     {items.length}
                   </span>
                 </div>
-
-                {/* Cards */}
                 <div className="space-y-0.5">
                   {items.map((p) => (
                     <CatalogCard
@@ -245,9 +368,22 @@ export function SourceProfileCatalog({
                 </div>
               </div>
             ))}
+
           </div>
 
-          {/* Hint */}
+          {/* Empty DM hint */}
+          {!hasAny && !search && (
+            <div className="flex flex-col items-center gap-2 py-6 text-center px-4">
+              <Database size={18} className="text-gray-300 dark:text-[#30363d]" />
+              <p className="text-xs text-gray-500 dark:text-[#8b949e] m-0">
+                Chưa có Source Profile nào
+              </p>
+              <a href="/admin/datasources" className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline">
+                Tạo trong Data Matching Sources →
+              </a>
+            </div>
+          )}
+
           <div className="px-3 pt-3 pb-1">
             <p className="text-[10px] text-gray-300 dark:text-[#30363d] m-0 text-center">
               Click + hoặc kéo thả để thêm
