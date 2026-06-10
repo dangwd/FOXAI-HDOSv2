@@ -28,12 +28,14 @@ export function useDataSources(
     // Only gate fetching on params that are actually used as {param} placeholders
     // in the resourcePath. Declared requiredParams that don't appear in the path
     // are ignored — they don't need a URL value to build the request.
+    // defaultParams (design-time) are merged per-source; URL params take precedence.
     const active = ds.filter((s) => {
+      const mergedParams = { ...(s.defaultParams ?? {}), ...params };
       const pathPlaceholders = new Set(
         (s.resourcePath ?? "").match(/\{(\w+)\}/g)?.map((m) => m.slice(1, -1)) ?? [],
       );
       const effectiveRequired = s.requiredParams.filter((p) => pathPlaceholders.has(p));
-      return effectiveRequired.every((p) => Boolean(params[p]));
+      return effectiveRequired.every((p) => Boolean(mergedParams[p]));
     });
     if (!active.length) {
       const blocked = ds.filter((s) => {
@@ -55,10 +57,13 @@ export function useDataSources(
         const rawPath = source.resourcePath ?? "";
         if (!rawPath) return [source.namespace, null] as const;
 
+        // Merge design-time defaults with URL params (URL wins)
+        const mergedParams = { ...(source.defaultParams ?? {}), ...params };
+
         // 1. Substitute {name} placeholders in path
         const path = rawPath.replace(
           /\{(\w+)\}/g,
-          (_, key) => encodeURIComponent(params[key] ?? ""),
+          (_, key) => encodeURIComponent(mergedParams[key] ?? ""),
         );
 
         // 2. Only add requiredParams that are NOT path-placeholders → query string (doc 60 §3).
@@ -70,7 +75,7 @@ export function useDataSources(
         const qs = new URLSearchParams();
         for (const name of source.requiredParams) {
           if (!pathPlaceholders.has(name)) {
-            const v = params[name];
+            const v = mergedParams[name];
             if (v !== undefined && v !== "") qs.append(name, v);
           }
         }

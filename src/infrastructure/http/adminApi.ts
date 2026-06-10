@@ -168,6 +168,7 @@ export interface DataSource {
   resourcePath?:  string | null;   // legacy mode
   requiredParams: string[];
   schemaPath?:    string | null;
+  defaultParams?: Record<string, string> | null;  // design-time param defaults (e.g. contractCode)
   // resolved fields returned by layout endpoint (read-only):
   baseUrl?:       string | null;
   kind?:          "Single" | "List" | null;
@@ -572,6 +573,7 @@ function normalizeDataSource(raw: Record<string, unknown>): DataSource {
     resourcePath:   (raw.resourcePath   ?? raw.ResourcePath   ?? null) as string | null,
     requiredParams: (raw.requiredParams ?? raw.RequiredParams ?? []) as string[],
     schemaPath:     (raw.schemaPath     ?? raw.SchemaPath     ?? null) as string | null,
+    defaultParams:  (raw.defaultParams  ?? raw.DefaultParams  ?? null) as Record<string, string> | null,
     baseUrl:        (raw.baseUrl        ?? raw.BaseUrl        ?? null) as string | null,
     kind:           (raw.kind           ?? raw.Kind           ?? null) as "Single" | "List" | null,
   };

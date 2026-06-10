@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, Copy, Check, Database, FlaskConical } from "lucide-react";
-import { Input, Select } from "antd";
+import { Input, Select, message } from "antd";
 import { adminApi, type DataSource } from "@/infrastructure/http/adminApi";
 import useAuthStore from "@/core/auth/authStore";
 
@@ -53,6 +53,12 @@ function normalizeSchemaField(
 
 function extractParams(resourcePath: string): string[] {
   return (resourcePath.match(/\{(\w+)\}/g) ?? []).map((m) => m.slice(1, -1));
+}
+
+/** Extract embedded contract code from a baked-in path like /lakehouse/contracts/patient.daily.new/prefill */
+function extractEmbeddedContractCode(path: string): string {
+  const m = /\/lakehouse\/contracts\/([^/{}]+)\//.exec(path);
+  return m ? m[1] : "";
 }
 
 function flattenProbeFields(
@@ -197,7 +203,13 @@ interface SourceSectionState {
   error: string | null;
 }
 
-function SourceSection({ source }: { source: DataSource }) {
+function SourceSection({
+  source,
+  onDefaultParamChange,
+}: {
+  source: DataSource;
+  onDefaultParamChange?: (paramName: string, value: string) => void;
+}) {
   const accessToken = useAuthStore((s) => s.accessToken);
   const requiredParams = extractParams(source.resourcePath ?? "");
   const hasSchema = Boolean(source.schemaPath);
@@ -205,16 +217,37 @@ function SourceSection({ source }: { source: DataSource }) {
   const schemaParams = extractParams(source.schemaPath ?? "");
   const schemaHasPlaceholders = schemaParams.length > 0;
 
+  // Lakehouse contract source — cần hiện ContractCodeSelect dù placeholder hay embedded
+  const isLakehouseSource = source.serviceId === "lakehouse" || source.operationId?.startsWith("lakehouse::");
+  const embeddedContractCode = isLakehouseSource
+    ? extractEmbeddedContractCode(source.resourcePath ?? source.schemaPath ?? "")
+    : "";
+
+  // Params hiện ở UI: schema params (nếu có schemaPath) hoặc resource params
+  // Với lakehouse source đã embed code → không còn placeholder nhưng vẫn cần hiện selector
+  const displayParams: string[] = schemaHasPlaceholders
+    ? schemaParams
+    : (!hasSchema
+        ? requiredParams
+        : isLakehouseSource && embeddedContractCode
+          ? ["contractCode"]
+          : []);
+
   const [st, setSt] = useState<SourceSectionState>({
     expanded: true,
-    paramValues: {},
+    paramValues: {
+      ...(source.defaultParams ?? {}),
+      // Pre-fill từ embedded path nếu code đã được baked in
+      ...(embeddedContractCode ? { contractCode: embeddedContractCode } : {}),
+    },
     loading: false,
     fields: null,
     mode: hasSchema ? "schema" : "probe",
     error: null,
   });
 
-  // Auto-fetch schema chỉ khi schemaPath không có placeholder (không cần user điền param)
+  // Auto-fetch schema khi schemaPath không có placeholder
+  // Với lakehouse source đã embed code: pass empty params (code is in the path itself)
   useEffect(() => {
     if (!hasSchema || schemaHasPlaceholders) return;
     void fetchSchema({});
@@ -311,10 +344,10 @@ function SourceSection({ source }: { source: DataSource }) {
             {source.resourcePath}
           </p>
 
-          {/* Param inputs — hiện cho cả schema (khi có placeholder) và probe */}
-          {(hasSchema ? schemaParams : requiredParams).length > 0 && (
+          {/* Param inputs — hiện cho cả schema (khi có placeholder) và probe, và lakehouse re-select */}
+          {displayParams.length > 0 && (
             <div className="space-y-1.5">
-              {(hasSchema ? schemaParams : requiredParams).map((param) => {
+              {displayParams.map((param) => {
                 const isContractCode =
                   param === "contractCode" && source.serviceId === "lakehouse";
                 return (
@@ -329,6 +362,7 @@ function SourceSection({ source }: { source: DataSource }) {
                           const newParams = { ...st.paramValues, [param]: v };
                           setSt((s) => ({ ...s, paramValues: newParams }));
                           void fetchSchema(newParams);
+                          onDefaultParamChange?.(param, v);
                         }}
                       />
                     ) : (
@@ -408,6 +442,7 @@ export function FieldBrowser({ selectedSlug }: { selectedSlug: string }) {
   const [sources,   setSources]   = useState<DataSource[]>([]);
   const [height,    setHeight]    = useState(288);
   const drag = useRef<{ startY: number; startH: number } | null>(null);
+  const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(() => {
     if (!selectedSlug) return;
@@ -419,6 +454,22 @@ export function FieldBrowser({ selectedSlug }: { selectedSlug: string }) {
       .catch(() => { if (!cancelled) setSources([]); });
     return () => { cancelled = true; };
   }, [selectedSlug]);
+
+  function handleDefaultParamChange(namespace: string, paramName: string, value: string) {
+    const [mc, sc] = splitSlug(selectedSlug);
+    // BE dùng managed mode — template {contractCode} không được thay đổi.
+    // Lưu giá trị vào defaultParams của DataSource VO để FE substitute lúc fetch.
+    const updated = sources.map((s) =>
+      s.namespace === namespace
+        ? { ...s, defaultParams: { ...(s.defaultParams ?? {}), [paramName]: value } }
+        : s,
+    );
+    setSources(updated);
+    adminApi
+      .saveDataSources(mc, sc, updated)
+      .then(() => { void messageApi.success(`Đã lưu ${paramName} = ${value}`); })
+      .catch(() => { void messageApi.error("Lưu thất bại"); });
+  }
 
   function onResizeStart(e: React.PointerEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -445,6 +496,7 @@ export function FieldBrowser({ selectedSlug }: { selectedSlug: string }) {
       style={collapsed ? undefined : { height }}
       className="border-t border-gray-200 dark:border-[#1f2937] bg-white dark:bg-[#0a0f1a] shrink-0 flex flex-col"
     >
+      {contextHolder}
       {/* Resize handle */}
       {!collapsed && (
         <div
@@ -476,7 +528,13 @@ export function FieldBrowser({ selectedSlug }: { selectedSlug: string }) {
       {!collapsed && (
         <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-2 space-y-1.5">
           {sources.map((src) => (
-            <SourceSection key={src.namespace} source={src} />
+            <SourceSection
+              key={src.namespace}
+              source={src}
+              onDefaultParamChange={(paramName, value) =>
+                handleDefaultParamChange(src.namespace, paramName, value)
+              }
+            />
           ))}
           <p className="text-[9px] text-gray-400 dark:text-[#484f58] text-center pt-0.5 pb-1 m-0 select-none">
             Kéo field vào ô Expression · Click để copy
