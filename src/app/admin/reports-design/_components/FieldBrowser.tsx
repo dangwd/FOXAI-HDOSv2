@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, Copy, Check, Database, FlaskConical } from "lucide-react";
-import { Input } from "antd";
+import { Input, Select } from "antd";
 import { adminApi, type DataSource } from "@/infrastructure/http/adminApi";
 import useAuthStore from "@/core/auth/authStore";
 
@@ -20,12 +20,33 @@ interface FieldMeta {
   hint: string;
 }
 
-// Schema contract từ docs section 3
-interface SchemaField {
-  key: string;
-  type: "string" | "number" | "date" | "boolean";
-  label: string | null;
-  sourceField: string | null;
+// Schema có thể trả về 2 format:
+// - Lakehouse: { name, jsonName, type (C# type), optional }
+// - Legacy/DM: { key, type ("string"|"number"|...), label?, sourceField? }
+type SchemaField =
+  | { jsonName: string; name: string; type: string; optional: boolean; key?: never; label?: never }
+  | { key: string; type: string; label?: string | null; sourceField?: string | null; jsonName?: never };
+
+function normalizeSchemaField(
+  f: SchemaField,
+  namespace: string,
+): { path: string; expr: string; type: FieldType; hint: string } {
+  if (f.jsonName) {
+    // Lakehouse format — C# types
+    const t = f.type.toLowerCase();
+    let ft: FieldType = "string";
+    if (t === "boolean") ft = "boolean";
+    else if (t === "dateonly" || t === "datetime" || t === "datetimeoffset") ft = "date";
+    else if (t === "int32" || t === "int64" || t === "double" || t === "float" || t === "decimal") ft = "number";
+    return { path: f.jsonName, expr: `{{sources.${namespace}.${f.jsonName}}}`, type: ft, hint: f.name };
+  }
+  // Legacy format
+  const key = f.key!;
+  const t = f.type?.toLowerCase() ?? "string";
+  const ft: FieldType = (["string","number","date","boolean","array","object","null"] as FieldType[]).includes(t as FieldType)
+    ? (t as FieldType)
+    : "string";
+  return { path: key, expr: `{{sources.${namespace}.${key}}}`, type: ft, hint: f.label ?? key };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,6 +89,55 @@ const TYPE_BADGE: Record<FieldType, { label: string; cls: string }> = {
   object:  { label: "obj",  cls: "text-gray-500 dark:text-[#8b949e] bg-gray-100 dark:bg-[#1f2937]" },
   null:    { label: "null", cls: "text-gray-400 dark:text-[#484f58] bg-gray-50 dark:bg-[#0f172a]" },
 };
+
+// ─── ContractCodeSelect ───────────────────────────────────────────────────────
+
+interface ContractOption { code: string; displayName: string }
+
+function ContractCodeSelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const [options, setOptions] = useState<ContractOption[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${BASE}/lakehouse/contracts`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    })
+      .then((r) => r.json())
+      .then((raw: { data?: ContractOption[] }) => {
+        setOptions(raw.data ?? []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [accessToken]);
+
+  return (
+    <Select
+      size="small"
+      style={{ flex: 1, minWidth: 0 }}
+      placeholder="Chọn contract"
+      loading={loading}
+      value={value || undefined}
+      onChange={onChange}
+      showSearch
+      optionFilterProp="label"
+      labelRender={(opt) => (
+        <span className="font-mono text-[10px] truncate">{String(opt.value ?? opt.label)}</span>
+      )}
+      options={options.map((o) => ({
+        value: o.code,
+        label: o.displayName ? `${o.code} — ${o.displayName}` : o.code,
+      }))}
+    />
+  );
+}
 
 // ─── FieldChip ────────────────────────────────────────────────────────────────
 
@@ -130,6 +200,9 @@ function SourceSection({ source }: { source: DataSource }) {
   const accessToken = useAuthStore((s) => s.accessToken);
   const requiredParams = extractParams(source.resourcePath ?? "");
   const hasSchema = Boolean(source.schemaPath);
+  // schemaPath cũng có thể có {placeholder} cần substitute trước khi fetch
+  const schemaParams = extractParams(source.schemaPath ?? "");
+  const schemaHasPlaceholders = schemaParams.length > 0;
 
   const [st, setSt] = useState<SourceSectionState>({
     expanded: true,
@@ -140,30 +213,33 @@ function SourceSection({ source }: { source: DataSource }) {
     error: null,
   });
 
-  // Auto-fetch schema khi có schemaPath (không cần user action)
+  // Auto-fetch schema chỉ khi schemaPath không có placeholder (không cần user điền param)
   useEffect(() => {
-    if (!hasSchema) return;
-    void fetchSchema();
+    if (!hasSchema || schemaHasPlaceholders) return;
+    void fetchSchema({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source.schemaPath]);
 
-  async function fetchSchema() {
+  async function fetchSchema(paramValues: Record<string, string>) {
     setSt((s) => ({ ...s, loading: true, error: null, mode: "schema" }));
     try {
-      const path = source.schemaPath!;
-      const url = path.startsWith("http") ? path : `${BASE}${path}`;
+      // Substitute {param} placeholders in schemaPath before fetching
+      const rawSchemaPath = source.schemaPath!;
+      const resolvedPath = rawSchemaPath.replace(
+        /\{(\w+)\}/g,
+        (_, key: string) => encodeURIComponent(paramValues[key] ?? ""),
+      );
+      const url = resolvedPath.startsWith("http") ? resolvedPath : `${BASE}${resolvedPath}`;
       const res = await fetch(url, {
         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const raw = await res.json() as { data?: { fields?: SchemaField[] } };
-      const schemaFields = raw.data?.fields ?? [];
-      const fields: FieldMeta[] = schemaFields.map((f) => ({
-        path: f.key,
-        expr: `{{sources.${source.namespace}.${f.key}}}`,
-        type: f.type,
-        hint: f.label ?? f.key,
-      }));
+      const raw = await res.json() as { data?: SchemaField[] | { fields?: SchemaField[] } };
+      // Lakehouse: { data: [...] } — array trực tiếp; legacy: { data: { fields: [...] } }
+      const schemaFields: SchemaField[] = Array.isArray(raw.data)
+        ? raw.data
+        : (raw.data as { fields?: SchemaField[] } | undefined)?.fields ?? [];
+      const fields: FieldMeta[] = schemaFields.map((f) => normalizeSchemaField(f, source.namespace));
       setSt((s) => ({ ...s, loading: false, fields }));
     } catch (e) {
       setSt((s) => ({ ...s, loading: false, error: (e as Error).message }));
@@ -179,10 +255,8 @@ function SourceSection({ source }: { source: DataSource }) {
         /\{(\w+)\}/g,
         (_, key: string) => encodeURIComponent(st.paramValues[key] ?? ""),
       );
-      const baseUrl = source.baseUrl?.replace(/\/+$/, "") ?? "";
-      const url = baseUrl
-        ? `${baseUrl}${path}`
-        : path.startsWith("http") ? path : `${BASE}${path}`;
+      // baseUrl từ Provider catalog là Docker-internal — dùng BASE (nginx) thay thế
+      const url = path.startsWith("http") ? path : `${BASE}${path}`;
       const res = await fetch(url, {
         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       });
@@ -236,16 +310,27 @@ function SourceSection({ source }: { source: DataSource }) {
             {source.resourcePath}
           </p>
 
-          {/* Probe section — chỉ hiện khi không có schemaPath hoặc user muốn probe thủ công */}
-          {!hasSchema && (
-            <>
-              {requiredParams.length > 0 && (
-                <div className="space-y-1.5">
-                  {requiredParams.map((param) => (
-                    <div key={param} className="flex items-center gap-1.5">
-                      <code className="text-[9px] text-gray-500 dark:text-[#8b949e] shrink-0 font-mono w-14 truncate">
-                        {`{${param}}`}
-                      </code>
+          {/* Param inputs — hiện cho cả schema (khi có placeholder) và probe */}
+          {(hasSchema ? schemaParams : requiredParams).length > 0 && (
+            <div className="space-y-1.5">
+              {(hasSchema ? schemaParams : requiredParams).map((param) => {
+                const isContractCode =
+                  param === "contractCode" && source.serviceId === "lakehouse";
+                return (
+                  <div key={param} className="flex items-center gap-1.5">
+                    <code className="text-[9px] text-gray-500 dark:text-[#8b949e] shrink-0 font-mono w-14 truncate">
+                      {`{${param}}`}
+                    </code>
+                    {isContractCode ? (
+                      <ContractCodeSelect
+                        value={st.paramValues[param] ?? ""}
+                        onChange={(v) => {
+                          const newParams = { ...st.paramValues, [param]: v };
+                          setSt((s) => ({ ...s, paramValues: newParams }));
+                          void fetchSchema(newParams);
+                        }}
+                      />
+                    ) : (
                       <Input
                         size="small"
                         placeholder={`test ${param}`}
@@ -257,30 +342,34 @@ function SourceSection({ source }: { source: DataSource }) {
                           }))
                         }
                       />
-                    </div>
-                  ))}
-                </div>
-              )}
-              <button
-                onClick={probe}
-                disabled={st.loading}
-                className="w-full flex items-center justify-center gap-1.5 py-1 rounded-md border border-dashed border-emerald-300 dark:border-emerald-800/60 text-[11px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <FlaskConical size={11} />
-                {st.loading ? "Đang lấy dữ liệu…" : st.fields ? "Probe lại" : "Probe & lấy fields"}
-              </button>
-            </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
 
-          {/* Refresh button khi có schema */}
+          {/* Schema mode */}
           {hasSchema && (
             <button
-              onClick={fetchSchema}
+              onClick={() => void fetchSchema(st.paramValues)}
               disabled={st.loading}
               className="w-full flex items-center justify-center gap-1.5 py-1 rounded-md border border-dashed border-emerald-300 dark:border-emerald-800/60 text-[11px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FlaskConical size={11} />
               {st.loading ? "Đang tải schema…" : "Làm mới schema"}
+            </button>
+          )}
+
+          {/* Probe mode — chỉ hiện khi không có schemaPath */}
+          {!hasSchema && (
+            <button
+              onClick={probe}
+              disabled={st.loading}
+              className="w-full flex items-center justify-center gap-1.5 py-1 rounded-md border border-dashed border-emerald-300 dark:border-emerald-800/60 text-[11px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FlaskConical size={11} />
+              {st.loading ? "Đang lấy dữ liệu…" : st.fields ? "Probe lại" : "Probe & lấy fields"}
             </button>
           )}
 

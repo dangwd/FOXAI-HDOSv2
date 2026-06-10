@@ -35,7 +35,16 @@ export function useDataSources(
       const effectiveRequired = s.requiredParams.filter((p) => pathPlaceholders.has(p));
       return effectiveRequired.every((p) => Boolean(params[p]));
     });
-    if (!active.length) return;
+    if (!active.length) {
+      const blocked = ds.filter((s) => {
+        const ph = new Set((s.resourcePath ?? "").match(/\{(\w+)\}/g)?.map((m) => m.slice(1, -1)) ?? []);
+        return s.requiredParams.filter((p) => ph.has(p)).some((p) => !params[p]);
+      });
+      if (blocked.length) {
+        console.warn("[useDataSources] Skipped — missing params:", blocked.map((s) => `${s.namespace}: ${s.requiredParams.join(", ")}`));
+      }
+      return;
+    }
 
     let cancelled = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -68,10 +77,11 @@ export function useDataSources(
         // 3. kind=Single → append ?mode=single (doc 58/60)
         if (source.kind === "Single") qs.append("mode", "single");
 
-        // doc 41: layout response carries baseUrl resolved from Provider Catalog.
+        // baseUrl from Provider catalog is Docker-internal (e.g. http://lakehouseservice:8080).
+        // Browser cannot reach Docker hostnames — use NEXT_PUBLIC_API_URL (nginx gateway) instead.
+        // nginx already routes /lakehouse/* and /dm/* to the correct internal services.
         // resourcePath may already contain '?' (baked-in query params) — use '&' to extend.
-        const baseUrl = source.baseUrl?.replace(/\/+$/, "") ?? "";
-        const base = baseUrl || (path.startsWith("http") ? "" : BASE);
+        const base = path.startsWith("http") ? "" : BASE;
         const hasQuery = path.includes("?");
         const sep = hasQuery ? "&" : "?";
         const fullUrl = `${base}${path}${qs.toString() ? `${sep}${qs}` : ""}`;

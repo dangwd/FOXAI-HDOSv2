@@ -842,17 +842,26 @@ function MiniFieldBrowser({ selectedSlug }: { selectedSlug: string }) {
                 : {},
             });
             if (!res.ok) continue;
+            type LhField  = { jsonName: string; name: string; type: string; optional: boolean };
+            type LegField = { key: string; type: string; label?: string | null };
+            type AnyField = LhField | LegField;
             const raw = (await res.json()) as {
-              data?: { fields?: Array<{ key: string; type: string }> };
+              data?: AnyField[] | { fields?: AnyField[] };
             };
-            const schemaFields = raw.data?.fields ?? [];
+            const schemaFields: AnyField[] = Array.isArray(raw.data)
+              ? raw.data
+              : (raw.data as { fields?: AnyField[] } | undefined)?.fields ?? [];
             result.push({
               namespace: src.namespace,
-              fields: schemaFields.map((f) => ({
-                path: f.key,
-                expr: `{{sources.${src.namespace}.${f.key}}}`,
-                type: f.type ?? "string",
-              })),
+              fields: schemaFields.map((f) => {
+                const isLh = "jsonName" in f && Boolean((f as LhField).jsonName);
+                const path = isLh ? (f as LhField).jsonName : (f as LegField).key;
+                return {
+                  path,
+                  expr: `{{sources.${src.namespace}.${path}}}`,
+                  type: f.type ?? "string",
+                };
+              }),
             });
           } catch {
             // skip unreachable source
