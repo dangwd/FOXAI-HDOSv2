@@ -112,6 +112,15 @@ export function useDataSources(
             }
           }
 
+          // Lakehouse FormPrefillResult (List mode): { contractCode, rowCount, rows, single }
+          // Unwrap rows so table expressions like {{sources.ns}} get an array (doc 63 §6).
+          if (!Array.isArray(responseData)) {
+            const rows = (responseData as Record<string, unknown>)?.rows;
+            if (Array.isArray(rows)) {
+              return [source.namespace, rows] as const;
+            }
+          }
+
           // DataMatchingService stores canonicalPayload as a JSON *string* in each record.
           // Parse and spread it so expressions like {{sources.ns.HoTen}} (single) or
           // {{sources.ns[0].HoTen}} (list) resolve directly without extra nesting.

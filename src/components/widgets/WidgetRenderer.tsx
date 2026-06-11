@@ -4,6 +4,7 @@ import type { ApiWidget, FormSchema } from "@/infrastructure/http/adminApi";
 import { evaluateExpression, evaluateRaw, applyDisplayFormat } from "@/core/dataBinding/evaluateExpression";
 import type { ChartDataPoint } from "@/types/chart";
 import { FormSectionWidget } from "./FormSectionWidget";
+import { EmbedSduiPageWidget } from "./EmbedSduiPage";
 import { AlertList } from "./AlertList";
 import { BulletList } from "./BulletList";
 import { ChartArea } from "./ChartArea";
@@ -989,6 +990,28 @@ export function WidgetRenderer({
         </div>
       </div>
     );
+  }
+
+  // ── Embed SDUI page (Lakehouse chart, doc 63) ─────────────────────────────────
+  if (type === "embed_sdui_page") {
+    const cfg = safeJson(widget.visualConfig) as {
+      providerCode?: string;
+      operationKey?: string;
+      params?: Record<string, string>;
+      queryParams?: Record<string, string>;
+      height?: number;
+    };
+    if (cfg.providerCode && cfg.operationKey) {
+      return (
+        <EmbedSduiPageWidget
+          providerCode={cfg.providerCode}
+          operationKey={cfg.operationKey}
+          params={cfg.params ?? {}}
+          queryParams={cfg.queryParams}
+          height={cfg.height}
+        />
+      );
+    }
   }
 
   // ── Fallback ──────────────────────────────────────────────────────────────────
