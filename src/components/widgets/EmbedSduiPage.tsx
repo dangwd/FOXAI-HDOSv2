@@ -9,6 +9,9 @@ import { useEffect, useRef, useState } from "react";
 import { resolveProviderUrl } from "@/shared/utils/providerResolver";
 import type { SduiPage } from "@/types/sdui";
 import type { EmbedSduiPageProps } from "@/types/sdui";
+import useAuthStore from "@/core/auth/authStore";
+
+const BASE = (process.env.NEXT_PUBLIC_API_URL ?? "https://192.168.100.60:8443").replace(/\/+$/, "");
 
 // Lazy import SduiPageRenderer để tránh circular dependency tại module-load time.
 // EmbedSduiPage → SduiPageRenderer → EmbedSduiPage (runtime recursion, OK)
@@ -52,21 +55,26 @@ export function EmbedSduiPageWidget({
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
   const cancelRef = useRef(false);
+  const accessToken = useAuthStore((s) => s.accessToken);
 
   async function load() {
     cancelRef.current = false;
     setLoading(true);
     setError(null);
     try {
-      const baseUrl = await resolveProviderUrl(providerCode, operationKey, params);
+      const resolvedUrl = await resolveProviderUrl(providerCode, operationKey, params);
+      // Provider catalog stores Docker-internal baseUrl — strip host, re-apply nginx BASE
+      const pathOnly = resolvedUrl.replace(/^https?:\/\/[^/]+/, "");
       const qs = new URLSearchParams(
         Object.fromEntries(
           Object.entries(queryParams ?? {}).filter(([, v]) => v !== undefined),
         ) as Record<string, string>,
       ).toString();
-      const url = qs ? `${baseUrl}?${qs}` : baseUrl;
+      const url = `${BASE}${pathOnly}${qs ? `?${qs}` : ""}`;
 
-      const r    = await fetch(url);
+      const r = await fetch(url, {
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+      });
       const json = await r.json() as { success?: boolean; data?: SduiPage; errorMessage?: string };
 
       if (cancelRef.current) return;
